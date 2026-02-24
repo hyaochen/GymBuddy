@@ -15,7 +15,7 @@ export default function LoginPage({
                 <div className="text-center mb-8">
                     <div className="text-4xl mb-3">💪</div>
                     <h1 className="text-2xl font-bold text-foreground">GymBuddy</h1>
-                    <p className="text-muted-foreground text-sm mt-1">World Gym 健身追蹤器</p>
+                    <p className="text-muted-foreground text-sm mt-1">健身訓練追蹤器</p>
                 </div>
 
                 <div className="bg-card rounded-xl border border-border p-6">

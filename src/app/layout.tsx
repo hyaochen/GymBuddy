@@ -7,7 +7,7 @@ const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
     title: "GymBuddy - 健身追蹤器",
-    description: "World Gym 健身動作安排與訓練記錄",
+    description: "個人健身訓練追蹤器，動作庫、計劃管理、組間計時與訓練記錄一站搞定",
     manifest: "/manifest.json",
 };
 
