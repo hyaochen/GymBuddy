@@ -1,45 +1,53 @@
 // Service Worker for GymBuddy — handles background rest-end notifications
-// This runs independently of the main page's JavaScript throttling.
+// Uses setInterval polling against an absolute endTime so the OS killing/restarting
+// the SW mid-wait doesn't silently swallow the notification.
 
 self.addEventListener('install', () => self.skipWaiting())
 self.addEventListener('activate', event => event.waitUntil(self.clients.claim()))
 
-// Scheduled notification timers (cleared when a new set is logged)
-const pendingTimers = []
+let checkInterval = null
+let scheduled = null   // { endTime: number, title: string, body: string }
+
+function clearScheduled() {
+    if (checkInterval) { clearInterval(checkInterval); checkInterval = null }
+    scheduled = null
+}
 
 self.addEventListener('message', event => {
     if (!event.data) return
 
     if (event.data.type === 'SCHEDULE_NOTIFICATION') {
-        const { delayMs, title, body } = event.data
+        const { endTime, title, body } = event.data
+        clearScheduled()
+        scheduled = { endTime, title, body }
 
-        // Cancel any previously scheduled notification
-        while (pendingTimers.length > 0) {
-            clearTimeout(pendingTimers.pop())
-        }
+        // Poll every 1 s instead of a single setTimeout.
+        // If the SW is suspended and restarted it re-receives this message
+        // from the page on the next postMessage call, so no state is lost.
+        checkInterval = setInterval(async () => {
+            if (!scheduled) { clearInterval(checkInterval); checkInterval = null; return }
+            if (Date.now() < scheduled.endTime) return
 
-        const timerId = setTimeout(async () => {
+            // Time is up
+            const { title: t, body: b } = scheduled
+            clearScheduled()
+
             // Only show if no client window is currently visible
             const clients = await self.clients.matchAll({ type: 'window', includeUncontrolled: true })
             const hasVisibleClient = clients.some(c => c.visibilityState === 'visible')
-
             if (!hasVisibleClient) {
-                self.registration.showNotification(title, {
-                    body,
+                self.registration.showNotification(t, {
+                    body: b,
                     tag: 'rest-end',
                     requireInteraction: true,
                     icon: '/icon.png',
                 })
             }
-        }, delayMs)
-
-        pendingTimers.push(timerId)
+        }, 1000)
     }
 
     if (event.data.type === 'CANCEL_NOTIFICATION') {
-        while (pendingTimers.length > 0) {
-            clearTimeout(pendingTimers.pop())
-        }
+        clearScheduled()
     }
 })
 
@@ -48,9 +56,7 @@ self.addEventListener('notificationclick', event => {
     event.notification.close()
     event.waitUntil(
         self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(clients => {
-            if (clients.length > 0) {
-                return clients[0].focus()
-            }
+            if (clients.length > 0) return clients[0].focus()
             return self.clients.openWindow('/')
         })
     )

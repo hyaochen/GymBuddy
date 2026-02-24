@@ -250,6 +250,9 @@ export default function ActiveSessionPage({ params }: { params: Promise<{ id: st
     const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
     const [submitting, setSubmitting] = useState(false)
     const swRegRef = useRef<ServiceWorkerRegistration | null>(null)
+    // Keep a live ref to state so event listeners don't capture stale closures
+    const stateRef = useRef(state)
+    stateRef.current = state
 
     // ── Audio ─────────────────────────────────────────────────────────────────
     const audioCtxRef = useRef<AudioContext | null>(null)
@@ -315,6 +318,20 @@ export default function ActiveSessionPage({ params }: { params: Promise<{ id: st
                 .then(reg => { swRegRef.current = reg })
                 .catch(() => {})
         }
+    }, [])
+
+    // ── visibilitychange: sync timer when user returns from background ────────
+    // If rest ended while the page was hidden, trigger alarm immediately on return.
+    useEffect(() => {
+        const handleVisible = () => {
+            if (document.visibilityState !== 'visible') return
+            const { phase, restEndTime } = stateRef.current
+            if (phase !== 'resting' || !restEndTime) return
+            const remaining = Math.max(0, Math.ceil((restEndTime - Date.now()) / 1000))
+            dispatch({ type: 'SET_REST_LEFT', value: remaining })
+        }
+        document.addEventListener('visibilitychange', handleVisible)
+        return () => document.removeEventListener('visibilitychange', handleVisible)
     }, [])
 
     // ── Load session ──────────────────────────────────────────────────────────
@@ -401,11 +418,11 @@ export default function ActiveSessionPage({ params }: { params: Promise<{ id: st
             const data = await res.json()
             // Pre-schedule 60 s of repeating alarm (Web Audio, fires even in background)
             scheduleAlarm(restSeconds)
-            // Also send to service worker for reliable background notification
+            // Send absolute endTime to SW (so setInterval polling survives SW restarts)
             if (swRegRef.current?.active) {
                 swRegRef.current.active.postMessage({
                     type: 'SCHEDULE_NOTIFICATION',
-                    delayMs: restSeconds * 1000,
+                    endTime: restEndTime,
                     title: '⏱️ 休息結束！',
                     body: '準備好下一組了嗎？點擊繼續訓練',
                 })
