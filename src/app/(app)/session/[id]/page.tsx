@@ -80,6 +80,7 @@ type Action =
     | { type: 'NEXT_EXERCISE' }
     | { type: 'SKIP_EXERCISE' }
     | { type: 'JUMP_TO_EXERCISE'; exIdx: number }
+    | { type: 'SUBSTITUTE_EXERCISE'; newSessionExercise: SessionExercise }
     | { type: 'TOGGLE_ALT' }
     | { type: 'TOGGLE_STEPS' }
     | { type: 'TOGGLE_EX_LIST' }
@@ -226,6 +227,29 @@ function reducer(state: State, action: Action): State {
             return navigateTo(state, state.exIdx + 1)
         case 'JUMP_TO_EXERCISE':
             return navigateTo(state, action.exIdx)
+        case 'SUBSTITUTE_EXERCISE': {
+            if (!state.session) return state
+            // Replace the current sessionExercise with the substitute one.
+            // Copy original exercise's plan defaults to the substitute so rest/reps remain correct.
+            const newExercises = state.session.exercises.map((ex, i) =>
+                i === state.exIdx ? action.newSessionExercise : ex
+            )
+            const origExId = state.session.exercises[state.exIdx]?.exerciseId
+            const origDefaults = origExId ? state.defaults[origExId] : undefined
+            const newDefaults = origDefaults
+                ? { ...state.defaults, [action.newSessionExercise.exerciseId]: origDefaults }
+                : state.defaults
+            return {
+                ...state,
+                session: { ...state.session, exercises: newExercises },
+                defaults: newDefaults,
+                // Fresh start for the substitute — reset logged sets and set counter
+                loggedSets: [],
+                setNum: 1,
+                weight: origDefaults?.defaultWeightKg ? Number(origDefaults.defaultWeightKg) : state.weight,
+                showAlt: false,
+            }
+        }
         case 'TOGGLE_ALT':
             return { ...state, showAlt: !state.showAlt }
         case 'TOGGLE_STEPS':
@@ -904,7 +928,10 @@ export default function ActiveSessionPage({ params }: { params: Promise<{ id: st
             {state.showAlt && (
                 <AlternativesDrawer
                     exerciseId={ex.exerciseId}
+                    sessionId={sessionId}
+                    sessionExerciseId={ex.id}
                     onClose={() => dispatch({ type: 'TOGGLE_ALT' })}
+                    onSelect={(newSex) => dispatch({ type: 'SUBSTITUTE_EXERCISE', newSessionExercise: newSex })}
                 />
             )}
         </div>
@@ -1016,9 +1043,22 @@ type AltExercise = {
     muscles: Array<{ muscleGroup: { name: string }; isPrimary: boolean }>
 }
 
-function AlternativesDrawer({ exerciseId, onClose }: { exerciseId: string; onClose: () => void }) {
+function AlternativesDrawer({
+    exerciseId,
+    sessionId,
+    sessionExerciseId,
+    onClose,
+    onSelect,
+}: {
+    exerciseId: string
+    sessionId: string
+    sessionExerciseId: string
+    onClose: () => void
+    onSelect: (newSessionExercise: SessionExercise) => void
+}) {
     const [alts, setAlts] = useState<AltExercise[]>([])
     const [loading, setLoading] = useState(true)
+    const [substituting, setSubstituting] = useState<string | null>(null)
 
     useEffect(() => {
         fetch(`/api/exercises/${exerciseId}/alternatives`)
@@ -1027,6 +1067,28 @@ function AlternativesDrawer({ exerciseId, onClose }: { exerciseId: string; onClo
             .catch(() => setLoading(false))
     }, [exerciseId])
 
+    const handleSelect = async (alt: AltExercise) => {
+        setSubstituting(alt.id)
+        try {
+            const res = await fetch(`/api/sessions/${sessionId}/substitute`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    originalSessionExerciseId: sessionExerciseId,
+                    newExerciseId: alt.id,
+                }),
+            })
+            const data = await res.json()
+            if (data.sessionExercise) {
+                onSelect(data.sessionExercise)
+            }
+        } catch (e) {
+            console.error(e)
+        } finally {
+            setSubstituting(null)
+        }
+    }
+
     return (
         <div className="fixed inset-0 z-50 bg-black/60 flex items-end" onClick={onClose}>
             <div
@@ -1034,7 +1096,10 @@ function AlternativesDrawer({ exerciseId, onClose }: { exerciseId: string; onClo
                 onClick={e => e.stopPropagation()}
             >
                 <div className="sticky top-0 bg-card border-b border-border flex items-center justify-between p-4">
-                    <h3 className="font-semibold">替代動作</h3>
+                    <div>
+                        <h3 className="font-semibold">替代動作</h3>
+                        <p className="text-xs text-muted-foreground mt-0.5">選擇後將在本次訓練中替換，並記入訓練紀錄</p>
+                    </div>
                     <button onClick={onClose} className="text-muted-foreground p-1">
                         <X className="h-5 w-5" />
                     </button>
@@ -1048,12 +1113,13 @@ function AlternativesDrawer({ exerciseId, onClose }: { exerciseId: string; onClo
                         alts.map(alt => {
                             const name = alt.name.includes(' / ') ? alt.name.split(' / ')[1] : alt.name
                             const muscle = alt.muscles.find(m => m.isPrimary)?.muscleGroup.name ?? ''
+                            const isBusy = substituting === alt.id
                             return (
-                                <Link
+                                <button
                                     key={alt.id}
-                                    href={`/exercises/${alt.id}`}
-                                    className="flex items-center gap-3 bg-secondary rounded-xl p-3 hover:bg-accent transition-colors"
-                                    onClick={onClose}
+                                    onClick={() => handleSelect(alt)}
+                                    disabled={substituting !== null}
+                                    className="w-full flex items-center gap-3 bg-secondary rounded-xl p-3 hover:bg-accent transition-colors disabled:opacity-60 text-left"
                                 >
                                     {alt.gifUrl ? (
                                         <img src={alt.gifUrl} alt={name} className="h-12 w-12 rounded-lg object-cover flex-shrink-0" />
@@ -1062,11 +1128,14 @@ function AlternativesDrawer({ exerciseId, onClose }: { exerciseId: string; onClo
                                             <Dumbbell className="h-5 w-5 text-muted-foreground" />
                                         </div>
                                     )}
-                                    <div className="min-w-0">
+                                    <div className="min-w-0 flex-1">
                                         <p className="font-medium text-sm truncate">{name}</p>
                                         <p className="text-xs text-muted-foreground">{muscle}</p>
                                     </div>
-                                </Link>
+                                    {isBusy && (
+                                        <div className="h-4 w-4 border-2 border-primary border-t-transparent rounded-full animate-spin flex-shrink-0" />
+                                    )}
+                                </button>
                             )
                         })
                     )}
