@@ -1,12 +1,12 @@
 @echo off
 setlocal enabledelayedexpansion
-title GymBuddy - World Gym Tracker
+title GymBuddy - 健身訓練追蹤器
 
 :MENU
 cls
 echo.
 echo  ==========================================
-echo       GymBuddy - World Gym Tracker
+echo       GymBuddy - 健身訓練追蹤器
 echo  ==========================================
 echo.
 echo   [1] Start All (DB + App + Tunnel)
