@@ -1,0 +1,15 @@
+services:
+  workout-tunnel:
+    image: cloudflare/cloudflared:latest
+    container_name: workout-tunnel
+    command: tunnel --config /etc/cloudflared/gym-docker-config.yml run
+    volumes:
+      - ${CLOUDFLARED_CONFIG_DIR:-~/.cloudflared}:/etc/cloudflared:ro
+    depends_on:
+      - workout-app
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"

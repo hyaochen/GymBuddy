@@ -1,0 +1,274 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Enums ───────────────────────────────────────────────────────────────────
+
+enum EquipmentCategory {
+  FREE_WEIGHTS
+  MACHINES
+  CABLES
+  CARDIO
+  BODYWEIGHT
+  STATIONS
+}
+
+enum Difficulty {
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
+}
+
+enum ExerciseType {
+  COMPOUND
+  ISOLATION
+  CARDIO
+  STRETCH
+}
+
+enum BodyRegion {
+  CHEST
+  BACK
+  SHOULDERS
+  ARMS
+  LEGS
+  CORE
+  FULL_BODY
+  CARDIO
+}
+
+// ─── Users ───────────────────────────────────────────────────────────────────
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  name         String
+  passwordHash String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  workoutPlans    WorkoutPlan[]
+  workoutSessions WorkoutSession[]
+  personalRecords PersonalRecord[]
+
+  @@index([email])
+  @@map("users")
+}
+
+// ─── Equipment ───────────────────────────────────────────────────────────────
+
+model Equipment {
+  id          String            @id @default(cuid())
+  name        String            @unique
+  category    EquipmentCategory
+  description String?
+  imageUrl    String?
+
+  exercises ExerciseEquipment[]
+
+  @@map("equipment")
+}
+
+// ─── Muscle Groups ───────────────────────────────────────────────────────────
+
+model MuscleGroup {
+  id         String     @id @default(cuid())
+  name       String     @unique
+  bodyRegion BodyRegion
+
+  exercises ExerciseMuscle[]
+
+  @@map("muscle_groups")
+}
+
+// ─── Exercises ───────────────────────────────────────────────────────────────
+
+model Exercise {
+  id               String       @id @default(cuid())
+  name             String       @unique
+  description      String?
+  stepInstructions Json         @default("[]")
+  difficulty       Difficulty   @default(INTERMEDIATE)
+  exerciseType     ExerciseType @default(COMPOUND)
+  gifUrl           String?
+  videoUrl         String?
+  createdAt        DateTime     @default(now())
+
+  equipment    ExerciseEquipment[]
+  muscles      ExerciseMuscle[]
+  alternatives         ExerciseAlternative[] @relation("ExerciseAlternatives")
+  alternativeOf        ExerciseAlternative[] @relation("AlternativeOf")
+  workoutPlanExercises WorkoutPlanExercise[]
+  sessionExercises     SessionExercise[]
+  personalRecords      PersonalRecord[]
+
+  @@index([difficulty])
+  @@index([exerciseType])
+  @@map("exercises")
+}
+
+model ExerciseEquipment {
+  exerciseId  String
+  equipmentId String
+  exercise    Exercise  @relation(fields: [exerciseId], references: [id], onDelete: Cascade)
+  equipment   Equipment @relation(fields: [equipmentId], references: [id], onDelete: Cascade)
+
+  @@id([exerciseId, equipmentId])
+  @@index([equipmentId])
+  @@map("exercise_equipment")
+}
+
+model ExerciseMuscle {
+  exerciseId    String
+  muscleGroupId String
+  isPrimary     Boolean     @default(true)
+  exercise      Exercise    @relation(fields: [exerciseId], references: [id], onDelete: Cascade)
+  muscleGroup   MuscleGroup @relation(fields: [muscleGroupId], references: [id], onDelete: Cascade)
+
+  @@id([exerciseId, muscleGroupId])
+  @@index([muscleGroupId])
+  @@index([isPrimary])
+  @@map("exercise_muscles")
+}
+
+model ExerciseAlternative {
+  exerciseId            String
+  alternativeExerciseId String
+  exercise              Exercise @relation("ExerciseAlternatives", fields: [exerciseId], references: [id], onDelete: Cascade)
+  alternative           Exercise @relation("AlternativeOf", fields: [alternativeExerciseId], references: [id], onDelete: Cascade)
+
+  @@id([exerciseId, alternativeExerciseId])
+  @@index([exerciseId])
+  @@map("exercise_alternatives")
+}
+
+// ─── Workout Plans ───────────────────────────────────────────────────────────
+
+model WorkoutPlan {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name        String
+  description String?
+  daysPerWeek Int      @default(3)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  days     WorkoutPlanDay[]
+  sessions WorkoutSession[]
+
+  @@index([userId])
+  @@index([userId, isActive])
+  @@map("workout_plans")
+}
+
+model WorkoutPlanDay {
+  id         String      @id @default(cuid())
+  planId     String
+  plan       WorkoutPlan @relation(fields: [planId], references: [id], onDelete: Cascade)
+  dayName    String
+  dayOfWeek  Int?
+  orderIndex Int         @default(0)
+
+  exercises WorkoutPlanExercise[]
+  sessions  WorkoutSession[]
+
+  @@index([planId])
+  @@map("workout_plan_days")
+}
+
+model WorkoutPlanExercise {
+  id              String         @id @default(cuid())
+  dayId           String
+  day             WorkoutPlanDay @relation(fields: [dayId], references: [id], onDelete: Cascade)
+  exerciseId      String
+  exercise        Exercise       @relation(fields: [exerciseId], references: [id])
+  orderIndex      Int            @default(0)
+  defaultSets     Int            @default(3)
+  defaultRepsMin  Int            @default(8)
+  defaultRepsMax  Int            @default(12)
+  defaultWeightKg Decimal?       @db.Decimal(6, 2)
+  restSeconds     Int            @default(90)
+  notes           String?
+
+  @@index([dayId])
+  @@index([exerciseId])
+  @@map("workout_plan_exercises")
+}
+
+// ─── Workout Sessions ────────────────────────────────────────────────────────
+
+model WorkoutSession {
+  id          String          @id @default(cuid())
+  userId      String
+  user        User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  planId      String?
+  plan        WorkoutPlan?    @relation(fields: [planId], references: [id], onDelete: SetNull)
+  dayId       String?
+  day         WorkoutPlanDay? @relation(fields: [dayId], references: [id], onDelete: SetNull)
+  startedAt   DateTime        @default(now())
+  completedAt DateTime?
+  durationMin Int?
+  notes       String?
+
+  exercises SessionExercise[]
+
+  @@index([userId])
+  @@index([userId, startedAt])
+  @@index([planId])
+  @@map("workout_sessions")
+}
+
+model SessionExercise {
+  id              String         @id @default(cuid())
+  sessionId       String
+  session         WorkoutSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  exerciseId      String
+  exercise        Exercise       @relation(fields: [exerciseId], references: [id])
+  orderIndex      Int            @default(0)
+  substituteForId String?
+
+  sets SessionSet[]
+
+  @@index([sessionId])
+  @@index([exerciseId])
+  @@map("session_exercises")
+}
+
+model SessionSet {
+  id                String          @id @default(cuid())
+  sessionExerciseId String
+  sessionExercise   SessionExercise @relation(fields: [sessionExerciseId], references: [id], onDelete: Cascade)
+  setNumber         Int
+  repsPerformed     Int
+  weightKg          Decimal         @db.Decimal(6, 2)
+  restAfterSeconds  Int?
+  completedAt       DateTime        @default(now())
+
+  @@index([sessionExerciseId])
+  @@map("session_sets")
+}
+
+// ─── Personal Records ────────────────────────────────────────────────────────
+
+model PersonalRecord {
+  id           String   @id @default(cuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  exerciseId   String
+  exercise     Exercise @relation(fields: [exerciseId], references: [id])
+  weightKg     Decimal  @db.Decimal(6, 2)
+  reps         Int
+  estimated1rm Decimal  @db.Decimal(6, 2)
+  achievedAt   DateTime @default(now())
+
+  @@index([userId, exerciseId])
+  @@index([userId])
+  @@map("personal_records")
+}
