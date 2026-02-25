@@ -48,14 +48,20 @@ export function schedulePush(
     const timer = setTimeout(async () => {
         timers.delete(userId)
         const sub = subscriptions.get(userId)
-        if (!sub) return
+        if (!sub) {
+            console.warn(`[push] No subscription for user ${userId} — skipping`)
+            return
+        }
         try {
             ensureVapid()
-            await webpush.sendNotification(
+            console.log(`[push] Sending notification to user ${userId}`)
+            const result = await webpush.sendNotification(
                 sub,
                 JSON.stringify({ title, body, tag: 'rest-end' }),
             )
+            console.log(`[push] Sent OK — status ${result.statusCode}`)
         } catch (err: unknown) {
+            console.error(`[push] sendNotification failed for user ${userId}:`, err)
             // 410 Gone = subscription expired / user unsubscribed → remove it
             if (typeof err === 'object' && err !== null && 'statusCode' in err && (err as {statusCode: number}).statusCode === 410) {
                 subscriptions.delete(userId)
@@ -70,4 +76,35 @@ export function schedulePush(
 export function cancelPush(userId: string) {
     const t = timers.get(userId)
     if (t) { clearTimeout(t); timers.delete(userId) }
+}
+
+/** Send a push notification immediately and return result for debugging */
+export async function sendPushNow(
+    userId: string,
+    title: string,
+    body: string,
+): Promise<{ ok: boolean; status?: number; error?: string; hasSubscription: boolean }> {
+    const sub = subscriptions.get(userId)
+    if (!sub) {
+        return { ok: false, error: 'No subscription stored for this user. Click "訂閱推播通知" first.', hasSubscription: false }
+    }
+    try {
+        ensureVapid()
+        const result = await webpush.sendNotification(
+            sub,
+            JSON.stringify({ title, body, tag: 'rest-end' }),
+        )
+        console.log(`[push] sendPushNow OK — status ${result.statusCode}`)
+        return { ok: true, status: result.statusCode, hasSubscription: true }
+    } catch (err: unknown) {
+        const statusCode = (typeof err === 'object' && err !== null && 'statusCode' in err)
+            ? (err as { statusCode: number }).statusCode
+            : undefined
+        const message = (typeof err === 'object' && err !== null && 'message' in err)
+            ? String((err as { message: unknown }).message)
+            : String(err)
+        console.error(`[push] sendPushNow failed for user ${userId}:`, err)
+        if (statusCode === 410) subscriptions.delete(userId)
+        return { ok: false, status: statusCode, error: message, hasSubscription: true }
+    }
 }

@@ -102,14 +102,16 @@ export default function TestPushPage() {
     async function sendTestPush() {
         setBusy(true)
         try {
-            addLog('📤 排程測試推播（10 秒後）...')
+            addLog('📤 立即傳送測試推播...')
             const res = await fetch('/api/push/test')
             const data = await res.json()
             if (data.ok) {
-                addLog(`⏱️ 推播已排程 — 將在 ${new Date(data.fireAt).toLocaleTimeString()} 送出`)
-                addLog('👉 現在切換到其他 App 或鎖定螢幕，10 秒後應收到通知')
+                addLog(`✅ 伺服器送出成功 (HTTP ${data.status}) — 通知應在幾秒內送達`)
+                addLog('👉 若沒收到通知，請確認 iOS 設定 → 通知 → GymBuddy 已開啟')
+            } else if (!data.hasSubscription) {
+                addLog('❌ 伺服器沒有你的訂閱資料 — 請先點「訂閱推播通知」')
             } else {
-                addLog(`❌ 錯誤: ${JSON.stringify(data)}`)
+                addLog(`❌ 伺服器送出失敗 (HTTP ${data.status ?? '?'}): ${data.error}`)
             }
         } catch (err) {
             addLog(`❌ 請求失敗: ${err}`)
@@ -178,7 +180,7 @@ export default function TestPushPage() {
                     disabled={busy}
                     className="bg-green-600 hover:bg-green-700 disabled:opacity-50 rounded-xl py-3 px-4 font-semibold text-center"
                 >
-                    2. 傳送測試推播（10 秒後）
+                    2. 立即傳送測試推播
                 </button>
             </div>
 
