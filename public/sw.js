@@ -51,6 +51,21 @@ self.addEventListener('message', event => {
     }
 })
 
+// Server-sent Web Push (via APNs on iOS) — the reliable path
+self.addEventListener('push', event => {
+    if (!event.data) return
+    let payload
+    try { payload = event.data.json() } catch { return }
+    event.waitUntil(
+        self.registration.showNotification(payload.title ?? '⏱️ 休息結束！', {
+            body: payload.body ?? '準備好下一組了嗎？點擊繼續訓練',
+            tag: payload.tag ?? 'rest-end',
+            requireInteraction: true,
+            icon: '/icon.png',
+        })
+    )
+})
+
 // When user taps the notification, focus or open the app
 self.addEventListener('notificationclick', event => {
     event.notification.close()

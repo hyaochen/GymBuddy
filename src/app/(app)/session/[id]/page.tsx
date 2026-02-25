@@ -335,13 +335,37 @@ export default function ActiveSessionPage({ params }: { params: Promise<{ id: st
         beepNodesRef.current = nodes
     }, [getAudioCtx, cancelBeep])
 
-    // ── Service worker ────────────────────────────────────────────────────────
+    // ── Service worker + Web Push subscription ────────────────────────────────
     useEffect(() => {
-        if (typeof navigator !== 'undefined' && 'serviceWorker' in navigator) {
-            navigator.serviceWorker.register('/sw.js')
-                .then(reg => { swRegRef.current = reg })
-                .catch(() => {})
-        }
+        if (typeof navigator === 'undefined' || !('serviceWorker' in navigator)) return
+
+        navigator.serviceWorker.register('/sw.js').then(async reg => {
+            swRegRef.current = reg
+
+            // Request notification permission if not yet granted
+            if (Notification.permission === 'default') {
+                await Notification.requestPermission().catch(() => {})
+            }
+            if (Notification.permission !== 'granted') return
+
+            const vapidKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY
+            if (!vapidKey) return
+
+            try {
+                // Subscribe to Web Push (creates or retrieves existing subscription)
+                const existing = await reg.pushManager.getSubscription()
+                const sub = existing ?? await reg.pushManager.subscribe({
+                    userVisibleOnly: true,
+                    applicationServerKey: vapidKey,
+                })
+                // Send subscription to server so it can send pushes on our behalf
+                await fetch('/api/push/subscribe', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ subscription: sub.toJSON() }),
+                })
+            } catch { /* push not supported on this browser/context */ }
+        }).catch(() => {})
     }, [])
 
     // ── visibilitychange: sync timer when user returns from background ────────
@@ -442,7 +466,7 @@ export default function ActiveSessionPage({ params }: { params: Promise<{ id: st
             const data = await res.json()
             // Pre-schedule 60 s of repeating alarm (Web Audio, fires even in background)
             scheduleAlarm(restSeconds)
-            // Send absolute endTime to SW (so setInterval polling survives SW restarts)
+            // Send absolute endTime to SW (local fallback for when app is briefly in background)
             if (swRegRef.current?.active) {
                 swRegRef.current.active.postMessage({
                     type: 'SCHEDULE_NOTIFICATION',
@@ -451,6 +475,12 @@ export default function ActiveSessionPage({ params }: { params: Promise<{ id: st
                     body: '準備好下一組了嗎？點擊繼續訓練',
                 })
             }
+            // Server-side Web Push via APNs — reliable even after iOS kills the SW
+            fetch('/api/push/schedule', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ endTime: restEndTime }),
+            }).catch(() => {})
             dispatch({
                 type: 'SET_DONE',
                 set: { id: data.set?.id, setNumber: state.setNum, repsPerformed: state.reps, weightKg: state.weight },
@@ -614,7 +644,7 @@ export default function ActiveSessionPage({ params }: { params: Promise<{ id: st
 
                 <div className="flex justify-center">
                     <button
-                        onClick={() => { cancelBeep(); dispatch({ type: 'SKIP_REST' }) }}
+                        onClick={() => { cancelBeep(); fetch('/api/push/schedule', { method: 'DELETE' }).catch(() => {}); dispatch({ type: 'SKIP_REST' }) }}
                         className="flex items-center gap-2 px-6 py-3 rounded-xl bg-secondary text-secondary-foreground font-medium text-sm"
                     >
                         <SkipForward className="h-4 w-4" />
@@ -652,7 +682,7 @@ export default function ActiveSessionPage({ params }: { params: Promise<{ id: st
                 {state.alarmRinging && (
                     <AlarmOverlay
                         label={`準備繼續 ${isLastEx ? '完成訓練' : '下一個動作'}`}
-                        onDismiss={() => { cancelBeep(); dispatch({ type: 'ALARM_DISMISS' }) }}
+                        onDismiss={() => { cancelBeep(); fetch('/api/push/schedule', { method: 'DELETE' }).catch(() => {}); dispatch({ type: 'ALARM_DISMISS' }) }}
                     />
                 )}
 
