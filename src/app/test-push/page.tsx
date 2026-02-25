@@ -74,16 +74,17 @@ export default function TestPushPage() {
             const vapidKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY
             if (!vapidKey) { addLog('❌ NEXT_PUBLIC_VAPID_PUBLIC_KEY 未設定'); return }
 
-            let sub = await reg.pushManager.getSubscription()
-            if (sub) {
-                addLog('ℹ️ 已有訂閱 — 重新使用')
-            } else {
-                sub = await reg.pushManager.subscribe({
-                    userVisibleOnly: true,
-                    applicationServerKey: urlBase64ToUint8Array(vapidKey),
-                })
-                addLog('✅ 推播訂閱建立成功')
+            // Always unsubscribe and re-subscribe to ensure fresh subscription with current VAPID key
+            const existing = await reg.pushManager.getSubscription()
+            if (existing) {
+                await existing.unsubscribe()
+                addLog('🔄 舊訂閱已清除，重新訂閱...')
             }
+            const sub = await reg.pushManager.subscribe({
+                userVisibleOnly: true,
+                applicationServerKey: urlBase64ToUint8Array(vapidKey),
+            })
+            addLog('✅ 推播訂閱建立成功')
 
             const res = await fetch('/api/push/subscribe', {
                 method: 'POST',
