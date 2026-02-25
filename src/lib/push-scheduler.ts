@@ -5,9 +5,26 @@
  * When a rest period starts, the session page POSTs to /api/push/schedule.
  * This module fires the push at exactly the right time via Apple APNs,
  * completely bypassing iOS Safari's background JS limitations.
+ *
+ * FIX: web-push 3.x defaults to 12-hour JWT expiry, but Apple APNs requires
+ * ≤ 1 hour ("BadJwtToken" 403 otherwise). We monkey-patch getVapidHeaders
+ * to always use a 1-hour expiry.
  */
 
 import webpush from 'web-push'
+
+// Patch web-push's internal vapid-helper to use 1-hour JWT expiry.
+// Apple APNs rejects tokens with exp > 3600 s from now with 403 BadJwtToken.
+// web-push 3.x hardcodes DEFAULT_EXPIRATION_SECONDS = 12 * 60 * 60 and
+// sendNotification() never passes a custom expiration to getVapidHeaders().
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const vapidHelper = require('web-push/src/vapid-helper')
+const _origGetVapidHeaders = vapidHelper.getVapidHeaders as (...args: unknown[]) => unknown
+vapidHelper.getVapidHeaders = function(...args: unknown[]) {
+    // Force the expiration (6th arg) to 1 hour from now, overriding the default 12h
+    args[5] = Math.floor(Date.now() / 1000) + 3600
+    return _origGetVapidHeaders(...args)
+}
 
 // In-memory stores (survive as long as the Docker container is running)
 const subscriptions = new Map<string, webpush.PushSubscription>() // userId → subscription
@@ -60,10 +77,11 @@ export function schedulePush(
                 JSON.stringify({ title, body, tag: 'rest-end' }),
             )
             console.log(`[push] Sent OK — status ${result.statusCode}`)
+            if (result.statusCode === 410) subscriptions.delete(userId)
         } catch (err: unknown) {
-            console.error(`[push] sendNotification failed for user ${userId}:`, err)
-            // 410 Gone = subscription expired / user unsubscribed → remove it
-            if (typeof err === 'object' && err !== null && 'statusCode' in err && (err as {statusCode: number}).statusCode === 410) {
+            console.error(`[push] send failed for user ${userId}:`, err)
+            if (typeof err === 'object' && err !== null && 'statusCode' in err &&
+                (err as { statusCode: number }).statusCode === 410) {
                 subscriptions.delete(userId)
             }
         }
