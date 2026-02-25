@@ -8,11 +8,11 @@
  *
  * VAPID FIX: web-push 3.x defaults to 12-hour JWT expiry. Apple APNs requires
  * ≤ 1 hour and returns 403 {"reason":"BadJwtToken"} otherwise.
- * We use generateRequestDetails() for payload encryption, then replace the
- * Authorization header with our own 1-hour JWT before sending.
+ * We use createRequire to load web-push's vapid-helper.js at runtime and call
+ * getVapidHeaders() directly with a 1-hour expiration, bypassing the default.
  */
 
-import crypto from 'crypto'
+import { createRequire } from 'module'
 import https from 'https'
 import { URL } from 'url'
 import webpush from 'web-push'
@@ -36,53 +36,35 @@ function ensureVapid() {
     vapidConfigured = true
 }
 
-// ─── Custom 1-hour VAPID JWT (Apple requires exp ≤ now + 3600) ──────────────
+// ─── 1-hour VAPID JWT via web-push's own vapid-helper ────────────────────────
 
-function urlB64ToBuffer(s: string): Buffer {
-    return Buffer.from(s.replace(/-/g, '+').replace(/_/g, '/'), 'base64')
+interface VapidHelperModule {
+    getVapidHeaders(
+        audience: string, subject: string, publicKey: string, privateKey: string,
+        contentEncoding: string, expiration?: number,
+    ): { Authorization: string }
 }
 
-function derSigToRawRS(derSig: Buffer): Buffer {
-    // Parse DER ECDSA signature SEQUENCE { INTEGER r, INTEGER s }
-    let pos = 1
-    if (derSig[pos] & 0x80) pos += (derSig[pos] & 0x7f) + 1
-    else pos += 1
-    pos += 1  // skip 0x02 (INTEGER tag)
-    const rLen = derSig[pos++]
-    const r = derSig.slice(pos, pos + rLen); pos += rLen
-    pos += 1  // skip 0x02
-    const sLen = derSig[pos++]
-    const s = derSig.slice(pos, pos + sLen)
-    // Trim leading zeros, then left-pad to 32 bytes
-    const rFinal = Buffer.concat([Buffer.alloc(Math.max(0, 32 - r.length)), r]).slice(-32)
-    const sFinal = Buffer.concat([Buffer.alloc(Math.max(0, 32 - s.length)), s]).slice(-32)
-    return Buffer.concat([rFinal, sFinal])
+// Load web-push's vapid-helper.js at runtime (not bundled) so we can call
+// getVapidHeaders() with our own 1-hour expiration parameter.
+let _vapidHelper: VapidHelperModule | null = null
+function getVapidHelper(): VapidHelperModule {
+    if (_vapidHelper) return _vapidHelper
+    // createRequire lets us use Node.js's native module resolution regardless
+    // of how Next.js has bundled our code
+    const nativeRequire = createRequire(process.cwd() + '/dummy.js')
+    _vapidHelper = nativeRequire('web-push/src/vapid-helper') as VapidHelperModule
+    return _vapidHelper
 }
 
-function createVapidJwt(audience: string, subject: string, publicKey: string, privateKey: string): string {
-    const header  = Buffer.from(JSON.stringify({ typ: 'JWT', alg: 'ES256' })).toString('base64url')
-    const payload = Buffer.from(JSON.stringify({
-        aud: audience,
-        exp: Math.floor(Date.now() / 1000) + 3600,  // 1 hour
-        sub: subject,
-    })).toString('base64url')
-    const message = `${header}.${payload}`
-
-    const privBuf = urlB64ToBuffer(privateKey)
-    const pubBuf  = urlB64ToBuffer(publicKey)
-
-    // Build SEC1-DER private key (same byte structure as web-push uses internally)
-    const derKey = Buffer.concat([
-        Buffer.from('30770201010420', 'hex'),
-        privBuf,
-        Buffer.from('a00a06082a8648ce3d030107a144034200', 'hex'),
-        pubBuf,
-    ])
-    const signer = crypto.createSign('SHA256')
-    signer.update(message)
-    const derSig = signer.sign({ key: derKey, format: 'der', type: 'sec1' })
-    const sig = derSigToRawRS(derSig).toString('base64url')
-    return `${message}.${sig}`
+function buildOneHourAuthHeader(
+    audience: string, subject: string, publicKey: string, privateKey: string,
+): string {
+    const expiration = Math.floor(Date.now() / 1000) + 3600  // 1 hour — Apple requires ≤ 3600
+    const { Authorization } = getVapidHelper().getVapidHeaders(
+        audience, subject, publicKey, privateKey, 'aes128gcm', expiration,
+    )
+    return Authorization
 }
 
 // ─── Core send function ───────────────────────────────────────────────────────
@@ -102,11 +84,15 @@ async function sendNotificationWithOneHourJwt(
         vapidDetails: { subject, publicKey: pub, privateKey: priv },
     }) as { endpoint: string; headers: Record<string, string>; body: Buffer | null }
 
-    // Replace web-push's 12-hour JWT with our own 1-hour JWT
+    // Replace web-push's 12-hour JWT with a 1-hour JWT using vapid-helper directly
     const endpointUrl = new URL(details.endpoint)
     const audience    = `${endpointUrl.protocol}//${endpointUrl.host}`
-    const jwt         = createVapidJwt(audience, subject, pub, priv)
-    details.headers['Authorization'] = `vapid t=${jwt},k=${pub}`
+    const authorization = buildOneHourAuthHeader(audience, subject, pub, priv)
+
+    // Remove any existing Authorization header (both capitalizations)
+    delete details.headers['authorization']
+    details.headers['Authorization'] = authorization
+    console.log(`[push] Sending to ${details.endpoint} — auth: ${authorization.substring(0, 60)}...`)
 
     return new Promise((resolve, reject) => {
         const req = https.request({
@@ -129,6 +115,10 @@ async function sendNotificationWithOneHourJwt(
 
 export function savePushSubscription(userId: string, sub: webpush.PushSubscription) {
     subscriptions.set(userId, sub)
+}
+
+export function getSubscriptionForUser(userId: string): webpush.PushSubscription | undefined {
+    return subscriptions.get(userId)
 }
 
 export function schedulePush(userId: string, endTime: number, title: string, body: string) {

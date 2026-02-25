@@ -420,7 +420,13 @@ export default function ActiveSessionPage({ params }: { params: Promise<{ id: st
             if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
                 navigator.vibrate([300, 100, 300, 100, 300, 100, 300])
             }
-            if (swRegRef.current && typeof Notification !== 'undefined' && Notification.permission === 'granted') {
+            // Only show SW notification if app is hidden (backgrounded) —
+            // if visible, the in-app alarm overlay is sufficient
+            if (
+                swRegRef.current && typeof Notification !== 'undefined' &&
+                Notification.permission === 'granted' &&
+                document.visibilityState !== 'visible'
+            ) {
                 swRegRef.current.showNotification('⏱️ 休息結束！', {
                     body: '準備好下一組了嗎？點擊繼續訓練',
                     tag: 'rest-end',

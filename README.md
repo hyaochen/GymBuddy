@@ -28,6 +28,7 @@
 | 📚 **動作庫** | 79+ 個動作，GIF 示範、步驟說明、按肌群/器材/難度篩選 |
 | 📋 **訓練計劃** | 自訂多日分化計劃（PPL 等），每日動作/組數/次數/重量設定 |
 | ▶️ **主動訓練** | 組間休息倒數計時、±2.5kg 快速調重、器材被佔用時切換替代動作 |
+| 📲 **背景推播通知** | 手機鎖屏 / 切換 App 時透過 Apple APNs 推播休息結束提醒（iOS PWA 支援）|
 | 📊 **訓練記錄** | 歷史紀錄查閱、訓練量趨勢圖表、單組編輯/刪除 |
 | 🎯 **漸進超負荷** | 根據歷史數據自動推薦下次目標重量 |
 
@@ -108,9 +109,11 @@ flowchart TD
 
     H --> I{完成一組}
     I --> J[記錄重量 & 次數]
-    J --> K[休息計時器倒數]
+    J --> K[休息計時器倒數\n同時排程伺服器端推播]
     K --> L{計時結束}
-    L -->|繼續下一組| H
+    L -->|App 前景：in-app alarm| H
+    L -->|App 背景/鎖屏：APNs 推播通知| N2[點擊通知回到 App]
+    N2 --> H
     L -->|器材被佔用| M[切換替代動作]
     M --> H
 
@@ -159,9 +162,9 @@ flowchart TD
 
 ```mermaid
 graph TB
-    subgraph Client["瀏覽器 / 行動裝置"]
+    subgraph Client["瀏覽器 / 行動裝置 (iOS PWA)"]
         UI[Next.js App Router\nReact 18 + TypeScript]
-        SW[Service Worker\n背景休息提醒通知]
+        SW[Service Worker\npush event / 本地計時備援]
     end
 
     subgraph Server["Docker 容器 — workout-app"]
@@ -169,6 +172,7 @@ graph TB
         API[REST API Routes\n/api/exercises, /api/plans\n/api/sessions, /api/history]
         AUTH[HMAC Cookie Session\nsignSession / verifySession]
         PO[漸進超負荷引擎\nprogressive-overload.ts]
+        PUSH[Web Push Scheduler\npush-scheduler.ts\nVAPID 1-hour JWT]
     end
 
     subgraph DB["Docker 容器 — workout-db"]
@@ -178,6 +182,7 @@ graph TB
 
     subgraph Infra["基礎設施"]
         CF[Cloudflare Tunnel\ngym.example.com]
+        APNS[Apple APNs\nweb.push.apple.com]
     end
 
     UI -->|HTTP| SA
@@ -189,7 +194,10 @@ graph TB
     PRISMA --> PG
     API --> PO
     CF -->|反向代理| UI
-    SW -.->|Notification API| UI
+    API -->|POST /api/push/schedule| PUSH
+    PUSH -->|VAPID JWT + AES-GCM| APNS
+    APNS -->|推播通知| SW
+    SW -->|showNotification| UI
 ```
 
 ### 技術選型
@@ -205,7 +213,8 @@ graph TB
 | 認證 | HMAC 簽名 Cookie Session + argon2id 密碼雜湊 |
 | 部署 | Docker Compose |
 | 外網穿透 | Cloudflare Tunnel |
-| 背景通知 | Web Audio API + Service Worker |
+| 前景提醒 | Web Audio API 預排音效 + in-app Alarm Overlay |
+| 背景推播 | Web Push (VAPID) → Apple APNs → Service Worker |
 
 ---
 
@@ -301,7 +310,16 @@ cp .env.example .env
 DATABASE_URL="postgresql://workout:password@localhost:5435/workout"
 SESSION_SECRET="your-64-char-random-string"
 COOKIE_SECURE="false"
+
+# Web Push (VAPID) — 用於 iOS 背景推播通知
+# 使用 npx web-push generate-vapid-keys 產生
+VAPID_PUBLIC_KEY="your-vapid-public-key"
+VAPID_PRIVATE_KEY="your-vapid-private-key"
+VAPID_EMAIL="mailto:admin@yourdomain.com"
+NEXT_PUBLIC_VAPID_PUBLIC_KEY="your-vapid-public-key"
 ```
+
+> **注意**：`NEXT_PUBLIC_VAPID_PUBLIC_KEY` 必須在 `docker compose build` 前設定，因為 Next.js 在 build 時會將其嵌入客戶端程式碼。
 
 ### 初始化資料庫
 

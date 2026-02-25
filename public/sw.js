@@ -56,12 +56,23 @@ self.addEventListener('push', event => {
     if (!event.data) return
     let payload
     try { payload = event.data.json() } catch { return }
+
+    // APNs push is authoritative — cancel any pending local SW timer to prevent double notification
+    clearScheduled()
+
     event.waitUntil(
-        self.registration.showNotification(payload.title ?? '⏱️ 休息結束！', {
-            body: payload.body ?? '準備好下一組了嗎？點擊繼續訓練',
-            tag: payload.tag ?? 'rest-end',
-            requireInteraction: true,
-            icon: '/icon.png',
+        self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(clients => {
+            const hasVisibleClient = clients.some(c => c.visibilityState === 'visible')
+            if (hasVisibleClient) {
+                // App is open and visible — in-app alarm handles it, skip notification
+                return
+            }
+            return self.registration.showNotification(payload.title ?? '⏱️ 休息結束！', {
+                body: payload.body ?? '準備好下一組了嗎？點擊繼續訓練',
+                tag: payload.tag ?? 'rest-end',
+                requireInteraction: true,
+                icon: '/icon.png',
+            })
         })
     )
 })
@@ -71,8 +82,12 @@ self.addEventListener('notificationclick', event => {
     event.notification.close()
     event.waitUntil(
         self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(clients => {
+            // Find a session page if one is already open
+            const sessionClient = clients.find(c => c.url.includes('/session/'))
+            if (sessionClient) return sessionClient.focus()
             if (clients.length > 0) return clients[0].focus()
-            return self.clients.openWindow('/')
+            // App was killed — open the session list so user can resume
+            return self.clients.openWindow('/session')
         })
     )
 })
