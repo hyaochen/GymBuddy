@@ -9,15 +9,32 @@ function urlBase64ToUint8Array(base64String: string) {
     return Uint8Array.from([...rawData].map(c => c.charCodeAt(0)))
 }
 
+/** Returns true when running as an installed PWA on iOS (standalone mode) */
+function isIosPwa(): boolean {
+    if (typeof window === 'undefined') return false
+    return ('standalone' in window.navigator) && (window.navigator as { standalone?: boolean }).standalone === true
+}
+
+/** Returns true when on iOS Safari (but not necessarily PWA) */
+function isIos(): boolean {
+    if (typeof window === 'undefined') return false
+    return /iphone|ipad|ipod/i.test(window.navigator.userAgent)
+}
+
 export default function TestPushPage() {
     const [log, setLog] = useState<string[]>([])
     const [busy, setBusy] = useState(false)
+    const [iosBrowserWarning, setIosBrowserWarning] = useState(false)
     const swRef = useRef<ServiceWorkerRegistration | null>(null)
 
     const addLog = (msg: string) => setLog(prev => [`${new Date().toLocaleTimeString()} — ${msg}`, ...prev])
 
-    // Register SW and subscribe on mount
     useEffect(() => {
+        // Warn if iOS Safari but NOT in standalone PWA mode
+        if (isIos() && !isIosPwa()) {
+            setIosBrowserWarning(true)
+        }
+
         if (!('serviceWorker' in navigator)) {
             addLog('❌ Service Worker not supported')
             return
@@ -29,41 +46,54 @@ export default function TestPushPage() {
     }, [])
 
     async function subscribe() {
+        // iOS requires PWA mode for Notification API
+        if (typeof Notification === 'undefined') {
+            addLog('❌ Notification API 不存在')
+            addLog('⚠️ iOS 需要從主畫面開啟 PWA 才支援推播通知')
+            addLog('👉 請先點 Safari 分享按鈕 → 「加入主畫面」，再從主畫面開啟此頁面')
+            return
+        }
+
         setBusy(true)
         try {
-            // Request notification permission
             const perm = await Notification.requestPermission()
-            addLog(`🔔 Notification permission: ${perm}`)
-            if (perm !== 'granted') return
+            addLog(`🔔 通知權限: ${perm}`)
+            if (perm !== 'granted') {
+                addLog('❌ 未授予通知權限，請到設定 → 通知 → GymBuddy 開啟')
+                return
+            }
 
             const reg = swRef.current ?? await navigator.serviceWorker.ready
             swRef.current = reg
 
-            const vapidKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY
-            if (!vapidKey) { addLog('❌ NEXT_PUBLIC_VAPID_PUBLIC_KEY not set'); return }
+            if (!reg.pushManager) {
+                addLog('❌ pushManager 不存在（需要 HTTPS + PWA 主畫面模式）')
+                return
+            }
 
-            // Get or create push subscription
+            const vapidKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY
+            if (!vapidKey) { addLog('❌ NEXT_PUBLIC_VAPID_PUBLIC_KEY 未設定'); return }
+
             let sub = await reg.pushManager.getSubscription()
             if (sub) {
-                addLog('ℹ️ Already subscribed — reusing existing subscription')
+                addLog('ℹ️ 已有訂閱 — 重新使用')
             } else {
                 sub = await reg.pushManager.subscribe({
                     userVisibleOnly: true,
                     applicationServerKey: urlBase64ToUint8Array(vapidKey),
                 })
-                addLog('✅ Push subscription created')
+                addLog('✅ 推播訂閱建立成功')
             }
 
-            // Send subscription to server
             const res = await fetch('/api/push/subscribe', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ subscription: sub.toJSON() }),
             })
             const data = await res.json()
-            addLog(data.ok ? '✅ Subscription saved on server' : `❌ Server error: ${JSON.stringify(data)}`)
+            addLog(data.ok ? '✅ 訂閱已儲存至伺服器，可以測試推播了' : `❌ 伺服器錯誤: ${JSON.stringify(data)}`)
         } catch (err) {
-            addLog(`❌ Subscribe error: ${err}`)
+            addLog(`❌ 訂閱失敗: ${err}`)
         } finally {
             setBusy(false)
         }
@@ -72,17 +102,17 @@ export default function TestPushPage() {
     async function sendTestPush() {
         setBusy(true)
         try {
-            addLog('📤 Scheduling test push (10 s)...')
+            addLog('📤 排程測試推播（10 秒後）...')
             const res = await fetch('/api/push/test')
             const data = await res.json()
             if (data.ok) {
-                addLog(`⏱️ Push scheduled — will fire at ${new Date(data.fireAt).toLocaleTimeString()}`)
-                addLog('👉 Now lock your screen or switch to another app. Notification should arrive in 10 s.')
+                addLog(`⏱️ 推播已排程 — 將在 ${new Date(data.fireAt).toLocaleTimeString()} 送出`)
+                addLog('👉 現在切換到其他 App 或鎖定螢幕，10 秒後應收到通知')
             } else {
-                addLog(`❌ Error: ${JSON.stringify(data)}`)
+                addLog(`❌ 錯誤: ${JSON.stringify(data)}`)
             }
         } catch (err) {
-            addLog(`❌ Fetch error: ${err}`)
+            addLog(`❌ 請求失敗: ${err}`)
         } finally {
             setBusy(false)
         }
@@ -91,12 +121,16 @@ export default function TestPushPage() {
     async function checkSubscription() {
         try {
             if (!('serviceWorker' in navigator)) { addLog('❌ SW not supported'); return }
-            const reg = await navigator.serviceWorker.ready
+            const reg = swRef.current ?? await navigator.serviceWorker.ready
+            if (!reg.pushManager) {
+                addLog('❌ pushManager 不存在（需要 HTTPS + PWA 主畫面模式）')
+                return
+            }
             const sub = await reg.pushManager.getSubscription()
             if (sub) {
-                addLog(`✅ Active subscription — endpoint: ...${sub.endpoint.slice(-30)}`)
+                addLog(`✅ 有效訂閱 — endpoint: ...${sub.endpoint.slice(-30)}`)
             } else {
-                addLog('⚠️ No active push subscription (click Subscribe first)')
+                addLog('⚠️ 沒有推播訂閱（請先點「訂閱推播通知」）')
             }
         } catch (err) {
             addLog(`❌ ${err}`)
@@ -106,10 +140,23 @@ export default function TestPushPage() {
     return (
         <div className="min-h-screen bg-gray-950 text-white p-6 max-w-lg mx-auto">
             <h1 className="text-2xl font-bold mb-2">Web Push 測試頁面</h1>
-            <p className="text-gray-400 text-sm mb-6">
-                用此頁面測試伺服器端 Web Push（APNs）是否運作正常。<br />
+            <p className="text-gray-400 text-sm mb-4">
                 測試流程：訂閱 → 傳送測試推播 → 切換到其他 App → 等 10 秒 → 確認通知是否送達
             </p>
+
+            {/* iOS Safari warning banner */}
+            {iosBrowserWarning && (
+                <div className="bg-amber-900/60 border border-amber-500 rounded-xl p-4 mb-4 text-sm">
+                    <p className="font-bold text-amber-300 mb-1">⚠️ 需要從主畫面開啟</p>
+                    <p className="text-amber-200">
+                        iOS 只有在「加入主畫面」的 PWA 模式下才支援推播通知。<br />
+                        目前您在 Safari 瀏覽器中，推播功能無法使用。
+                    </p>
+                    <p className="text-amber-300 font-semibold mt-2">
+                        請點底部分享按鈕（□↑）→「加入主畫面」→ 從主畫面開啟 GymBuddy
+                    </p>
+                </div>
+            )}
 
             <div className="flex flex-col gap-3 mb-6">
                 <button
