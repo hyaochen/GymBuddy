@@ -9,6 +9,18 @@ export const metadata: Metadata = {
     title: "GymBuddy - 健身追蹤器",
     description: "個人健身訓練追蹤器，動作庫、計劃管理、組間計時與訓練記錄一站搞定",
     manifest: "/manifest.json",
+    icons: {
+        icon: "/favicon.png",
+        apple: "/apple-touch-icon.png",
+    },
+    appleWebApp: {
+        capable: true,
+        statusBarStyle: "black-translucent",
+        title: "GymBuddy",
+    },
+    other: {
+        "mobile-web-app-capable": "yes",
+    },
 };
 
 export const viewport = {

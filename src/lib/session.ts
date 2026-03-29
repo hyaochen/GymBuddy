@@ -6,6 +6,7 @@ export type SessionPayload = {
 };
 
 const SECRET = process.env.SESSION_SECRET || "dev-secret-change-in-production";
+const SESSION_MAX_AGE_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
 const encoder = new TextEncoder();
 
 function toBase64Url(buf: ArrayBuffer | Uint8Array): string {
@@ -56,6 +57,10 @@ export async function verifySession(token?: string | null): Promise<SessionPaylo
         const payloadBuf = fromBase64Url(payloadB64);
         const payload = JSON.parse(new TextDecoder().decode(payloadBuf)) as SessionPayload;
         if (!payload.userId) return null;
+        // Check token expiration
+        if (payload.issuedAt && Date.now() - payload.issuedAt > SESSION_MAX_AGE_MS) {
+            return null;
+        }
         return payload;
     } catch {
         return null;
