@@ -95,7 +95,7 @@ function SetRow({
                     type="number"
                     value={weight}
                     onChange={e => setWeight(Number(e.target.value))}
-                    className="w-16 h-7 rounded-lg bg-secondary text-foreground text-sm text-center border border-border focus:outline-none focus:border-primary"
+                    className="w-20 h-10 rounded-lg bg-secondary text-foreground text-base text-center border border-border focus:outline-none focus:border-primary"
                     step="0.5"
                 />
                 <span className="text-xs text-muted-foreground">kg ×</span>
@@ -103,32 +103,34 @@ function SetRow({
                     type="number"
                     value={reps}
                     onChange={e => setReps(Number(e.target.value))}
-                    className="w-12 h-7 rounded-lg bg-secondary text-foreground text-sm text-center border border-border focus:outline-none focus:border-primary"
+                    className="w-16 h-10 rounded-lg bg-secondary text-foreground text-base text-center border border-border focus:outline-none focus:border-primary"
                 />
                 <span className="text-xs text-muted-foreground flex-1">下</span>
-                <button onClick={save} disabled={saving} className="text-green-500 p-1">
-                    <Check className="h-4 w-4" />
+                <button onClick={save} disabled={saving} className="text-green-500 min-w-[44px] min-h-[44px] flex items-center justify-center" aria-label="儲存">
+                    <Check className="h-5 w-5" />
                 </button>
-                <button onClick={cancel} className="text-muted-foreground p-1">
-                    <X className="h-4 w-4" />
+                <button onClick={cancel} className="text-muted-foreground min-w-[44px] min-h-[44px] flex items-center justify-center" aria-label="取消">
+                    <X className="h-5 w-5" />
                 </button>
             </div>
         )
     }
 
     return (
-        <div className="flex items-center gap-2 py-1 group">
+        <div className="flex items-center gap-2 py-1.5">
             <span className="text-xs text-muted-foreground w-10 flex-shrink-0">第 {set.setNumber} 組</span>
             <span className="text-sm font-medium flex-1">{set.repsPerformed} 下 × {Number(set.weightKg)} kg</span>
             <button
                 onClick={() => setEditing(true)}
-                className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-foreground p-1 transition-opacity"
+                className="text-muted-foreground hover:text-foreground min-w-[36px] min-h-[36px] flex items-center justify-center rounded-lg hover:bg-accent transition-colors"
+                aria-label="編輯此組"
             >
                 <Pencil className="h-3.5 w-3.5" />
             </button>
             <button
-                onClick={() => onDelete(set.id)}
-                className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive p-1 transition-opacity"
+                onClick={() => { if (confirm('確定刪除此組記錄？')) onDelete(set.id) }}
+                className="text-muted-foreground hover:text-destructive min-w-[36px] min-h-[36px] flex items-center justify-center rounded-lg hover:bg-destructive/10 transition-colors"
+                aria-label="刪除此組"
             >
                 <Trash2 className="h-3.5 w-3.5" />
             </button>
@@ -235,7 +237,7 @@ function SessionCard({
                 <div className="border-t border-border px-4 pb-4 pt-3 space-y-4">
                     {localExercises.filter(ex => ex.sets.length > 0).map(ex => (
                         <div key={ex.id}>
-                            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1">
+                            <p className="text-sm font-semibold text-foreground/70 tracking-wide mb-1.5">
                                 {exName(ex.exercise.name)}
                             </p>
                             {ex.sets.map(set => (
@@ -349,8 +351,8 @@ export default function HistoryPage() {
                 </div>
 
                 {loading ? (
-                    <div className="h-40 flex items-center justify-center">
-                        <p className="text-muted-foreground text-sm animate-pulse">載入中...</p>
+                    <div className="h-44 flex flex-col items-center justify-center gap-2">
+                        <div className="w-full h-full rounded-lg bg-secondary/50 animate-pulse" />
                     </div>
                 ) : chartData.length === 0 ? (
                     <div className="h-40 flex items-center justify-center">

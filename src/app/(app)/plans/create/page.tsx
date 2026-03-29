@@ -1,9 +1,9 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
-import { ChevronLeft, Plus, Trash2, Search } from "lucide-react"
+import { ChevronLeft, Plus, Trash2, Search, Loader2 } from "lucide-react"
 
 type ExerciseItem = {
     id: string
@@ -39,6 +39,18 @@ export default function CreatePlanPage() {
     const [searchResults, setSearchResults] = useState<ExerciseItem[]>([])
     const [activeDayId, setActiveDayId] = useState<string | null>(null)
     const [searching, setSearching] = useState(false)
+
+    // Close search dropdown on Escape
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') {
+                setActiveDayId(null)
+                setSearchResults([])
+            }
+        }
+        document.addEventListener('keydown', handleKeyDown)
+        return () => document.removeEventListener('keydown', handleKeyDown)
+    }, [])
 
     const addDay = () => {
         const names = ['Push Day', 'Pull Day', 'Leg Day', 'Upper Body', 'Lower Body', 'Full Body', 'Rest']
@@ -143,7 +155,7 @@ export default function CreatePlanPage() {
     return (
         <div className="space-y-5">
             <div className="flex items-center gap-3">
-                <Link href="/plans" className="text-muted-foreground">
+                <Link href="/plans" className="text-muted-foreground hover:text-foreground transition-colors p-1" aria-label="返回計畫列表">
                     <ChevronLeft className="h-5 w-5" />
                 </Link>
                 <h1 className="text-lg font-bold">建立訓練計畫</h1>
@@ -152,21 +164,23 @@ export default function CreatePlanPage() {
             {/* Plan Info */}
             <div className="bg-card rounded-xl border border-border p-4 space-y-3">
                 <div>
-                    <label className="block text-sm font-medium mb-1.5">計畫名稱 *</label>
+                    <label htmlFor="plan-name" className="block text-sm font-medium mb-1.5">計畫名稱 *</label>
                     <input
+                        id="plan-name"
                         value={planName}
                         onChange={e => setPlanName(e.target.value)}
                         placeholder="例如：PPL 推拉腿"
-                        className="w-full h-11 px-3 rounded-lg bg-background border border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                        className="w-full h-11 px-3 rounded-lg bg-background border border-border text-base text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                     />
                 </div>
                 <div>
-                    <label className="block text-sm font-medium mb-1.5">描述（選填）</label>
+                    <label htmlFor="plan-desc" className="block text-sm font-medium mb-1.5">描述（選填）</label>
                     <input
+                        id="plan-desc"
                         value={description}
                         onChange={e => setDescription(e.target.value)}
                         placeholder="計畫說明..."
-                        className="w-full h-11 px-3 rounded-lg bg-background border border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                        className="w-full h-11 px-3 rounded-lg bg-background border border-border text-base text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                     />
                 </div>
             </div>
@@ -175,7 +189,7 @@ export default function CreatePlanPage() {
             <div className="space-y-4">
                 <div className="flex items-center justify-between">
                     <h2 className="font-semibold">訓練日</h2>
-                    <button onClick={addDay} className="flex items-center gap-1 text-sm text-primary">
+                    <button onClick={addDay} className="flex items-center gap-1 text-sm text-primary min-h-[44px] px-2">
                         <Plus className="h-4 w-4" />
                         新增天數
                     </button>
@@ -187,9 +201,9 @@ export default function CreatePlanPage() {
                             <input
                                 value={day.dayName}
                                 onChange={e => updateDayName(day.id, e.target.value)}
-                                className="flex-1 h-9 px-3 rounded-lg bg-background border border-border text-sm font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                                className="flex-1 h-10 px-3 rounded-lg bg-background border border-border text-sm font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                             />
-                            <button onClick={() => removeDay(day.id)} className="text-destructive/60 hover:text-destructive">
+                            <button onClick={() => removeDay(day.id)} className="text-destructive/60 hover:text-destructive min-w-[44px] min-h-[44px] flex items-center justify-center" aria-label="移除此訓練日">
                                 <Trash2 className="h-4 w-4" />
                             </button>
                         </div>
@@ -203,48 +217,48 @@ export default function CreatePlanPage() {
                                             {idx + 1}. {ex.exerciseName.split(' / ')[1] || ex.exerciseName.split(' ')[0]}
                                         </p>
                                     </div>
-                                    <button onClick={() => removeExercise(day.id, ex.exerciseId)} className="text-destructive/60 hover:text-destructive flex-shrink-0">
+                                    <button onClick={() => removeExercise(day.id, ex.exerciseId)} className="text-destructive/60 hover:text-destructive flex-shrink-0 min-w-[44px] min-h-[44px] flex items-center justify-center" aria-label="移除動作">
                                         <Trash2 className="h-3.5 w-3.5" />
                                     </button>
                                 </div>
-                                <div className="grid grid-cols-4 gap-2 text-xs">
+                                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
                                     <div>
-                                        <label className="text-muted-foreground">組數</label>
+                                        <label className="text-muted-foreground block mb-1">組數</label>
                                         <input
                                             type="number"
                                             value={ex.defaultSets}
                                             onChange={e => updateExercise(day.id, ex.exerciseId, 'defaultSets', parseInt(e.target.value))}
-                                            className="w-full h-8 px-2 rounded-md bg-background border border-border text-foreground text-center focus:outline-none focus:ring-1 focus:ring-ring"
-                                            min={1} max={10}
+                                            className="w-full h-11 px-2 rounded-lg bg-background border border-border text-foreground text-sm text-center focus:outline-none focus:ring-2 focus:ring-ring"
+                                            min={1} max={10} step={1}
                                         />
                                     </div>
                                     <div>
-                                        <label className="text-muted-foreground">最少下</label>
+                                        <label className="text-muted-foreground block mb-1">最少下</label>
                                         <input
                                             type="number"
                                             value={ex.defaultRepsMin}
                                             onChange={e => updateExercise(day.id, ex.exerciseId, 'defaultRepsMin', parseInt(e.target.value))}
-                                            className="w-full h-8 px-2 rounded-md bg-background border border-border text-foreground text-center focus:outline-none focus:ring-1 focus:ring-ring"
-                                            min={1} max={50}
+                                            className="w-full h-11 px-2 rounded-lg bg-background border border-border text-foreground text-sm text-center focus:outline-none focus:ring-2 focus:ring-ring"
+                                            min={1} max={50} step={1}
                                         />
                                     </div>
                                     <div>
-                                        <label className="text-muted-foreground">最多下</label>
+                                        <label className="text-muted-foreground block mb-1">最多下</label>
                                         <input
                                             type="number"
                                             value={ex.defaultRepsMax}
                                             onChange={e => updateExercise(day.id, ex.exerciseId, 'defaultRepsMax', parseInt(e.target.value))}
-                                            className="w-full h-8 px-2 rounded-md bg-background border border-border text-foreground text-center focus:outline-none focus:ring-1 focus:ring-ring"
-                                            min={1} max={50}
+                                            className="w-full h-11 px-2 rounded-lg bg-background border border-border text-foreground text-sm text-center focus:outline-none focus:ring-2 focus:ring-ring"
+                                            min={1} max={50} step={1}
                                         />
                                     </div>
                                     <div>
-                                        <label className="text-muted-foreground">休息(秒)</label>
+                                        <label className="text-muted-foreground block mb-1">休息(秒)</label>
                                         <input
                                             type="number"
                                             value={ex.restSeconds}
                                             onChange={e => updateExercise(day.id, ex.exerciseId, 'restSeconds', parseInt(e.target.value))}
-                                            className="w-full h-8 px-2 rounded-md bg-background border border-border text-foreground text-center focus:outline-none focus:ring-1 focus:ring-ring"
+                                            className="w-full h-11 px-2 rounded-lg bg-background border border-border text-foreground text-sm text-center focus:outline-none focus:ring-2 focus:ring-ring"
                                             min={15} step={15}
                                         />
                                     </div>
@@ -255,7 +269,8 @@ export default function CreatePlanPage() {
                         {/* Search to add exercise */}
                         <div className="relative">
                             <div className="relative">
-                                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                {searching && <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground animate-spin" />}
                                 <input
                                     value={activeDayId === day.id ? searchQuery : ''}
                                     onFocus={() => setActiveDayId(day.id)}
@@ -263,23 +278,26 @@ export default function CreatePlanPage() {
                                         setSearchQuery(e.target.value)
                                         searchExercises(e.target.value)
                                     }}
-                                    placeholder="新增動作..."
-                                    className="w-full h-9 pl-8 pr-3 rounded-lg bg-background border border-dashed border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-solid"
+                                    placeholder="搜尋新增動作..."
+                                    className="w-full h-11 pl-9 pr-9 rounded-lg bg-background border border-dashed border-border text-base text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-solid"
                                 />
                             </div>
                             {activeDayId === day.id && searchResults.length > 0 && (
-                                <div className="absolute top-full left-0 right-0 z-10 mt-1 bg-card border border-border rounded-xl shadow-lg overflow-hidden">
-                                    {searchResults.map(ex => (
-                                        <button
-                                            key={ex.id}
-                                            type="button"
-                                            onClick={() => { addExerciseToDay(day.id, ex); setActiveDayId(null) }}
-                                            className="w-full text-left px-4 py-3 text-sm hover:bg-accent border-b border-border last:border-0 truncate"
-                                        >
-                                            {ex.name}
-                                        </button>
-                                    ))}
-                                </div>
+                                <>
+                                    <div className="fixed inset-0 z-5" onClick={() => { setActiveDayId(null); setSearchResults([]) }} />
+                                    <div className="absolute top-full left-0 right-0 z-10 mt-1 bg-card border border-border rounded-xl shadow-lg overflow-hidden max-h-60 overflow-y-auto">
+                                        {searchResults.map(ex => (
+                                            <button
+                                                key={ex.id}
+                                                type="button"
+                                                onClick={() => { addExerciseToDay(day.id, ex); setActiveDayId(null) }}
+                                                className="w-full text-left px-4 py-3 text-sm hover:bg-accent active:bg-accent/80 border-b border-border last:border-0 truncate min-h-[44px]"
+                                            >
+                                                {ex.name}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </>
                             )}
                         </div>
                     </div>
@@ -290,9 +308,14 @@ export default function CreatePlanPage() {
             <button
                 onClick={handleSubmit}
                 disabled={loading || !planName.trim()}
-                className="w-full h-14 rounded-xl bg-primary text-primary-foreground font-semibold text-base disabled:opacity-50"
+                className="w-full h-14 rounded-xl bg-primary text-primary-foreground font-semibold text-base disabled:opacity-50 active:scale-[0.98] transition-transform"
             >
-                {loading ? '儲存中...' : '建立計畫'}
+                {loading ? (
+                    <span className="flex items-center justify-center gap-2">
+                        <Loader2 className="h-5 w-5 animate-spin" />
+                        儲存中...
+                    </span>
+                ) : '建立計畫'}
             </button>
         </div>
     )

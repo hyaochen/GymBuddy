@@ -10,7 +10,7 @@ export default async function AppLayout({
     const user = await requireAuth()
 
     return (
-        <div className="flex flex-col min-h-screen pb-20 bg-background text-foreground">
+        <div className="flex flex-col min-h-screen pb-[calc(5rem+env(safe-area-inset-bottom,0px))] bg-background text-foreground">
             <header className="sticky top-0 z-40 border-b border-border bg-card/80 backdrop-blur">
                 <div className="flex items-center justify-between px-4 h-14 max-w-2xl mx-auto w-full">
                     <div className="flex items-center gap-2">

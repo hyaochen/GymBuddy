@@ -55,7 +55,7 @@ export default async function ExercisesPage({
                         name="q"
                         defaultValue={q}
                         placeholder="搜尋動作..."
-                        className="w-full h-11 pl-9 pr-4 rounded-lg bg-card border border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                        className="w-full h-11 pl-9 pr-4 rounded-lg bg-card border border-border text-base text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                     />
                 </div>
 
@@ -101,7 +101,7 @@ export default async function ExercisesPage({
                         <Link
                             key={exercise.id}
                             href={`/exercises/${exercise.id}`}
-                            className="block bg-card rounded-xl border border-border p-4 hover:border-primary/50 transition-colors active:scale-[0.99]"
+                            className="block bg-card rounded-xl border border-border p-4 hover:border-primary/50 hover:shadow-sm transition-all active:scale-[0.98]"
                         >
                             <div className="flex items-start justify-between gap-3">
                                 <div className="flex-1 min-w-0">
