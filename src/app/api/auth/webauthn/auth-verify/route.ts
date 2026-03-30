@@ -29,7 +29,7 @@ export async function POST(req: NextRequest) {
         })
 
         if (!passkey) {
-            return NextResponse.json({ error: "Passkey not found" }, { status: 400 })
+            return NextResponse.json({ error: "Verification failed" }, { status: 400 })
         }
 
         const verification = await verifyAuthenticationResponse({

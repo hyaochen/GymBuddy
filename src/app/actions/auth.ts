@@ -21,17 +21,13 @@ export async function login(formData: FormData) {
     const user = await prisma.user.findFirst({
         where: { OR: [{ email }, { name: email }] },
     })
-    if (!user) {
+    if (!user || !user.passwordHash) {
         redirect("/login?error=" + encodeURIComponent("帳號或密碼錯誤"))
-    }
-
-    if (!user.passwordHash) {
-        redirect("/login?error=" + encodeURIComponent("此帳號使用 Google 登入，請點擊下方 Google 按鈕"))
     }
 
     const valid = await argon2.verify(user.passwordHash, password)
     if (!valid) {
-        redirect("/login?error=" + encodeURIComponent("電子郵件或密碼錯誤"))
+        redirect("/login?error=" + encodeURIComponent("帳號或密碼錯誤"))
     }
 
     const token = await signSession({ userId: user.id, issuedAt: Date.now() })
@@ -61,13 +57,9 @@ export async function register(formData: FormData) {
     }
 
     const existingEmail = await prisma.user.findUnique({ where: { email } })
-    if (existingEmail) {
-        redirect("/register?error=" + encodeURIComponent("此電子郵件已被使用"))
-    }
-
     const existingName = await prisma.user.findUnique({ where: { name } })
-    if (existingName) {
-        redirect("/register?error=" + encodeURIComponent("此暱稱已被使用，請換一個"))
+    if (existingEmail || existingName) {
+        redirect("/register?error=" + encodeURIComponent("此帳號資訊已被使用，請更換電子郵件或暱稱"))
     }
 
     const passwordHash = await argon2.hash(password)

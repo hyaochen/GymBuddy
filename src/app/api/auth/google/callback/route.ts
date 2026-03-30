@@ -52,7 +52,7 @@ export async function GET(req: NextRequest) {
         if (!tokenRes.ok) {
             const err = await tokenRes.text()
             console.error("[google-auth] Token exchange failed:", err)
-            console.error("[google-auth] redirect_uri used:", redirectUri)
+            console.error("[google-auth] Token exchange failed for redirect_uri mismatch or invalid credentials")
             return NextResponse.redirect(new URL("/login?error=" + encodeURIComponent("Google 驗證失敗"), baseUrl))
         }
 
@@ -99,7 +99,7 @@ export async function GET(req: NextRequest) {
                     passwordHash: null,
                 },
             })
-            console.log(`[google-auth] New user created: ${user.name} (${user.email})`)
+            console.log(`[google-auth] New user created: ${user.id}`)
 
             // Copy starter plans in background
             copyStarterPlans(user.id).catch(e => console.error("[google-auth] copyStarterPlans failed:", e))
