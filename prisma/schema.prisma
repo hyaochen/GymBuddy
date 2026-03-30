@@ -47,17 +47,34 @@ enum BodyRegion {
 model User {
   id           String   @id @default(cuid())
   email        String   @unique
-  name         String
-  passwordHash String
+  name         String   @unique
+  passwordHash String?
+  googleId     String?  @unique
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
   workoutPlans    WorkoutPlan[]
   workoutSessions WorkoutSession[]
   personalRecords PersonalRecord[]
+  passkeys        Passkey[]
 
   @@index([email])
   @@map("users")
+}
+
+model Passkey {
+  id           String   @id @default(cuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  credentialId String   @unique
+  publicKey    Bytes
+  counter      BigInt   @default(0)
+  transports   String[]
+  deviceName   String?
+  createdAt    DateTime @default(now())
+
+  @@index([userId])
+  @@map("passkeys")
 }
 
 // ─── Equipment ───────────────────────────────────────────────────────────────
