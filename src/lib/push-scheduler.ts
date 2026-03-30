@@ -21,6 +21,21 @@ import webpush from 'web-push'
 const subscriptions = new Map<string, webpush.PushSubscription>()
 const timers        = new Map<string, ReturnType<typeof setTimeout>>()
 
+// ─── Push event log (queryable via /api/push/log) ────────────────────────────
+interface PushLogEntry { ts: string; event: string; userId: string; detail?: string }
+const pushLog: PushLogEntry[] = []
+const MAX_PUSH_LOG = 200
+
+function addPushLog(event: string, userId: string, detail?: string) {
+    const entry = { ts: new Date().toISOString(), event, userId, detail }
+    pushLog.push(entry)
+    if (pushLog.length > MAX_PUSH_LOG) pushLog.shift()
+}
+
+export function getPushLog(): PushLogEntry[] {
+    return [...pushLog]
+}
+
 let vapidConfigured = false
 
 function ensureVapid() {
@@ -124,19 +139,31 @@ export function getSubscriptionForUser(userId: string): webpush.PushSubscription
 export function schedulePush(userId: string, endTime: number, title: string, body: string) {
     cancelPush(userId)
     const delay = Math.max(0, endTime - Date.now())
+    const scheduledAt = new Date().toISOString()
+    const expectedFireAt = new Date(endTime).toISOString()
+    addPushLog('SCHEDULED', userId, `delay=${Math.round(delay/1000)}s fire=${expectedFireAt}`)
+    console.log(`[push] 📋 Scheduled — user=${userId} delay=${Math.round(delay/1000)}s scheduledAt=${scheduledAt} expectedFireAt=${expectedFireAt}`)
     const timer = setTimeout(async () => {
+        const actualFireAt = new Date().toISOString()
+        const drift = Date.now() - endTime
+        addPushLog('TIMER_FIRED', userId, `drift=${drift}ms actual=${actualFireAt}`)
+        console.log(`[push] ⏰ Timer fired — user=${userId} actualFireAt=${actualFireAt} drift=${drift}ms (scheduled ${scheduledAt})`)
         timers.delete(userId)
         const sub = subscriptions.get(userId)
-        if (!sub) { console.warn(`[push] No subscription for user ${userId}`); return }
+        if (!sub) { addPushLog('NO_SUBSCRIPTION', userId); console.warn(`[push] ❌ No subscription for user ${userId}`); return }
         try {
-            console.log(`[push] Sending to user ${userId}`)
+            console.log(`[push] 📤 Sending push to user ${userId}`)
             const result = await sendNotificationWithOneHourJwt(
                 sub, JSON.stringify({ title, body, tag: 'rest-end' }),
             )
-            console.log(`[push] Sent — status ${result.statusCode} body: ${result.body}`)
+            const ok = result.statusCode >= 200 && result.statusCode < 300
+            const status = ok ? '✅' : '❌'
+            addPushLog(ok ? 'PUSH_SENT_OK' : 'PUSH_SENT_FAIL', userId, `status=${result.statusCode} body=${result.body}`)
+            console.log(`[push] ${status} Sent — status=${result.statusCode} body=${result.body} user=${userId}`)
             if (result.statusCode === 410) subscriptions.delete(userId)
         } catch (err) {
-            console.error(`[push] Error for user ${userId}:`, err)
+            addPushLog('PUSH_ERROR', userId, String(err))
+            console.error(`[push] ❌ Error for user ${userId}:`, err)
         }
     }, delay)
     timers.set(userId, timer)

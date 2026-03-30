@@ -198,10 +198,26 @@ function reducer(state: State, action: Action): State {
             return { ...state, weight: Math.max(0, Math.round((state.weight + action.delta) * 4) / 4) }
         case 'ADJ_REPS':
             return { ...state, reps: Math.max(1, state.reps + action.delta) }
-        case 'SET_DONE':
+        case 'SET_DONE': {
+            if (!state.session) return state
+            const updatedExercises = state.session.exercises.map((ex, i) =>
+                i === state.exIdx
+                    ? {
+                        ...ex,
+                        sets: [...ex.sets, {
+                            id: action.set.id ?? '',
+                            setNumber: action.set.setNumber,
+                            repsPerformed: action.set.repsPerformed,
+                            weightKg: String(action.set.weightKg),
+                            restAfterSeconds: action.restSeconds,
+                        }],
+                    }
+                    : ex
+            )
             return {
                 ...state,
                 phase: 'resting',
+                session: { ...state.session, exercises: updatedExercises },
                 loggedSets: [...state.loggedSets, action.set],
                 setNum: state.setNum + 1,
                 restLeft: action.restSeconds,
@@ -210,6 +226,7 @@ function reducer(state: State, action: Action): State {
                 newPR: action.isNewPR ? action.exerciseName : state.newPR,
                 alarmRinging: false,
             }
+        }
         case 'REST_TICK':
             if (state.restLeft <= 1) return { ...state, phase: 'exercise', restLeft: 0, restEndTime: null, alarmRinging: true }
             return { ...state, restLeft: state.restLeft - 1 }
@@ -370,17 +387,31 @@ export default function ActiveSessionPage({ params }: { params: Promise<{ id: st
 
     // ── visibilitychange: sync timer when user returns from background ────────
     // If rest ended while the page was hidden, trigger alarm immediately on return.
+    // Also cancel stale Web Audio beeps: the AudioContext clock stops when the app is
+    // backgrounded, so pre-scheduled beeps would fire at the wrong (much later) time
+    // after the context resumes. Cancel them here; the alarm overlay handles UI feedback.
     useEffect(() => {
         const handleVisible = () => {
             if (document.visibilityState !== 'visible') return
             const { phase, restEndTime } = stateRef.current
             if (phase !== 'resting' || !restEndTime) return
             const remaining = Math.max(0, Math.ceil((restEndTime - Date.now()) / 1000))
+            if (remaining <= 0) {
+                // Rest ended while hidden — pre-scheduled Web Audio beeps will fire at
+                // the wrong time (AudioContext was suspended); cancel them now.
+                cancelBeep()
+            }
             dispatch({ type: 'SET_REST_LEFT', value: remaining })
         }
         document.addEventListener('visibilitychange', handleVisible)
         return () => document.removeEventListener('visibilitychange', handleVisible)
-    }, [])
+    }, [cancelBeep])
+
+    // ── Cancel beeps when navigating away (component unmount) ─────────────────
+    // Prevents ghost alarm sounds after client-side navigation away from this page.
+    useEffect(() => {
+        return () => { cancelBeep() }
+    }, [cancelBeep])
 
     // ── Load session ──────────────────────────────────────────────────────────
     useEffect(() => {
@@ -650,7 +681,7 @@ export default function ActiveSessionPage({ params }: { params: Promise<{ id: st
 
                 <div className="flex justify-center">
                     <button
-                        onClick={() => { cancelBeep(); fetch('/api/push/schedule', { method: 'DELETE' }).catch(() => {}); dispatch({ type: 'SKIP_REST' }) }}
+                        onClick={() => { cancelBeep(); fetch('/api/push/schedule', { method: 'DELETE' }).catch(() => {}); navigator.serviceWorker?.controller?.postMessage({ type: 'CANCEL_NOTIFICATION' }); dispatch({ type: 'SKIP_REST' }) }}
                         className="flex items-center gap-2 px-6 py-3 rounded-xl bg-secondary text-secondary-foreground font-medium text-sm"
                     >
                         <SkipForward className="h-4 w-4" />
@@ -688,7 +719,7 @@ export default function ActiveSessionPage({ params }: { params: Promise<{ id: st
                 {state.alarmRinging && (
                     <AlarmOverlay
                         label={`準備繼續 ${isLastEx ? '完成訓練' : '下一個動作'}`}
-                        onDismiss={() => { cancelBeep(); fetch('/api/push/schedule', { method: 'DELETE' }).catch(() => {}); dispatch({ type: 'ALARM_DISMISS' }) }}
+                        onDismiss={() => { cancelBeep(); fetch('/api/push/schedule', { method: 'DELETE' }).catch(() => {}); navigator.serviceWorker?.controller?.postMessage({ type: 'CANCEL_NOTIFICATION' }); dispatch({ type: 'ALARM_DISMISS' }) }}
                     />
                 )}
 
@@ -1126,9 +1157,9 @@ function AlternativesDrawer({
     }
 
     return (
-        <div className="fixed inset-0 z-50 bg-black/60 flex items-end" onClick={onClose}>
+        <div className="fixed inset-0 z-[60] bg-black/60 flex items-end" onClick={onClose}>
             <div
-                className="w-full max-w-2xl mx-auto bg-card rounded-t-2xl border-t border-x border-border max-h-[70vh] overflow-y-auto"
+                className="w-full max-w-2xl mx-auto bg-card rounded-t-2xl border-t border-x border-border max-h-[70vh] overflow-y-auto mb-16 pb-[env(safe-area-inset-bottom,0px)]"
                 onClick={e => e.stopPropagation()}
             >
                 <div className="sticky top-0 bg-card border-b border-border flex items-center justify-between p-4">
@@ -1140,7 +1171,7 @@ function AlternativesDrawer({
                         <X className="h-5 w-5" />
                     </button>
                 </div>
-                <div className="p-4 space-y-3 pb-8">
+                <div className="p-4 space-y-3 pb-4">
                     {loading ? (
                         <p className="text-sm text-muted-foreground text-center py-6">載入中...</p>
                     ) : alts.length === 0 ? (
