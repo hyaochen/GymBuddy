@@ -2,6 +2,7 @@ import Link from 'next/link'
 import prisma from '@/lib/prisma'
 import { requireAuth } from '@/lib/auth'
 import { Play, Trophy, TrendingUp, Calendar, Dumbbell, ClipboardList } from 'lucide-react'
+import PasskeyPrompt from '@/components/PasskeyPrompt'
 
 function formatRelativeDate(date: Date): string {
     const now = new Date()
@@ -62,6 +63,8 @@ export default async function DashboardPage() {
 
     return (
         <div className="space-y-5">
+            <PasskeyPrompt />
+
             {/* Welcome */}
             <div>
                 <h1 className="text-xl font-bold">
