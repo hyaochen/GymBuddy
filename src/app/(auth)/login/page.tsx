@@ -19,12 +19,19 @@ export default function LoginPage({
     const router = useRouter()
 
     useEffect(() => {
-        setSupportsPasskey(browserSupportsWebAuthn())
+        const supported = browserSupportsWebAuthn()
+        setSupportsPasskey(supported)
+
+        // Auto-trigger Face ID / Passkey on page load if supported
+        if (supported && !error) {
+            handlePasskeyLogin(true)
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
 
-    async function handlePasskeyLogin() {
+    async function handlePasskeyLogin(silent = false) {
         setPasskeyLoading(true)
-        setPasskeyError("")
+        if (!silent) setPasskeyError("")
         try {
             const optRes = await fetch("/api/auth/webauthn/auth-options")
             if (!optRes.ok) throw new Error("Failed to get options")
@@ -41,9 +48,12 @@ export default function LoginPage({
             if (!verifyRes.ok) throw new Error("驗證失敗")
             router.push("/")
         } catch (err) {
-            const msg = err instanceof Error ? err.message : "Passkey 登入失敗"
-            if (!msg.includes("cancelled") && !msg.includes("AbortError")) {
-                setPasskeyError(msg)
+            // In silent mode (auto-trigger), don't show errors — user can still login manually
+            if (!silent) {
+                const msg = err instanceof Error ? err.message : "Passkey 登入失敗"
+                if (!msg.includes("cancelled") && !msg.includes("AbortError")) {
+                    setPasskeyError(msg)
+                }
             }
         } finally {
             setPasskeyLoading(false)
