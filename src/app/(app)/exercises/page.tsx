@@ -2,7 +2,7 @@ import Link from "next/link"
 import prisma from "@/lib/prisma"
 import { requireAuth } from "@/lib/auth"
 import { Badge } from "@/components/ui/badge"
-import { Search } from "lucide-react"
+import ExerciseFilters from "./ExerciseFilters"
 
 const DIFFICULTY_LABELS: Record<string, string> = {
     BEGINNER: '初級',
@@ -48,48 +48,7 @@ export default async function ExercisesPage({
             <h1 className="text-xl font-bold">動作庫</h1>
 
             {/* Search & Filters */}
-            <form method="GET" className="space-y-3">
-                <div className="relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <input
-                        name="q"
-                        defaultValue={q}
-                        placeholder="搜尋動作..."
-                        className="w-full h-11 pl-9 pr-4 rounded-lg bg-card border border-border text-base text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-                    />
-                </div>
-
-                <div className="grid grid-cols-3 gap-2">
-                    <select
-                        name="difficulty"
-                        defaultValue={difficulty}
-                        className="h-10 px-2 rounded-lg bg-card border border-border text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-                    >
-                        <option value="">難度</option>
-                        <option value="BEGINNER">初級</option>
-                        <option value="INTERMEDIATE">中級</option>
-                        <option value="ADVANCED">進階</option>
-                    </select>
-
-                    <select
-                        name="muscle"
-                        defaultValue={muscle}
-                        className="h-10 px-2 rounded-lg bg-card border border-border text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-                    >
-                        <option value="">肌群</option>
-                        {muscleGroups.map(mg => (
-                            <option key={mg.id} value={mg.id}>{mg.name.split(' ')[0]}</option>
-                        ))}
-                    </select>
-
-                    <button
-                        type="submit"
-                        className="h-10 px-4 rounded-lg bg-primary text-primary-foreground text-sm font-medium"
-                    >
-                        搜尋
-                    </button>
-                </div>
-            </form>
+            <ExerciseFilters muscleGroups={muscleGroups.map(mg => ({ id: mg.id, name: mg.name }))} />
 
             {/* Exercise List */}
             <div className="text-sm text-muted-foreground">{exercises.length} 個動作</div>

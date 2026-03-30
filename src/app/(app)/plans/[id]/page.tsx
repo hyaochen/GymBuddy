@@ -2,8 +2,8 @@ import { notFound } from "next/navigation"
 import Link from "next/link"
 import prisma from "@/lib/prisma"
 import { requireAuth } from "@/lib/auth"
-import { ChevronLeft, Play, Pencil } from "lucide-react"
-import StartSessionButton from "./StartSessionButton"
+import { ChevronLeft, Pencil } from "lucide-react"
+import DayCard from "./DayCard"
 
 export default async function PlanDetailPage({
     params,
@@ -60,45 +60,38 @@ export default async function PlanDetailPage({
             {/* Days */}
             <div className="space-y-4">
                 {plan.days.map(day => (
-                    <div key={day.id} className="bg-card rounded-xl border border-border p-4 space-y-3">
-                        <div className="flex items-center justify-between">
-                            <h2 className="font-semibold">{day.dayName}</h2>
-                            <StartSessionButton planId={plan.id} dayId={day.id} dayName={day.dayName} />
-                        </div>
-
+                    <DayCard key={day.id} dayId={day.id} planId={plan.id} dayName={day.dayName} exerciseCount={day.exercises.length}>
                         {day.exercises.length === 0 ? (
                             <p className="text-sm text-muted-foreground">尚未新增動作</p>
                         ) : (
-                            <div className="space-y-2">
-                                {day.exercises.map((pe, idx) => {
-                                    const primaryMuscle = pe.exercise.muscles[0]
-                                    return (
-                                        <div key={pe.id} className="flex items-center gap-3 py-1">
-                                            <span className="text-xs text-muted-foreground w-5 text-right">{idx + 1}.</span>
-                                            <div className="flex-1 min-w-0">
-                                                <p className="text-sm font-medium leading-snug truncate">
-                                                    {pe.exercise.name.split(' / ')[1] || pe.exercise.name.split(' ')[0]}
-                                                </p>
-                                                {primaryMuscle && (
-                                                    <p className="text-xs text-muted-foreground">
-                                                        {primaryMuscle.muscleGroup.name.split(' ')[0]}
-                                                    </p>
-                                                )}
-                                            </div>
-                                            <div className="text-right">
+                            day.exercises.map((pe, idx) => {
+                                const primaryMuscle = pe.exercise.muscles[0]
+                                return (
+                                    <div key={pe.id} className="flex items-center gap-3 py-1">
+                                        <span className="text-xs text-muted-foreground w-5 text-right">{idx + 1}.</span>
+                                        <div className="flex-1 min-w-0">
+                                            <p className="text-sm font-medium leading-snug truncate">
+                                                {pe.exercise.name.split(' / ')[1] || pe.exercise.name.split(' ')[0]}
+                                            </p>
+                                            {primaryMuscle && (
                                                 <p className="text-xs text-muted-foreground">
-                                                    {pe.defaultSets} 組 × {pe.defaultRepsMin}-{pe.defaultRepsMax} 下
+                                                    {primaryMuscle.muscleGroup.name.split(' ')[0]}
                                                 </p>
-                                                {pe.defaultWeightKg && (
-                                                    <p className="text-xs text-primary">{Number(pe.defaultWeightKg)}kg</p>
-                                                )}
-                                            </div>
+                                            )}
                                         </div>
-                                    )
-                                })}
-                            </div>
+                                        <div className="text-right">
+                                            <p className="text-xs text-muted-foreground">
+                                                {pe.defaultSets} 組 × {pe.defaultRepsMin}-{pe.defaultRepsMax} 下
+                                            </p>
+                                            {pe.defaultWeightKg && (
+                                                <p className="text-xs text-primary">{Number(pe.defaultWeightKg)}kg</p>
+                                            )}
+                                        </div>
+                                    </div>
+                                )
+                            })
                         )}
-                    </div>
+                    </DayCard>
                 ))}
             </div>
         </div>

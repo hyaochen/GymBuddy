@@ -45,6 +45,42 @@ services:
       NODE_ENV: production
       DATABASE_URL: postgresql://${POSTGRES_USER:-workout}:${POSTGRES_PASSWORD:-workout_dev_password}@workout-db:5432/${POSTGRES_DB:-workout}
       COOKIE_SECURE: ${COOKIE_SECURE:-false}
+      RAG_API_URL: ${RAG_API_URL:-http://rag-api:8080}
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  rag-api:
+    build:
+      context: ${RAG_API_BUILD_CONTEXT:-../kn/projects/rag_api}
+      dockerfile: Dockerfile
+    container_name: rag-api
+    restart: unless-stopped
+    ports:
+      - "${RAG_API_PORT:-8080}:8080"
+    environment:
+      OLLAMA_BASE_URL: ${OLLAMA_BASE_URL:-http://host.docker.internal:11434}
+      EMBED_MODEL: ${EMBED_MODEL:-nomic-embed-text}
+      LLM_MODEL: ${LLM_MODEL:-qwen2.5:7b}
+      CHROMA_DB_PATH: /app/chroma_db
+      COLLECTION_NAME: fitness_books
+      BOOK1_OCR_DIR: /app/data/book1_ocr
+      BOOK1_ID: core_strength
+      BOOK1_NAME: 核心訓練圖解聖經
+      BOOK2_OCR_DIR: /app/data/book2_ocr
+      BOOK2_ID: strength_training
+      BOOK2_NAME: 肌力訓練
+      CHUNK_SIZE: "500"
+      CHUNK_OVERLAP: "80"
+      TOP_K: "4"
+    volumes:
+      - rag_chroma:/app/chroma_db
+      - ${BOOK1_OCR_HOST_DIR:-../kn/projects/week5_sports_book_rag/data/ocr_output}:/app/data/book1_ocr:ro
+      - ${BOOK2_OCR_HOST_DIR:-../kn/projects/rag_api/data/book2_ocr}:/app/data/book2_ocr:ro
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     logging:
       driver: json-file
       options:
@@ -53,3 +89,4 @@ services:
 
 volumes:
   pgdata:
+  rag_chroma:

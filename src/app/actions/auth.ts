@@ -25,6 +25,10 @@ export async function login(formData: FormData) {
         redirect("/login?error=" + encodeURIComponent("帳號或密碼錯誤"))
     }
 
+    if (!user.passwordHash) {
+        redirect("/login?error=" + encodeURIComponent("此帳號使用 Google 登入，請點擊下方 Google 按鈕"))
+    }
+
     const valid = await argon2.verify(user.passwordHash, password)
     if (!valid) {
         redirect("/login?error=" + encodeURIComponent("電子郵件或密碼錯誤"))
@@ -56,15 +60,23 @@ export async function register(formData: FormData) {
         redirect("/register?error=" + encodeURIComponent("密碼至少需要 6 個字元"))
     }
 
-    const existing = await prisma.user.findUnique({ where: { email } })
-    if (existing) {
+    const existingEmail = await prisma.user.findUnique({ where: { email } })
+    if (existingEmail) {
         redirect("/register?error=" + encodeURIComponent("此電子郵件已被使用"))
+    }
+
+    const existingName = await prisma.user.findUnique({ where: { name } })
+    if (existingName) {
+        redirect("/register?error=" + encodeURIComponent("此暱稱已被使用，請換一個"))
     }
 
     const passwordHash = await argon2.hash(password)
     const user = await prisma.user.create({
         data: { name, email, passwordHash },
     })
+
+    // 複製第一位用戶（admin）的訓練計劃給新用戶作為參考（不阻塞註冊流程）
+    copyStarterPlans(user.id).catch(e => console.error("[register] copyStarterPlans failed:", e))
 
     const token = await signSession({ userId: user.id, issuedAt: Date.now() })
     const cookieStore = await cookies()
@@ -77,6 +89,48 @@ export async function register(formData: FormData) {
     })
 
     redirect("/")
+}
+
+/** 複製第一位用戶的所有訓練計劃給新註冊的用戶 */
+async function copyStarterPlans(newUserId: string) {
+    try {
+        const firstUser = await prisma.user.findFirst({ orderBy: { createdAt: "asc" } })
+        if (!firstUser || firstUser.id === newUserId) return
+
+        const plans = await prisma.workoutPlan.findMany({
+            where: { userId: firstUser.id, isActive: true },
+            include: {
+                days: {
+                    include: { exercises: { orderBy: { orderIndex: "asc" } } },
+                    orderBy: { orderIndex: "asc" },
+                },
+            },
+        })
+
+        for (const plan of plans) {
+            const newPlan = await prisma.workoutPlan.create({
+                data: { userId: newUserId, name: plan.name, description: plan.description, daysPerWeek: plan.daysPerWeek },
+            })
+            for (const day of plan.days) {
+                const newDay = await prisma.workoutPlanDay.create({
+                    data: { planId: newPlan.id, dayName: day.dayName, orderIndex: day.orderIndex, dayOfWeek: day.dayOfWeek },
+                })
+                for (const ex of day.exercises) {
+                    await prisma.workoutPlanExercise.create({
+                        data: {
+                            dayId: newDay.id, exerciseId: ex.exerciseId, orderIndex: ex.orderIndex,
+                            defaultSets: ex.defaultSets, defaultRepsMin: ex.defaultRepsMin,
+                            defaultRepsMax: ex.defaultRepsMax, defaultWeightKg: ex.defaultWeightKg,
+                            restSeconds: ex.restSeconds,
+                        },
+                    })
+                }
+            }
+        }
+        console.log(`[register] Copied ${plans.length} starter plans to user ${newUserId}`)
+    } catch (e) {
+        console.error("[register] Failed to copy starter plans:", e)
+    }
 }
 
 export async function logout() {

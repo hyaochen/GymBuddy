@@ -821,16 +821,16 @@ export default function ActiveSessionPage({ params }: { params: Promise<{ id: st
                     <ChevronLeft className="h-5 w-5" />
                 </Link>
                 <div className="flex-1">
-                    <div className="flex items-center justify-between text-xs text-muted-foreground mb-1">
+                    <div className="flex items-center justify-between text-sm text-muted-foreground mb-1">
                         <span>{session.day?.dayName}</span>
                         <div className="flex items-center gap-2">
                             <span>動作 {exIdx + 1} / {exTotal}</span>
                             <button
                                 onClick={() => dispatch({ type: 'TOGGLE_EX_LIST' })}
-                                className="text-primary"
+                                className="text-primary p-1.5 -m-1.5"
                                 title="選擇動作"
                             >
-                                <List className="h-3.5 w-3.5" />
+                                <List className="h-5 w-5" />
                             </button>
                         </div>
                     </div>
@@ -848,10 +848,10 @@ export default function ActiveSessionPage({ params }: { params: Promise<{ id: st
                 </div>
                 <button
                     onClick={() => { cancelBeep(); dispatch({ type: 'SKIP_EXERCISE' }) }}
-                    className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors flex-shrink-0 mt-0.5"
+                    className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors flex-shrink-0 p-1.5 -m-1.5"
                     title="跳過此動作"
                 >
-                    <SkipForward className="h-3.5 w-3.5" />
+                    <SkipForward className="h-4.5 w-4.5" />
                     跳過
                 </button>
             </div>
