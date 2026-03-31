@@ -41,6 +41,7 @@ export default function PlanEditPage({ params }: { params: Promise<{ id: string 
     const [saved, setSaved] = useState(false)
     const [planName, setPlanName] = useState('')
     const [deleteMsg, setDeleteMsg] = useState('')
+    const [dayNames, setDayNames] = useState<Record<string, string>>({})
     const [addingTo, setAddingTo] = useState<string | null>(null)
     const [searchQ, setSearchQ] = useState('')
     const [searchResults, setSearchResults] = useState<{ id: string; name: string }[]>([])
@@ -75,6 +76,16 @@ export default function PlanEditPage({ params }: { params: Promise<{ id: string 
                     body: JSON.stringify({ name: planName, description: plan.description, daysPerWeek: plan.days.length }),
                 })
             }
+            // Save dirty day names
+            await Promise.all(
+                Object.entries(dayNames).map(([dayId, newName]) =>
+                    fetch(`/api/plan-days/${dayId}`, {
+                        method: 'PATCH',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ dayName: newName }),
+                    })
+                )
+            )
             // Save each dirty exercise
             await Promise.all(
                 Object.entries(dirty).map(([peId, changes]) =>
@@ -85,6 +96,14 @@ export default function PlanEditPage({ params }: { params: Promise<{ id: string 
                     })
                 )
             )
+            // Update local plan state with saved day names
+            if (Object.keys(dayNames).length > 0) {
+                setPlan(prev => prev ? {
+                    ...prev,
+                    days: prev.days.map(d => dayNames[d.id] ? { ...d, dayName: dayNames[d.id] } : d)
+                } : prev)
+            }
+            setDayNames({})
             setDirty({})
             setSaved(true)
             setTimeout(() => setSaved(false), 2000)
@@ -172,7 +191,7 @@ export default function PlanEditPage({ params }: { params: Promise<{ id: string 
 
     if (!plan) return <div className="text-center py-20 text-muted-foreground">載入中...</div>
 
-    const hasDirty = planName !== plan.name || Object.keys(dirty).length > 0
+    const hasDirty = planName !== plan.name || Object.keys(dirty).length > 0 || Object.keys(dayNames).length > 0
 
     return (
         <div className="space-y-5 pb-10">
@@ -209,8 +228,18 @@ export default function PlanEditPage({ params }: { params: Promise<{ id: string 
             {/* Days */}
             {plan.days.map(day => (
                 <div key={day.id} className="bg-card border border-border rounded-xl overflow-hidden">
-                    <div className="px-4 py-3 bg-muted/50 border-b border-border flex items-center justify-between">
-                        <h2 className="font-semibold text-sm">{day.dayName}</h2>
+                    <div className="px-4 py-3 bg-muted/50 border-b border-border flex items-center justify-between gap-2">
+                        <input
+                            value={dayNames[day.id] ?? day.dayName}
+                            onChange={e => {
+                                const val = e.target.value
+                                setDayNames(prev => {
+                                    if (val === day.dayName) { const next = { ...prev }; delete next[day.id]; return next }
+                                    return { ...prev, [day.id]: val }
+                                })
+                            }}
+                            className="font-semibold text-sm bg-transparent flex-1 outline-none border-b border-transparent focus:border-primary"
+                        />
                         <button
                             onClick={() => { if (confirm(`確定刪除「${day.dayName}」？此操作無法復原。`)) deleteDay(day.id) }}
                             className="text-muted-foreground hover:text-destructive transition-colors p-1"
