@@ -40,6 +40,7 @@ export default function PlanEditPage({ params }: { params: Promise<{ id: string 
     const [saving, setSaving] = useState(false)
     const [saved, setSaved] = useState(false)
     const [planName, setPlanName] = useState('')
+    const [deleteMsg, setDeleteMsg] = useState('')
 
     useEffect(() => {
         fetch(`/api/plans/${id}`)
@@ -88,11 +89,18 @@ export default function PlanEditPage({ params }: { params: Promise<{ id: string 
         }
     }
 
+    const showDeleted = (msg: string) => {
+        setDeleteMsg(msg)
+        setTimeout(() => setDeleteMsg(''), 2000)
+    }
+
     const deleteDay = async (dayId: string) => {
         if (!plan) return
+        const dayName = plan.days.find(d => d.id === dayId)?.dayName
         const res = await fetch(`/api/plan-days/${dayId}`, { method: 'DELETE' })
         if (res.ok) {
             setPlan({ ...plan, days: plan.days.filter(d => d.id !== dayId) })
+            showDeleted(`已刪除「${dayName}」`)
         }
     }
 
@@ -109,6 +117,7 @@ export default function PlanEditPage({ params }: { params: Promise<{ id: string 
             const newDirty = { ...dirty }
             delete newDirty[peId]
             setDirty(newDirty)
+            showDeleted('動作已刪除')
         }
     }
 
@@ -141,6 +150,12 @@ export default function PlanEditPage({ params }: { params: Promise<{ id: string 
                     {saved ? '已儲存' : saving ? '儲存中...' : '儲存'}
                 </button>
             </div>
+
+            {deleteMsg && (
+                <div className="bg-green-500/15 border border-green-500/30 text-green-400 text-sm rounded-lg px-3 py-2 text-center">
+                    {deleteMsg}
+                </div>
+            )}
 
             {/* Days */}
             {plan.days.map(day => (
