@@ -3,7 +3,7 @@
 import { use, useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { ChevronLeft, Save, Plus, Minus, Check, Trash2 } from 'lucide-react'
+import { ChevronLeft, Save, Plus, Minus, Check, Trash2, Search, X } from 'lucide-react'
 
 type PlanExercise = {
     id: string
@@ -41,6 +41,10 @@ export default function PlanEditPage({ params }: { params: Promise<{ id: string 
     const [saved, setSaved] = useState(false)
     const [planName, setPlanName] = useState('')
     const [deleteMsg, setDeleteMsg] = useState('')
+    const [addingTo, setAddingTo] = useState<string | null>(null)
+    const [searchQ, setSearchQ] = useState('')
+    const [searchResults, setSearchResults] = useState<{ id: string; name: string }[]>([])
+    const [searching, setSearching] = useState(false)
 
     useEffect(() => {
         fetch(`/api/plans/${id}`)
@@ -121,6 +125,51 @@ export default function PlanEditPage({ params }: { params: Promise<{ id: string 
         }
     }
 
+    const searchExercises = async (q: string) => {
+        setSearchQ(q)
+        if (!q.trim()) { setSearchResults([]); return }
+        setSearching(true)
+        try {
+            const res = await fetch(`/api/exercises?q=${encodeURIComponent(q)}&limit=10`)
+            const data = await res.json()
+            setSearchResults(data.exercises || [])
+        } catch { } finally { setSearching(false) }
+    }
+
+    const addExercise = async (dayId: string, exercise: { id: string; name: string }) => {
+        if (!plan) return
+        const res = await fetch('/api/plan-exercises', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ dayId, exerciseId: exercise.id }),
+        })
+        if (res.ok) {
+            const data = await res.json()
+            setPlan({
+                ...plan,
+                days: plan.days.map(d =>
+                    d.id !== dayId ? d : {
+                        ...d,
+                        exercises: [...d.exercises, {
+                            id: data.exercise.id,
+                            orderIndex: data.exercise.orderIndex,
+                            defaultSets: data.exercise.defaultSets,
+                            defaultRepsMin: data.exercise.defaultRepsMin,
+                            defaultRepsMax: data.exercise.defaultRepsMax,
+                            restSeconds: data.exercise.restSeconds,
+                            defaultWeightKg: data.exercise.defaultWeightKg,
+                            exercise: { id: exercise.id, name: exercise.name },
+                        }],
+                    }
+                ),
+            })
+            setAddingTo(null)
+            setSearchQ('')
+            setSearchResults([])
+            showDeleted('動作已新增')
+        }
+    }
+
     if (!plan) return <div className="text-center py-20 text-muted-foreground">載入中...</div>
 
     const hasDirty = planName !== plan.name || Object.keys(dirty).length > 0
@@ -170,6 +219,9 @@ export default function PlanEditPage({ params }: { params: Promise<{ id: string 
                         </button>
                     </div>
                     <div className="divide-y divide-border">
+                        {day.exercises.length === 0 && (
+                            <div className="px-4 py-6 text-center text-sm text-muted-foreground">尚無動作</div>
+                        )}
                         {day.exercises.map((pe, idx) => {
                             const sets = getVal(pe, 'defaultSets')
                             const repsMin = getVal(pe, 'defaultRepsMin')
@@ -248,6 +300,45 @@ export default function PlanEditPage({ params }: { params: Promise<{ id: string 
                             )
                         })}
                     </div>
+                    {/* Add exercise */}
+                    {addingTo === day.id ? (
+                        <div className="px-4 py-3 border-t border-border space-y-2">
+                            <div className="flex items-center gap-2">
+                                <Search className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                                <input
+                                    autoFocus
+                                    value={searchQ}
+                                    onChange={e => searchExercises(e.target.value)}
+                                    placeholder="搜尋動作名稱..."
+                                    className="flex-1 text-sm bg-transparent outline-none placeholder:text-muted-foreground"
+                                />
+                                <button onClick={() => { setAddingTo(null); setSearchQ(''); setSearchResults([]) }} className="text-muted-foreground hover:text-foreground p-1">
+                                    <X className="h-4 w-4" />
+                                </button>
+                            </div>
+                            {searching && <p className="text-xs text-muted-foreground">搜尋中...</p>}
+                            {searchResults.length > 0 && (
+                                <div className="max-h-40 overflow-y-auto space-y-1">
+                                    {searchResults.map(ex => (
+                                        <button
+                                            key={ex.id}
+                                            onClick={() => addExercise(day.id, ex)}
+                                            className="w-full text-left text-sm px-2 py-1.5 rounded-md hover:bg-muted transition-colors truncate"
+                                        >
+                                            {ex.name}
+                                        </button>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    ) : (
+                        <button
+                            onClick={() => { setAddingTo(day.id); setSearchQ(''); setSearchResults([]) }}
+                            className="w-full px-4 py-2.5 border-t border-border text-sm text-primary hover:bg-muted/50 transition-colors flex items-center justify-center gap-1.5"
+                        >
+                            <Plus className="h-4 w-4" /> 新增動作
+                        </button>
+                    )}
                 </div>
             ))}
         </div>
