@@ -3,7 +3,7 @@
 import { use, useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { ChevronLeft, Save, Plus, Minus, Check } from 'lucide-react'
+import { ChevronLeft, Save, Plus, Minus, Check, Trash2 } from 'lucide-react'
 
 type PlanExercise = {
     id: string
@@ -88,6 +88,30 @@ export default function PlanEditPage({ params }: { params: Promise<{ id: string 
         }
     }
 
+    const deleteDay = async (dayId: string) => {
+        if (!plan) return
+        const res = await fetch(`/api/plan-days/${dayId}`, { method: 'DELETE' })
+        if (res.ok) {
+            setPlan({ ...plan, days: plan.days.filter(d => d.id !== dayId) })
+        }
+    }
+
+    const deleteExercise = async (dayId: string, peId: string) => {
+        if (!plan) return
+        const res = await fetch(`/api/plan-exercises/${peId}`, { method: 'DELETE' })
+        if (res.ok) {
+            setPlan({
+                ...plan,
+                days: plan.days.map(d =>
+                    d.id === dayId ? { ...d, exercises: d.exercises.filter(e => e.id !== peId) } : d
+                ),
+            })
+            const newDirty = { ...dirty }
+            delete newDirty[peId]
+            setDirty(newDirty)
+        }
+    }
+
     if (!plan) return <div className="text-center py-20 text-muted-foreground">載入中...</div>
 
     const hasDirty = planName !== plan.name || Object.keys(dirty).length > 0
@@ -121,8 +145,14 @@ export default function PlanEditPage({ params }: { params: Promise<{ id: string 
             {/* Days */}
             {plan.days.map(day => (
                 <div key={day.id} className="bg-card border border-border rounded-xl overflow-hidden">
-                    <div className="px-4 py-3 bg-muted/50 border-b border-border">
+                    <div className="px-4 py-3 bg-muted/50 border-b border-border flex items-center justify-between">
                         <h2 className="font-semibold text-sm">{day.dayName}</h2>
+                        <button
+                            onClick={() => { if (confirm(`確定刪除「${day.dayName}」？此操作無法復原。`)) deleteDay(day.id) }}
+                            className="text-muted-foreground hover:text-destructive transition-colors p-1"
+                        >
+                            <Trash2 className="h-3.5 w-3.5" />
+                        </button>
                     </div>
                     <div className="divide-y divide-border">
                         {day.exercises.map((pe, idx) => {
@@ -141,6 +171,12 @@ export default function PlanEditPage({ params }: { params: Promise<{ id: string 
                                             {pe.exercise.name.split(' ')[0]}
                                         </span>
                                         {isDirty && <span className="text-xs text-primary">●</span>}
+                                        <button
+                                            onClick={() => { if (confirm('確定刪除此動作？')) deleteExercise(day.id, pe.id) }}
+                                            className="text-muted-foreground hover:text-destructive transition-colors p-1"
+                                        >
+                                            <Trash2 className="h-3.5 w-3.5" />
+                                        </button>
                                     </div>
 
                                     <div className="grid grid-cols-2 gap-2 pl-7">

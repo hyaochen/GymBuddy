@@ -4,6 +4,7 @@ import prisma from "@/lib/prisma"
 import { requireAuth } from "@/lib/auth"
 import { ChevronLeft, Pencil } from "lucide-react"
 import DayCard from "./DayCard"
+import DeletePlanButton from "./DeletePlanButton"
 
 export default async function PlanDetailPage({
     params,
@@ -46,6 +47,7 @@ export default async function PlanDetailPage({
                 <Link href={`/plans/${plan.id}/edit`} className="text-muted-foreground hover:text-foreground">
                     <Pencil className="h-4 w-4" />
                 </Link>
+                <DeletePlanButton planId={plan.id} />
             </div>
 
             {plan.description && (

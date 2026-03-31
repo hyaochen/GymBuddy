@@ -31,3 +31,20 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 
     return NextResponse.json({ exercise: updated })
 }
+
+export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+    const user = await getCurrentUser()
+    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+    const { id } = await params
+    const pe = await prisma.workoutPlanExercise.findUnique({
+        where: { id },
+        include: { day: { include: { plan: true } } },
+    })
+    if (!pe || pe.day.plan.userId !== user.id) {
+        return NextResponse.json({ error: 'Not found' }, { status: 404 })
+    }
+
+    await prisma.workoutPlanExercise.delete({ where: { id } })
+    return NextResponse.json({ success: true })
+}
