@@ -370,6 +370,28 @@ export default function PlanEditPage({ params }: { params: Promise<{ id: string 
                     )}
                 </div>
             ))}
+
+            {/* Add day */}
+            <button
+                onClick={async () => {
+                    const res = await fetch('/api/plan-days', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ planId: id }),
+                    })
+                    if (res.ok) {
+                        const data = await res.json()
+                        setPlan(prev => prev ? {
+                            ...prev,
+                            days: [...prev.days, { ...data.day, exercises: [] }],
+                        } : prev)
+                        showDeleted('訓練日已新增')
+                    }
+                }}
+                className="w-full py-3 rounded-xl border border-dashed border-border text-sm text-primary hover:bg-muted/50 transition-colors flex items-center justify-center gap-1.5"
+            >
+                <Plus className="h-4 w-4" /> 新增訓練日
+            </button>
         </div>
     )
 }
