@@ -5,6 +5,8 @@ import TopBar from "@/components/layout/TopBar"
 import AIFloatingButton from "@/components/layout/AIFloatingButton"
 import DesktopSidebar from "@/components/layout/DesktopSidebar"
 
+export const dynamic = "force-dynamic"
+
 export default async function AppLayout({
     children,
 }: {
