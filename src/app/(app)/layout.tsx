@@ -1,8 +1,8 @@
-import Link from "next/link"
 import { requireAuth } from "@/lib/auth"
 import BottomNav from "@/components/layout/BottomNav"
-import { logout } from "@/app/actions/auth"
-import { Settings } from "lucide-react"
+import TopBar from "@/components/layout/TopBar"
+import AIFloatingButton from "@/components/layout/AIFloatingButton"
+import DesktopSidebar from "@/components/layout/DesktopSidebar"
 
 export default async function AppLayout({
     children,
@@ -12,33 +12,26 @@ export default async function AppLayout({
     const user = await requireAuth()
 
     return (
-        <div className="flex flex-col min-h-screen pb-[calc(5rem+env(safe-area-inset-bottom,0px))] bg-background text-foreground">
-            <header className="sticky top-0 z-40 border-b border-border bg-card/80 backdrop-blur">
-                <div className="flex items-center justify-between px-4 h-14 max-w-2xl mx-auto w-full">
-                    <Link href="/" className="flex items-center gap-2">
-                        <span className="text-lg">💪</span>
-                        <span className="font-bold text-foreground">GymBuddy</span>
-                    </Link>
-                    <div className="flex items-center gap-3">
-                        <span className="text-sm text-muted-foreground hidden sm:block">{user.name}</span>
-                        <Link href="/settings" className="text-muted-foreground hover:text-foreground transition-colors p-1.5">
-                            <Settings className="h-4.5 w-4.5" />
-                        </Link>
-                        <form action={logout}>
-                            <button
-                                type="submit"
-                                className="text-xs text-muted-foreground hover:text-foreground px-3 py-1.5 rounded-lg border border-border transition-colors"
-                            >
-                                登出
-                            </button>
-                        </form>
-                    </div>
-                </div>
-            </header>
-            <main className="flex-1 p-4 max-w-2xl mx-auto w-full">
-                {children}
-            </main>
-            <BottomNav />
+        <div className="flex h-[100dvh] bg-background text-foreground">
+            {/* Desktop sidebar */}
+            <DesktopSidebar />
+
+            {/* Main content area */}
+            <div className="flex flex-col flex-1 min-w-0">
+                {/* Top bar */}
+                <TopBar userName={user.name} />
+
+                {/* Page content */}
+                <main className="flex-1 overflow-y-auto p-4 pb-20 md:pb-4 max-w-2xl mx-auto w-full">
+                    {children}
+                </main>
+
+                {/* Mobile bottom nav */}
+                <BottomNav />
+
+                {/* Mobile AI floating button */}
+                <AIFloatingButton />
+            </div>
         </div>
     )
 }

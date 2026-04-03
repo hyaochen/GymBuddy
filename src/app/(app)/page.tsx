@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import prisma from '@/lib/prisma'
 import { requireAuth } from '@/lib/auth'
-import { Play, Trophy, TrendingUp, Calendar, Dumbbell, ClipboardList } from 'lucide-react'
+import { Play, Trophy, TrendingUp, Calendar, Dumbbell, ClipboardList, Users, Search, Activity } from 'lucide-react'
 import PasskeyPrompt from '@/components/PasskeyPrompt'
 import TrainingHeatmap from '@/components/TrainingHeatmap'
 import MuscleRadar from '@/components/MuscleRadar'
@@ -27,7 +27,7 @@ export default async function DashboardPage() {
     // Recent sessions (last 7 days)
     const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
 
-    const [recentSessions, prs, activePlans] = await Promise.all([
+    const [recentSessions, prs, activePlans, recentFeedItems] = await Promise.all([
         prisma.workoutSession.findMany({
             where: { userId: user.id, completedAt: { not: null } },
             include: {
@@ -54,6 +54,12 @@ export default async function DashboardPage() {
             },
             orderBy: { updatedAt: 'desc' },
         }),
+        prisma.activityFeedItem.findMany({
+            where: { isPublic: true },
+            include: { user: { select: { name: true } } },
+            orderBy: { createdAt: 'desc' },
+            take: 3,
+        }).catch(() => []),
     ])
 
     const totalSessions = await prisma.workoutSession.count({
@@ -112,6 +118,72 @@ export default async function DashboardPage() {
             {/* Training Heatmap + Muscle Radar */}
             <TrainingHeatmap compact />
             <MuscleRadar />
+
+            {/* Quick Access: Exercise Library + Social */}
+            <div className="grid grid-cols-2 gap-3">
+                {/* Exercise Library */}
+                <Link
+                    href="/exercises"
+                    className="bg-card rounded-xl border border-border p-4 hover:border-primary/50 transition-colors space-y-2"
+                >
+                    <div className="flex items-center gap-2">
+                        <div className="h-8 w-8 rounded-lg bg-primary/15 flex items-center justify-center">
+                            <Search className="h-4 w-4 text-primary" />
+                        </div>
+                        <h3 className="text-sm font-semibold">動作庫</h3>
+                    </div>
+                    <p className="text-xs text-muted-foreground">搜尋 257+ 動作</p>
+                </Link>
+
+                {/* Social */}
+                <Link
+                    href="/social"
+                    className="bg-card rounded-xl border border-border p-4 hover:border-primary/50 transition-colors space-y-2"
+                >
+                    <div className="flex items-center gap-2">
+                        <div className="h-8 w-8 rounded-lg bg-blue-500/15 flex items-center justify-center">
+                            <Users className="h-4 w-4 text-blue-400" />
+                        </div>
+                        <h3 className="text-sm font-semibold">社交動態</h3>
+                    </div>
+                    <p className="text-xs text-muted-foreground">好友、挑戰、排行</p>
+                </Link>
+            </div>
+
+            {/* Recent Social Feed */}
+            {recentFeedItems.length > 0 && (
+                <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                        <h2 className="font-semibold text-sm flex items-center gap-1.5">
+                            <Activity className="h-4 w-4 text-muted-foreground" />
+                            社交動態
+                        </h2>
+                        <Link href="/social" className="text-xs text-primary">查看全部</Link>
+                    </div>
+                    <div className="space-y-2">
+                        {recentFeedItems.map((item: { id: string; user: { name: string }; type: string; data: unknown; createdAt: Date }) => (
+                            <div key={item.id} className="bg-card rounded-xl border border-border p-3 flex items-center gap-3">
+                                <div className="h-7 w-7 rounded-full bg-primary/20 flex items-center justify-center text-xs font-bold text-primary flex-shrink-0">
+                                    {item.user.name.charAt(0).toUpperCase()}
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                    <p className="text-xs font-medium truncate">
+                                        <span className="text-foreground">{item.user.name}</span>
+                                        <span className="text-muted-foreground ml-1">
+                                            {item.type === 'WORKOUT_COMPLETED' && '完成了訓練'}
+                                            {item.type === 'PR_ACHIEVED' && '破了新 PR'}
+                                            {item.type === 'STREAK_MILESTONE' && '達成連續訓練里程碑'}
+                                        </span>
+                                    </p>
+                                    <p className="text-xs text-muted-foreground">
+                                        {formatRelativeDate(new Date(item.createdAt))}
+                                    </p>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
 
             {/* Active plans quick access */}
             {activePlans.length > 0 && (

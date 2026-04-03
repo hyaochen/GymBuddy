@@ -5,7 +5,7 @@ import { Users, Activity, Trophy, UserPlus, Check, X, Search, Trash2, Eye, EyeOf
 import { cn } from "@/lib/utils"
 import PRShareCard from "@/components/PRShareCard"
 
-type Tab = "feed" | "friends" | "leaderboard" | "challenges" | "templates"
+type Tab = "feed" | "friends" | "leaderboard"
 
 const KUDOS_EMOJIS = ["💪", "🔥", "👏", "🏆", "⚡"]
 
@@ -206,11 +206,13 @@ export default function SocialPage() {
     useEffect(() => {
         setLoading(true)
         if (tab === "feed") fetchFeed()
-        else if (tab === "friends") fetchFriends()
+        else if (tab === "friends") {
+            // Fetch both friends and challenges for merged tab
+            Promise.all([fetchFriends(), fetchChallenges()]).then(() => setLoading(false))
+            return
+        }
         else if (tab === "leaderboard") fetchLeaderboard()
-        else if (tab === "challenges") fetchChallenges()
-        else if (tab === "templates") fetchTemplates()
-    }, [tab, fetchFeed, fetchFriends, fetchLeaderboard, fetchChallenges, fetchTemplates])
+    }, [tab, fetchFeed, fetchFriends, fetchLeaderboard, fetchChallenges])
 
     async function handleKudo(feedItemId: string, emoji: string) {
         const item = feed.find(f => f.id === feedItemId)
@@ -289,8 +291,6 @@ export default function SocialPage() {
     const tabs: { key: Tab; label: string; icon: React.ReactNode }[] = [
         { key: "feed", label: "動態", icon: <Activity className="h-4 w-4" /> },
         { key: "friends", label: "好友", icon: <Users className="h-4 w-4" /> },
-        { key: "challenges", label: "挑戰", icon: <Swords className="h-4 w-4" /> },
-        { key: "templates", label: "模板", icon: <BookTemplate className="h-4 w-4" /> },
         { key: "leaderboard", label: "排行", icon: <Trophy className="h-4 w-4" /> },
     ]
 
@@ -298,8 +298,8 @@ export default function SocialPage() {
         <div className="space-y-4">
             <h1 className="text-xl font-bold">社交</h1>
 
-            {/* Tabs - scrollable for 5 tabs on mobile */}
-            <div className="flex gap-1 bg-secondary/50 rounded-xl p-1 overflow-x-auto no-scrollbar">
+            {/* Tabs */}
+            <div className="flex gap-1 bg-secondary/50 rounded-xl p-1">
                 {tabs.map(t => (
                     <button
                         key={t.key}
@@ -546,47 +546,51 @@ export default function SocialPage() {
                             </div>
                         ))}
                     </div>
-                </div>
-            )}
 
-            {/* Challenges Tab */}
-            {!loading && tab === "challenges" && (
-                <div className="space-y-4">
-                    <button
-                        onClick={() => setShowCreateChallenge(!showCreateChallenge)}
-                        className="w-full flex items-center justify-center gap-2 bg-primary text-primary-foreground rounded-xl py-2.5 text-sm font-medium hover:bg-primary/90 transition-colors"
-                    >
-                        <Plus className="h-4 w-4" />
-                        建立挑戰
-                    </button>
-
-                    {showCreateChallenge && (
-                        <CreateChallengeForm
-                            onCreated={() => { setShowCreateChallenge(false); fetchChallenges() }}
-                            onCancel={() => setShowCreateChallenge(false)}
-                        />
-                    )}
-
-                    {challenges.length === 0 && !showCreateChallenge && (
-                        <div className="text-center py-10 text-muted-foreground">
-                            <Swords className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                            <p className="text-sm">還沒有挑戰</p>
-                            <p className="text-xs mt-1">建立一個挑戰，邀請好友一起來！</p>
+                    {/* Challenges section (merged into friends tab) */}
+                    <div className="space-y-3 pt-2">
+                        <div className="flex items-center justify-between">
+                            <h2 className="text-sm font-semibold text-muted-foreground flex items-center gap-1.5">
+                                <Swords className="h-4 w-4" />
+                                挑戰
+                            </h2>
+                            <button
+                                onClick={() => setShowCreateChallenge(!showCreateChallenge)}
+                                className="flex items-center gap-1 text-xs text-primary font-medium"
+                            >
+                                <Plus className="h-3.5 w-3.5" />
+                                建立
+                            </button>
                         </div>
-                    )}
 
-                    {challenges.map(c => (
-                        <ChallengeCard
-                            key={c.id}
-                            challenge={c}
-                            onJoin={() => joinChallenge(c.id)}
-                        />
-                    ))}
+                        {showCreateChallenge && (
+                            <CreateChallengeForm
+                                onCreated={() => { setShowCreateChallenge(false); fetchChallenges() }}
+                                onCancel={() => setShowCreateChallenge(false)}
+                            />
+                        )}
+
+                        {challenges.length === 0 && !showCreateChallenge && (
+                            <div className="text-center py-6 text-muted-foreground">
+                                <Swords className="h-6 w-6 mx-auto mb-1.5 opacity-50" />
+                                <p className="text-xs">還沒有挑戰，建立一個邀請好友吧！</p>
+                            </div>
+                        )}
+
+                        {challenges.map(c => (
+                            <ChallengeCard
+                                key={c.id}
+                                challenge={c}
+                                onJoin={() => joinChallenge(c.id)}
+                            />
+                        ))}
+                    </div>
                 </div>
             )}
 
-            {/* Templates Tab */}
-            {!loading && tab === "templates" && (
+            {/* Templates section removed — moved to Plans page */}
+            {/* Templates Tab was here — now lives in /plans */}
+            {false && (
                 <div className="space-y-4">
                     {/* Search + sort */}
                     <div className="flex gap-2">
