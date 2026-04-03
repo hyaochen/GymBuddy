@@ -115,10 +115,6 @@ export default async function DashboardPage() {
                 </div>
             </div>
 
-            {/* Training Heatmap + Muscle Radar */}
-            <TrainingHeatmap compact />
-            <MuscleRadar />
-
             {/* Quick Access: Exercise Library + Social */}
             <div className="grid grid-cols-2 gap-3">
                 {/* Exercise Library */}
@@ -149,6 +145,12 @@ export default async function DashboardPage() {
                     <p className="text-xs text-muted-foreground">好友、挑戰、排行</p>
                 </Link>
             </div>
+
+            {/* Muscle Radar */}
+            <MuscleRadar />
+
+            {/* Training Heatmap */}
+            <TrainingHeatmap compact />
 
             {/* Recent Social Feed */}
             {recentFeedItems.length > 0 && (
