@@ -1,7 +1,8 @@
 "use client"
 
-import { useEffect, useState, useCallback } from "react"
-import { User, Flame, Dumbbell, Calendar, Shield, Award } from "lucide-react"
+import { useEffect, useState, useCallback, useRef } from "react"
+import { User, Flame, Dumbbell, Calendar, Shield, Award, Camera, Loader2 } from "lucide-react"
+import Image from "next/image"
 import { cn } from "@/lib/utils"
 
 interface ProfileData {
@@ -40,7 +41,11 @@ export default function ProfilePage() {
     const [badgeCounts, setBadgeCounts] = useState({ earned: 0, total: 0 })
     const [loading, setLoading] = useState(true)
     const [saving, setSaving] = useState(false)
+    const [uploading, setUploading] = useState(false)
+    const [avatarPreview, setAvatarPreview] = useState<string | null>(null)
+    const [selectedFile, setSelectedFile] = useState<File | null>(null)
     const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null)
+    const fileInputRef = useRef<HTMLInputElement>(null)
 
     // Form state
     const [displayName, setDisplayName] = useState("")
@@ -74,6 +79,64 @@ export default function ProfilePage() {
     }, [])
 
     useEffect(() => { fetchProfile() }, [fetchProfile])
+
+    function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
+        const file = e.target.files?.[0]
+        if (!file) return
+
+        // Validate client-side
+        const allowedTypes = ["image/jpeg", "image/png", "image/webp"]
+        if (!allowedTypes.includes(file.type)) {
+            setMessage({ type: "error", text: "僅支援 JPG、PNG、WebP 格式" })
+            return
+        }
+        if (file.size > 5 * 1024 * 1024) {
+            setMessage({ type: "error", text: "檔案大小不能超過 5MB" })
+            return
+        }
+
+        setSelectedFile(file)
+        setAvatarPreview(URL.createObjectURL(file))
+        setMessage(null)
+    }
+
+    async function handleAvatarUpload() {
+        if (!selectedFile) return
+        setUploading(true)
+        setMessage(null)
+
+        const formData = new FormData()
+        formData.append("avatar", selectedFile)
+
+        try {
+            const res = await fetch("/api/profile/avatar", {
+                method: "POST",
+                body: formData,
+            })
+            if (res.ok) {
+                const { avatarUrl } = await res.json()
+                setData(prev => prev ? {
+                    ...prev,
+                    profile: { ...prev.profile, avatarUrl },
+                } : prev)
+                setAvatarPreview(null)
+                setSelectedFile(null)
+                setMessage({ type: "success", text: "頭像已更新！" })
+            } else {
+                const err = await res.json()
+                setMessage({ type: "error", text: err.error || "上傳失敗" })
+            }
+        } catch {
+            setMessage({ type: "error", text: "上傳失敗，請稍後再試" })
+        }
+        setUploading(false)
+    }
+
+    function cancelAvatarPreview() {
+        setAvatarPreview(null)
+        setSelectedFile(null)
+        if (fileInputRef.current) fileInputRef.current.value = ""
+    }
 
     async function handleSave() {
         setSaving(true)
@@ -126,10 +189,36 @@ export default function ProfilePage() {
             {/* Avatar + basic info */}
             <div className="bg-card rounded-xl border border-border p-5">
                 <div className="flex items-center gap-4">
-                    <div className="h-16 w-16 rounded-full bg-primary/20 flex items-center justify-center text-2xl font-bold text-primary">
-                        {data.name.charAt(0).toUpperCase()}
+                    {/* Clickable avatar */}
+                    <div className="relative group">
+                        <button
+                            type="button"
+                            onClick={() => fileInputRef.current?.click()}
+                            className="relative h-16 w-16 rounded-full overflow-hidden bg-primary/20 flex items-center justify-center text-2xl font-bold text-primary hover:ring-2 hover:ring-primary/50 transition-all"
+                            aria-label="更換頭像"
+                        >
+                            {avatarPreview ? (
+                                <Image src={avatarPreview} alt="預覽" fill className="object-cover" unoptimized />
+                            ) : data.profile.avatarUrl ? (
+                                <Image src={data.profile.avatarUrl} alt="頭像" fill className="object-cover" unoptimized />
+                            ) : (
+                                data.name.charAt(0).toUpperCase()
+                            )}
+                            {/* Camera overlay */}
+                            <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                <Camera className="h-5 w-5 text-white" />
+                            </div>
+                        </button>
+                        <input
+                            ref={fileInputRef}
+                            type="file"
+                            accept="image/*"
+                            capture="user"
+                            onChange={handleFileSelect}
+                            className="hidden"
+                        />
                     </div>
-                    <div>
+                    <div className="flex-1 min-w-0">
                         <p className="font-bold text-lg">{data.name}</p>
                         <p className="text-sm text-muted-foreground">{data.email}</p>
                         <p className="text-xs text-muted-foreground mt-0.5">
@@ -137,6 +226,33 @@ export default function ProfilePage() {
                         </p>
                     </div>
                 </div>
+
+                {/* Avatar upload actions */}
+                {selectedFile && (
+                    <div className="mt-3 flex items-center gap-2">
+                        <button
+                            onClick={handleAvatarUpload}
+                            disabled={uploading}
+                            className="flex items-center gap-1.5 bg-primary text-primary-foreground rounded-lg px-3 py-1.5 text-sm font-medium hover:bg-primary/90 disabled:opacity-50 transition-colors"
+                        >
+                            {uploading ? (
+                                <>
+                                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                    上傳中...
+                                </>
+                            ) : (
+                                "上傳頭像"
+                            )}
+                        </button>
+                        <button
+                            onClick={cancelAvatarPreview}
+                            disabled={uploading}
+                            className="text-sm text-muted-foreground hover:text-foreground transition-colors px-2 py-1.5"
+                        >
+                            取消
+                        </button>
+                    </div>
+                )}
             </div>
 
             {/* Stats */}

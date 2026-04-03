@@ -1,6 +1,7 @@
 "use client"
 
 import Link from "next/link"
+import Image from "next/image"
 import { usePathname } from "next/navigation"
 import {
     Home, History, Play, ClipboardList, BarChart3,
@@ -29,7 +30,12 @@ const bottomItems = [
     { href: "/settings", label: "設定", icon: Settings },
 ]
 
-export default function DesktopSidebar() {
+interface DesktopSidebarProps {
+    userName?: string
+    avatarUrl?: string | null
+}
+
+export default function DesktopSidebar({ userName, avatarUrl }: DesktopSidebarProps = {}) {
     const pathname = usePathname()
     const [collapsed, setCollapsed] = useState(false)
 
@@ -101,7 +107,33 @@ export default function DesktopSidebar() {
 
             {/* Bottom section */}
             <div className="px-2 py-3 space-y-1 border-t border-border">
-                {bottomItems.map(item => (
+                {/* User avatar + profile link */}
+                {userName && (
+                    <Link
+                        href="/profile"
+                        className={cn(
+                            "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors",
+                            collapsed && "justify-center px-2",
+                            isActive("/profile")
+                                ? "bg-secondary text-foreground"
+                                : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"
+                        )}
+                        title={collapsed ? userName : undefined}
+                    >
+                        <div className="h-6 w-6 rounded-full bg-primary/20 flex items-center justify-center text-[10px] font-bold text-primary overflow-hidden relative flex-shrink-0">
+                            {avatarUrl ? (
+                                <Image src={avatarUrl} alt="頭像" fill className="object-cover" unoptimized />
+                            ) : (
+                                userName.charAt(0).toUpperCase()
+                            )}
+                        </div>
+                        {!collapsed && <span>{userName}</span>}
+                    </Link>
+                )}
+                {!userName && bottomItems.filter(i => i.href === "/profile").map(item => (
+                    <NavItem key={item.href} {...item} />
+                ))}
+                {bottomItems.filter(i => i.href !== "/profile").map(item => (
                     <NavItem key={item.href} {...item} />
                 ))}
 

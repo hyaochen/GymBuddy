@@ -1,12 +1,14 @@
 import Link from "next/link"
+import Image from "next/image"
 import { Settings } from "lucide-react"
 
 interface TopBarProps {
     userName: string
+    avatarUrl?: string | null
     pageTitle?: string
 }
 
-export default function TopBar({ userName, pageTitle }: TopBarProps) {
+export default function TopBar({ userName, avatarUrl, pageTitle }: TopBarProps) {
     const initial = userName.charAt(0).toUpperCase()
 
     return (
@@ -15,10 +17,14 @@ export default function TopBar({ userName, pageTitle }: TopBarProps) {
                 {/* Left: Avatar */}
                 <Link
                     href="/profile"
-                    className="h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center text-xs font-bold text-primary hover:bg-primary/30 transition-colors"
+                    className="h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center text-xs font-bold text-primary hover:bg-primary/30 transition-colors overflow-hidden relative"
                     aria-label="個人檔案"
                 >
-                    {initial}
+                    {avatarUrl ? (
+                        <Image src={avatarUrl} alt="頭像" fill className="object-cover" unoptimized />
+                    ) : (
+                        initial
+                    )}
                 </Link>
 
                 {/* Center: Page title */}
