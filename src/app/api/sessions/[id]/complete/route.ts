@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
 import { getCurrentUser } from '@/lib/auth'
 import { generateOverloadSuggestion } from '@/lib/progressive-overload'
+import { updateExerciseSummary } from '@/lib/exercise-summary'
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
     const user = await getCurrentUser()
@@ -80,6 +81,14 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
         suggestions.push(suggestion)
     }
+
+    // Update exercise summaries (fire-and-forget, non-blocking)
+    const exerciseIds = session.exercises
+        .filter(se => se.sets.length > 0)
+        .map(se => se.exerciseId)
+    Promise.all(
+        exerciseIds.map(eid => updateExerciseSummary(user.id, eid))
+    ).catch(console.error)
 
     // Calculate session summary
     const totalSets = session.exercises.reduce((sum, se) => sum + se.sets.length, 0)

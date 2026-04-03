@@ -53,10 +53,11 @@ model User {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  workoutPlans    WorkoutPlan[]
-  workoutSessions WorkoutSession[]
-  personalRecords PersonalRecord[]
-  passkeys        Passkey[]
+  workoutPlans       WorkoutPlan[]
+  workoutSessions    WorkoutSession[]
+  personalRecords    PersonalRecord[]
+  exerciseSummaries  UserExerciseSummary[]
+  passkeys           Passkey[]
 
   @@index([email])
   @@map("users")
@@ -123,6 +124,7 @@ model Exercise {
   workoutPlanExercises WorkoutPlanExercise[]
   sessionExercises     SessionExercise[]
   personalRecords      PersonalRecord[]
+  exerciseSummaries    UserExerciseSummary[]
 
   @@index([difficulty])
   @@index([exerciseType])
@@ -270,6 +272,29 @@ model SessionSet {
 
   @@index([sessionExerciseId])
   @@map("session_sets")
+}
+
+// ─── User Exercise Summaries (Precomputed/Materialized) ─────────────────────
+
+model UserExerciseSummary {
+  id            String   @id @default(cuid())
+  userId        String
+  exerciseId    String
+  maxWeight     Decimal  @db.Decimal(6, 2)
+  maxWeightDate DateTime
+  maxVolume     Decimal  @db.Decimal(10, 2)
+  maxVolumeDate DateTime
+  estimated1rm  Decimal  @db.Decimal(6, 2)
+  totalSessions Int
+  lastUsedAt    DateTime
+  updatedAt     DateTime @updatedAt
+
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  exercise Exercise @relation(fields: [exerciseId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, exerciseId])
+  @@index([userId])
+  @@map("user_exercise_summaries")
 }
 
 // ─── Personal Records ────────────────────────────────────────────────────────

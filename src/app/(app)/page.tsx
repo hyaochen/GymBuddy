@@ -3,6 +3,8 @@ import prisma from '@/lib/prisma'
 import { requireAuth } from '@/lib/auth'
 import { Play, Trophy, TrendingUp, Calendar, Dumbbell, ClipboardList } from 'lucide-react'
 import PasskeyPrompt from '@/components/PasskeyPrompt'
+import TrainingHeatmap from '@/components/TrainingHeatmap'
+import MuscleRadar from '@/components/MuscleRadar'
 
 function formatRelativeDate(date: Date): string {
     const now = new Date()
@@ -106,6 +108,10 @@ export default async function DashboardPage() {
                     <p className="text-xs text-muted-foreground mt-0.5">訓練計畫</p>
                 </div>
             </div>
+
+            {/* Training Heatmap + Muscle Radar */}
+            <TrainingHeatmap compact />
+            <MuscleRadar />
 
             {/* Active plans quick access */}
             {activePlans.length > 0 && (
