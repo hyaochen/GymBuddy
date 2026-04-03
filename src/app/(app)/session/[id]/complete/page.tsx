@@ -2,7 +2,30 @@
 
 import { use, useEffect, useState } from 'react'
 import Link from 'next/link'
-import { Home, TrendingUp, TrendingDown, Minus, Trophy, Clock, Dumbbell, BarChart2 } from 'lucide-react'
+import { Home, TrendingUp, TrendingDown, Minus, Trophy, Clock, Dumbbell, BarChart2, Award } from 'lucide-react'
+
+const BADGE_INFO: Record<string, { name: string; icon: string }> = {
+    first_workout: { name: '初次訓練', icon: '🎯' },
+    sessions_10: { name: '十場達成', icon: '💪' },
+    sessions_50: { name: '半百訓練', icon: '💪' },
+    sessions_100: { name: '百場俱樂部', icon: '💪' },
+    sessions_500: { name: '訓練狂人', icon: '💪' },
+    streak_7: { name: '一週不懈', icon: '🔥' },
+    streak_14: { name: '兩週不懈', icon: '🔥' },
+    streak_30: { name: '月度戰士', icon: '🔥' },
+    streak_60: { name: '鐵人意志', icon: '🔥' },
+    streak_90: { name: '傳說不休', icon: '🔥' },
+    first_pr: { name: '首次破紀錄', icon: '🏅' },
+    pr_count_10: { name: 'PR 收藏家', icon: '🏆' },
+    pr_count_50: { name: 'PR 大師', icon: '🏆' },
+    heavy_lifter: { name: '重量級', icon: '⚡' },
+    first_friend: { name: '社交起步', icon: '🤝' },
+    first_kudos_given: { name: '鼓勵家', icon: '👏' },
+    first_kudos_received: { name: '受人讚賞', icon: '⭐' },
+    first_challenge: { name: '挑戰新手', icon: '🎪' },
+    challenge_winner: { name: '挑戰達成', icon: '🥇' },
+    template_shared: { name: '模板分享者', icon: '📤' },
+}
 
 type OverloadSuggestion = {
     exerciseId: string
@@ -17,6 +40,7 @@ type CompleteSummary = {
     totalSets: number
     totalVolume: number
     suggestions: OverloadSuggestion[]
+    newBadges?: string[]
 }
 
 type SessionInfo = {
@@ -133,6 +157,28 @@ export default function SessionCompletePage({ params }: { params: Promise<{ id: 
                                 : summary.totalVolume}
                         </p>
                         <p className="text-xs text-muted-foreground">kg 總量</p>
+                    </div>
+                </div>
+            )}
+
+            {/* New Badges */}
+            {summary?.newBadges && summary.newBadges.length > 0 && (
+                <div className="bg-primary/10 border border-primary/30 rounded-xl p-4 space-y-3">
+                    <h2 className="font-semibold text-sm flex items-center gap-2 text-primary">
+                        <Award className="h-4 w-4" />
+                        獲得新徽章！
+                    </h2>
+                    <div className="flex flex-wrap gap-3">
+                        {summary.newBadges.map(key => {
+                            const info = BADGE_INFO[key]
+                            if (!info) return null
+                            return (
+                                <div key={key} className="flex items-center gap-2 bg-card rounded-lg px-3 py-2 border border-border">
+                                    <span className="text-xl">{info.icon}</span>
+                                    <span className="text-sm font-medium">{info.name}</span>
+                                </div>
+                            )
+                        })}
                     </div>
                 </div>
             )}

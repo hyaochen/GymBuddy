@@ -5,6 +5,7 @@ import { requireAuth } from "@/lib/auth"
 import { ChevronLeft, Pencil } from "lucide-react"
 import DayCard from "./DayCard"
 import DeletePlanButton from "./DeletePlanButton"
+import ShareTemplateButton from "./ShareTemplateButton"
 
 export default async function PlanDetailPage({
     params,
@@ -44,6 +45,7 @@ export default async function PlanDetailPage({
                     <ChevronLeft className="h-5 w-5" />
                 </Link>
                 <h1 className="text-lg font-bold flex-1">{plan.name}</h1>
+                <ShareTemplateButton planId={plan.id} planName={plan.name} />
                 <Link href={`/plans/${plan.id}/edit`} className="text-muted-foreground hover:text-foreground">
                     <Pencil className="h-4 w-4" />
                 </Link>

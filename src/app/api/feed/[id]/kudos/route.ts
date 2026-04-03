@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
 import { getCurrentUser } from '@/lib/auth'
+import { checkSocialBadge } from '@/lib/badges'
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
     const user = await getCurrentUser()
@@ -27,6 +28,10 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         create: { userId: user.id, feedItemId, emoji },
         update: { emoji },
     })
+
+    // Award badges
+    checkSocialBadge(user.id, 'kudos_given').catch(console.error)
+    checkSocialBadge(feedItem.userId, 'kudos_received').catch(console.error)
 
     return NextResponse.json({ success: true, kudo })
 }

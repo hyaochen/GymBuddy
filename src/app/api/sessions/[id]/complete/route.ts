@@ -4,6 +4,7 @@ import { getCurrentUser } from '@/lib/auth'
 import { generateOverloadSuggestion } from '@/lib/progressive-overload'
 import { updateExerciseSummary } from '@/lib/exercise-summary'
 import { generateSessionFeedItems } from '@/lib/feed'
+import { checkSessionBadges, updateChallengeProgress } from '@/lib/badges'
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
     const user = await getCurrentUser()
@@ -101,11 +102,18 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     generateSessionFeedItems(user.id, sessionId, durationMin, totalSets, totalVolume)
         .catch(console.error)
 
+    // Check badges and update challenge progress (fire-and-forget)
+    const badgePromise = checkSessionBadges(user.id).catch(() => [] as string[])
+    const challengePromise = updateChallengeProgress(user.id).catch(() => [] as string[])
+    const [newBadges, challengeBadges] = await Promise.all([badgePromise, challengePromise])
+    const allNewBadges = [...newBadges, ...challengeBadges]
+
     return NextResponse.json({
         success: true,
         durationMin,
         totalSets,
         totalVolume: Math.round(totalVolume),
         suggestions,
+        newBadges: allNewBadges,
     })
 }

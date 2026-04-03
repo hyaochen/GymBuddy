@@ -50,6 +50,13 @@ enum FriendshipStatus {
   BLOCKED
 }
 
+enum ChallengeType {
+  STREAK
+  TOTAL_SESSIONS
+  WEIGHT_PR
+  VOLUME
+}
+
 // ─── Users ───────────────────────────────────────────────────────────────────
 
 model User {
@@ -72,6 +79,12 @@ model User {
   activityFeed           ActivityFeedItem[]
   kudos                  Kudo[]
   profile                UserProfile?
+
+  challengesCreated      Challenge[]
+  challengeParticipants  ChallengeParticipant[]
+  sharedTemplates        SharedTemplate[]
+  templateLikes          TemplateLike[]
+  badges                 UserBadge[]
 
   @@index([email])
   @@map("users")
@@ -139,6 +152,7 @@ model Exercise {
   sessionExercises     SessionExercise[]
   personalRecords      PersonalRecord[]
   exerciseSummaries    UserExerciseSummary[]
+  challenges           Challenge[]
 
   @@index([difficulty])
   @@index([exerciseType])
@@ -396,4 +410,95 @@ model UserProfile {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("user_profiles")
+}
+
+// ─── Challenges ─────────────────────────────────────────────────────────────
+
+model Challenge {
+  id          String        @id @default(cuid())
+  creatorId   String
+  title       String
+  description String?
+  type        ChallengeType
+  targetValue Int
+  exerciseId  String?
+  startDate   DateTime
+  endDate     DateTime
+  isPublic    Boolean       @default(true)
+  createdAt   DateTime      @default(now())
+
+  creator      User                   @relation(fields: [creatorId], references: [id])
+  exercise     Exercise?              @relation(fields: [exerciseId], references: [id])
+  participants ChallengeParticipant[]
+
+  @@index([endDate])
+  @@map("challenges")
+}
+
+model ChallengeParticipant {
+  id           String    @id @default(cuid())
+  challengeId  String
+  userId       String
+  currentValue Int       @default(0)
+  completed    Boolean   @default(false)
+  completedAt  DateTime?
+  joinedAt     DateTime  @default(now())
+
+  challenge Challenge @relation(fields: [challengeId], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [userId], references: [id])
+
+  @@unique([challengeId, userId])
+  @@map("challenge_participants")
+}
+
+// ─── Shared Templates ───────────────────────────────────────────────────────
+
+model SharedTemplate {
+  id            String     @id @default(cuid())
+  creatorId     String
+  name          String
+  description   String?
+  daysPerWeek   Int
+  difficulty    Difficulty
+  targetMuscles String?
+  days          String
+  likes         Int        @default(0)
+  downloads     Int        @default(0)
+  isPublic      Boolean    @default(true)
+  createdAt     DateTime   @default(now())
+
+  creator       User           @relation(fields: [creatorId], references: [id])
+  templateLikes TemplateLike[]
+
+  @@index([likes])
+  @@index([createdAt])
+  @@map("shared_templates")
+}
+
+model TemplateLike {
+  id         String   @id @default(cuid())
+  userId     String
+  templateId String
+  createdAt  DateTime @default(now())
+
+  user     User           @relation(fields: [userId], references: [id])
+  template SharedTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, templateId])
+  @@map("template_likes")
+}
+
+// ─── Badges ─────────────────────────────────────────────────────────────────
+
+model UserBadge {
+  id       String   @id @default(cuid())
+  userId   String
+  badgeKey String
+  earnedAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@unique([userId, badgeKey])
+  @@index([userId])
+  @@map("user_badges")
 }

@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState, useCallback } from "react"
-import { User, Flame, Dumbbell, Calendar, Shield } from "lucide-react"
+import { User, Flame, Dumbbell, Calendar, Shield, Award } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 interface ProfileData {
@@ -24,8 +24,20 @@ interface ProfileData {
     }
 }
 
+interface BadgeData {
+    key: string
+    name: string
+    description: string
+    icon: string
+    category: string
+    earned: boolean
+    earnedAt: string | null
+}
+
 export default function ProfilePage() {
     const [data, setData] = useState<ProfileData | null>(null)
+    const [badges, setBadges] = useState<BadgeData[]>([])
+    const [badgeCounts, setBadgeCounts] = useState({ earned: 0, total: 0 })
     const [loading, setLoading] = useState(true)
     const [saving, setSaving] = useState(false)
     const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null)
@@ -39,9 +51,12 @@ export default function ProfilePage() {
     const [showWeight, setShowWeight] = useState(false)
 
     const fetchProfile = useCallback(async () => {
-        const res = await fetch("/api/profile")
-        if (res.ok) {
-            const d: ProfileData = await res.json()
+        const [profileRes, badgeRes] = await Promise.all([
+            fetch("/api/profile"),
+            fetch("/api/badges"),
+        ])
+        if (profileRes.ok) {
+            const d: ProfileData = await profileRes.json()
             setData(d)
             setDisplayName(d.profile.displayName || "")
             setBio(d.profile.bio || "")
@@ -49,6 +64,11 @@ export default function ProfilePage() {
             setShowWorkouts(d.profile.showWorkouts)
             setShowPRs(d.profile.showPRs)
             setShowWeight(d.profile.showWeight)
+        }
+        if (badgeRes.ok) {
+            const b = await badgeRes.json()
+            setBadges(b.badges)
+            setBadgeCounts({ earned: b.earnedCount, total: b.totalCount })
         }
         setLoading(false)
     }, [])
@@ -84,6 +104,19 @@ export default function ProfilePage() {
 
     if (!data) {
         return <div className="text-center py-10 text-destructive text-sm">載入失敗</div>
+    }
+
+    // Group badges by category
+    const badgesByCategory = {
+        milestone: badges.filter(b => b.category === "milestone"),
+        strength: badges.filter(b => b.category === "strength"),
+        social: badges.filter(b => b.category === "social"),
+    }
+
+    const categoryLabels: Record<string, string> = {
+        milestone: "里程碑",
+        strength: "力量",
+        social: "社交",
     }
 
     return (
@@ -123,6 +156,65 @@ export default function ProfilePage() {
                     <p className="text-2xl font-bold tabular-nums">{data.stats.longestStreak}</p>
                     <p className="text-xs text-muted-foreground">最長連續</p>
                 </div>
+            </div>
+
+            {/* Badge Showcase */}
+            <div className="bg-card rounded-xl border border-border p-5 space-y-4">
+                <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                        <Award className="h-5 w-5 text-primary" />
+                        <h2 className="font-semibold">徽章</h2>
+                    </div>
+                    <span className="text-xs text-muted-foreground">
+                        {badgeCounts.earned} / {badgeCounts.total}
+                    </span>
+                </div>
+
+                {/* Progress bar */}
+                <div className="h-2 bg-secondary rounded-full overflow-hidden">
+                    <div
+                        className="h-full bg-primary rounded-full transition-all"
+                        style={{ width: `${badgeCounts.total > 0 ? (badgeCounts.earned / badgeCounts.total) * 100 : 0}%` }}
+                    />
+                </div>
+
+                {(Object.entries(badgesByCategory) as [string, BadgeData[]][]).map(([cat, catBadges]) => (
+                    <div key={cat} className="space-y-2">
+                        <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                            {categoryLabels[cat]}
+                        </h3>
+                        <div className="grid grid-cols-5 gap-2">
+                            {catBadges.map(b => (
+                                <div
+                                    key={b.key}
+                                    className={cn(
+                                        "group relative flex flex-col items-center justify-center rounded-xl p-2 text-center transition-all",
+                                        b.earned
+                                            ? "bg-primary/10 border border-primary/30"
+                                            : "bg-secondary/50 border border-border opacity-40"
+                                    )}
+                                >
+                                    <span className="text-xl">{b.icon}</span>
+                                    <span className="text-[9px] leading-tight mt-1 font-medium line-clamp-2">
+                                        {b.name}
+                                    </span>
+                                    {/* Tooltip on hover */}
+                                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 hidden group-hover:block z-10 w-36">
+                                        <div className="bg-card border border-border rounded-lg p-2 shadow-lg text-center">
+                                            <p className="text-xs font-medium">{b.name}</p>
+                                            <p className="text-[10px] text-muted-foreground mt-0.5">{b.description}</p>
+                                            {b.earned && b.earnedAt && (
+                                                <p className="text-[10px] text-primary mt-1">
+                                                    {new Date(b.earnedAt).toLocaleDateString("zh-TW")}
+                                                </p>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                ))}
             </div>
 
             {/* Edit profile */}
@@ -167,7 +259,7 @@ export default function ProfilePage() {
                 <div className="space-y-3">
                     <PrivacyToggle label="顯示連續訓練天數" checked={showStreak} onChange={setShowStreak} />
                     <PrivacyToggle label="顯示訓練紀錄" checked={showWorkouts} onChange={setShowWorkouts} />
-                    <PrivacyToggle label="顯示個人最佳紀錄" checked={showPRs} onChange={setShowPRs} />
+                    <PrivacyToggle label="顯示個人最佳紀錄" checked={showPRs} onChange={setShowPRs} description="啟用後好友可與你比較紀錄" />
                     <PrivacyToggle label="顯示重量數據" checked={showWeight} onChange={setShowWeight} />
                 </div>
             </div>
@@ -195,21 +287,25 @@ export default function ProfilePage() {
     )
 }
 
-function PrivacyToggle({ label, checked, onChange }: {
+function PrivacyToggle({ label, checked, onChange, description }: {
     label: string
     checked: boolean
     onChange: (v: boolean) => void
+    description?: string
 }) {
     return (
         <div className="flex items-center justify-between">
-            <span className="text-sm">{label}</span>
+            <div>
+                <span className="text-sm">{label}</span>
+                {description && <p className="text-xs text-muted-foreground">{description}</p>}
+            </div>
             <button
                 type="button"
                 role="switch"
                 aria-checked={checked}
                 onClick={() => onChange(!checked)}
                 className={cn(
-                    "relative inline-flex h-6 w-11 items-center rounded-full transition-colors",
+                    "relative inline-flex h-6 w-11 items-center rounded-full transition-colors shrink-0 ml-3",
                     checked ? "bg-primary" : "bg-secondary"
                 )}
             >

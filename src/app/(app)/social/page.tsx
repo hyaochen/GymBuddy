@@ -1,13 +1,39 @@
 "use client"
 
 import { useEffect, useState, useCallback } from "react"
-import { Users, Activity, Trophy, UserPlus, Check, X, Search, Trash2, Eye, EyeOff, Flame, Dumbbell, Calendar } from "lucide-react"
+import { Users, Activity, Trophy, UserPlus, Check, X, Search, Trash2, Eye, EyeOff, Flame, Dumbbell, Calendar, Swords, BookTemplate, Plus, Clock, Target, TrendingUp, ArrowRight, Heart, Download, ChevronDown } from "lucide-react"
 import { cn } from "@/lib/utils"
 import PRShareCard from "@/components/PRShareCard"
 
-type Tab = "feed" | "friends" | "leaderboard"
+type Tab = "feed" | "friends" | "leaderboard" | "challenges" | "templates"
 
 const KUDOS_EMOJIS = ["💪", "🔥", "👏", "🏆", "⚡"]
+
+const CHALLENGE_TYPE_LABELS: Record<string, string> = {
+    STREAK: "連續訓練天數",
+    TOTAL_SESSIONS: "訓練次數",
+    WEIGHT_PR: "重量目標",
+    VOLUME: "總訓練量",
+}
+
+const CHALLENGE_TYPE_UNITS: Record<string, string> = {
+    STREAK: "天",
+    TOTAL_SESSIONS: "次",
+    WEIGHT_PR: "kg",
+    VOLUME: "kg",
+}
+
+const DIFFICULTY_LABELS: Record<string, string> = {
+    BEGINNER: "初學者",
+    INTERMEDIATE: "中階",
+    ADVANCED: "進階",
+}
+
+const DIFFICULTY_COLORS: Record<string, string> = {
+    BEGINNER: "text-green-400 bg-green-400/15 border-green-400/30",
+    INTERMEDIATE: "text-yellow-400 bg-yellow-400/15 border-yellow-400/30",
+    ADVANCED: "text-red-400 bg-red-400/15 border-red-400/30",
+}
 
 interface FeedItem {
     id: string
@@ -35,6 +61,37 @@ interface LeaderboardData {
     monthlySessions: { userId: string; name: string; sessions: number }[]
 }
 
+interface ChallengeData {
+    id: string
+    title: string
+    description: string | null
+    type: string
+    targetValue: number
+    startDate: string
+    endDate: string
+    exerciseId: string | null
+    exercise: { id: string; name: string } | null
+    creator: { id: string; name: string }
+    participants: { userId: string; currentValue: number; completed: boolean; user: { name: string } }[]
+    participantCount: number
+    isJoined: boolean
+    myProgress: { currentValue: number; completed: boolean } | null
+}
+
+interface TemplateData {
+    id: string
+    name: string
+    description: string | null
+    daysPerWeek: number
+    difficulty: string
+    targetMuscles: string[]
+    likes: number
+    downloads: number
+    isLiked: boolean
+    creator: { id: string; name: string }
+    createdAt: string
+}
+
 function timeAgo(dateStr: string): string {
     const diff = Date.now() - new Date(dateStr).getTime()
     const mins = Math.floor(diff / 60000)
@@ -45,6 +102,14 @@ function timeAgo(dateStr: string): string {
     const days = Math.floor(hrs / 24)
     if (days < 7) return `${days} 天前`
     return new Date(dateStr).toLocaleDateString("zh-TW", { month: "short", day: "numeric" })
+}
+
+function daysLeft(endDate: string): string {
+    const diff = new Date(endDate).getTime() - Date.now()
+    if (diff <= 0) return "已結束"
+    const days = Math.ceil(diff / 86400000)
+    if (days === 1) return "剩餘 1 天"
+    return `剩餘 ${days} 天`
 }
 
 function getActivityDescription(type: string, data: Record<string, unknown> | null): string {
@@ -86,11 +151,16 @@ export default function SocialPage() {
     const [feed, setFeed] = useState<FeedItem[]>([])
     const [friendData, setFriendData] = useState<FriendData | null>(null)
     const [leaderboard, setLeaderboard] = useState<LeaderboardData | null>(null)
+    const [challenges, setChallenges] = useState<ChallengeData[]>([])
+    const [templates, setTemplates] = useState<TemplateData[]>([])
     const [loading, setLoading] = useState(true)
     const [searchName, setSearchName] = useState("")
     const [searchMsg, setSearchMsg] = useState<{ type: "success" | "error"; text: string } | null>(null)
     const [emojiPickerFor, setEmojiPickerFor] = useState<string | null>(null)
     const [prShareItem, setPrShareItem] = useState<FeedItem | null>(null)
+    const [showCreateChallenge, setShowCreateChallenge] = useState(false)
+    const [templateSort, setTemplateSort] = useState<"recent" | "likes" | "downloads">("recent")
+    const [templateSearch, setTemplateSearch] = useState("")
 
     const fetchFeed = useCallback(async () => {
         const res = await fetch("/api/feed")
@@ -113,12 +183,34 @@ export default function SocialPage() {
         setLoading(false)
     }, [])
 
+    const fetchChallenges = useCallback(async () => {
+        const res = await fetch("/api/challenges")
+        if (res.ok) {
+            const data = await res.json()
+            setChallenges(data.challenges)
+        }
+        setLoading(false)
+    }, [])
+
+    const fetchTemplates = useCallback(async () => {
+        const params = new URLSearchParams({ sort: templateSort })
+        if (templateSearch) params.set("search", templateSearch)
+        const res = await fetch(`/api/templates?${params}`)
+        if (res.ok) {
+            const data = await res.json()
+            setTemplates(data.templates)
+        }
+        setLoading(false)
+    }, [templateSort, templateSearch])
+
     useEffect(() => {
         setLoading(true)
         if (tab === "feed") fetchFeed()
         else if (tab === "friends") fetchFriends()
-        else fetchLeaderboard()
-    }, [tab, fetchFeed, fetchFriends, fetchLeaderboard])
+        else if (tab === "leaderboard") fetchLeaderboard()
+        else if (tab === "challenges") fetchChallenges()
+        else if (tab === "templates") fetchTemplates()
+    }, [tab, fetchFeed, fetchFriends, fetchLeaderboard, fetchChallenges, fetchTemplates])
 
     async function handleKudo(feedItemId: string, emoji: string) {
         const item = feed.find(f => f.id === feedItemId)
@@ -175,31 +267,53 @@ export default function SocialPage() {
         fetchFriends()
     }
 
+    async function joinChallenge(challengeId: string) {
+        const res = await fetch(`/api/challenges/${challengeId}/join`, { method: "POST" })
+        if (res.ok) fetchChallenges()
+    }
+
+    async function toggleTemplateLike(templateId: string) {
+        await fetch(`/api/templates/${templateId}/like`, { method: "POST" })
+        fetchTemplates()
+    }
+
+    async function importTemplate(templateId: string) {
+        if (!confirm("確定要匯入此模板為新的訓練計畫？")) return
+        const res = await fetch(`/api/templates/${templateId}/import`, { method: "POST" })
+        if (res.ok) {
+            alert("模板已成功匯入為新計畫！")
+            fetchTemplates()
+        }
+    }
+
     const tabs: { key: Tab; label: string; icon: React.ReactNode }[] = [
         { key: "feed", label: "動態", icon: <Activity className="h-4 w-4" /> },
         { key: "friends", label: "好友", icon: <Users className="h-4 w-4" /> },
-        { key: "leaderboard", label: "排行榜", icon: <Trophy className="h-4 w-4" /> },
+        { key: "challenges", label: "挑戰", icon: <Swords className="h-4 w-4" /> },
+        { key: "templates", label: "模板", icon: <BookTemplate className="h-4 w-4" /> },
+        { key: "leaderboard", label: "排行", icon: <Trophy className="h-4 w-4" /> },
     ]
 
     return (
         <div className="space-y-4">
             <h1 className="text-xl font-bold">社交</h1>
 
-            {/* Tabs */}
-            <div className="flex gap-1 bg-secondary/50 rounded-xl p-1">
+            {/* Tabs - scrollable for 5 tabs on mobile */}
+            <div className="flex gap-1 bg-secondary/50 rounded-xl p-1 overflow-x-auto no-scrollbar">
                 {tabs.map(t => (
                     <button
                         key={t.key}
                         onClick={() => setTab(t.key)}
                         className={cn(
-                            "flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-sm font-medium transition-colors",
+                            "flex-1 min-w-0 flex items-center justify-center gap-1 py-2 rounded-lg text-xs font-medium transition-colors whitespace-nowrap px-2",
                             tab === t.key
                                 ? "bg-card text-foreground shadow-sm"
                                 : "text-muted-foreground hover:text-foreground"
                         )}
                     >
                         {t.icon}
-                        {t.label}
+                        <span className="hidden sm:inline">{t.label}</span>
+                        <span className="sm:hidden">{t.label}</span>
                     </button>
                 ))}
             </div>
@@ -435,6 +549,90 @@ export default function SocialPage() {
                 </div>
             )}
 
+            {/* Challenges Tab */}
+            {!loading && tab === "challenges" && (
+                <div className="space-y-4">
+                    <button
+                        onClick={() => setShowCreateChallenge(!showCreateChallenge)}
+                        className="w-full flex items-center justify-center gap-2 bg-primary text-primary-foreground rounded-xl py-2.5 text-sm font-medium hover:bg-primary/90 transition-colors"
+                    >
+                        <Plus className="h-4 w-4" />
+                        建立挑戰
+                    </button>
+
+                    {showCreateChallenge && (
+                        <CreateChallengeForm
+                            onCreated={() => { setShowCreateChallenge(false); fetchChallenges() }}
+                            onCancel={() => setShowCreateChallenge(false)}
+                        />
+                    )}
+
+                    {challenges.length === 0 && !showCreateChallenge && (
+                        <div className="text-center py-10 text-muted-foreground">
+                            <Swords className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                            <p className="text-sm">還沒有挑戰</p>
+                            <p className="text-xs mt-1">建立一個挑戰，邀請好友一起來！</p>
+                        </div>
+                    )}
+
+                    {challenges.map(c => (
+                        <ChallengeCard
+                            key={c.id}
+                            challenge={c}
+                            onJoin={() => joinChallenge(c.id)}
+                        />
+                    ))}
+                </div>
+            )}
+
+            {/* Templates Tab */}
+            {!loading && tab === "templates" && (
+                <div className="space-y-4">
+                    {/* Search + sort */}
+                    <div className="flex gap-2">
+                        <div className="flex-1 relative">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                            <input
+                                type="text"
+                                placeholder="搜尋模板..."
+                                value={templateSearch}
+                                onChange={e => setTemplateSearch(e.target.value)}
+                                className="w-full bg-secondary/50 border border-border rounded-xl pl-9 pr-3 py-2.5 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
+                            />
+                        </div>
+                        <div className="relative">
+                            <select
+                                value={templateSort}
+                                onChange={e => setTemplateSort(e.target.value as "recent" | "likes" | "downloads")}
+                                className="appearance-none bg-secondary/50 border border-border rounded-xl px-3 pr-8 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
+                            >
+                                <option value="recent">最新</option>
+                                <option value="likes">最多讚</option>
+                                <option value="downloads">最多下載</option>
+                            </select>
+                            <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+                        </div>
+                    </div>
+
+                    {templates.length === 0 && (
+                        <div className="text-center py-10 text-muted-foreground">
+                            <BookTemplate className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                            <p className="text-sm">還沒有社群模板</p>
+                            <p className="text-xs mt-1">在計畫頁面分享你的訓練計畫！</p>
+                        </div>
+                    )}
+
+                    {templates.map(t => (
+                        <TemplateCard
+                            key={t.id}
+                            template={t}
+                            onLike={() => toggleTemplateLike(t.id)}
+                            onImport={() => importTemplate(t.id)}
+                        />
+                    ))}
+                </div>
+            )}
+
             {/* Leaderboard Tab */}
             {!loading && tab === "leaderboard" && leaderboard && (
                 <div className="space-y-5">
@@ -501,6 +699,328 @@ export default function SocialPage() {
         </div>
     )
 }
+
+// ─── Challenge Card ─────────────────────────────────────────────────────────
+
+function ChallengeCard({ challenge: c, onJoin }: { challenge: ChallengeData; onJoin: () => void }) {
+    const progressPct = c.myProgress
+        ? Math.min(100, (c.myProgress.currentValue / c.targetValue) * 100)
+        : 0
+    const isEnded = new Date(c.endDate) < new Date()
+
+    return (
+        <div className="bg-card rounded-xl border border-border p-4 space-y-3">
+            <div className="flex items-start justify-between">
+                <div className="space-y-1">
+                    <h3 className="text-sm font-bold">{c.title}</h3>
+                    {c.description && <p className="text-xs text-muted-foreground">{c.description}</p>}
+                </div>
+                <span className={cn(
+                    "text-xs px-2 py-0.5 rounded-full font-medium",
+                    isEnded ? "bg-secondary text-muted-foreground" : "bg-primary/15 text-primary"
+                )}>
+                    {isEnded ? "已結束" : daysLeft(c.endDate)}
+                </span>
+            </div>
+
+            <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                <span className="flex items-center gap-1">
+                    <Target className="h-3.5 w-3.5" />
+                    {CHALLENGE_TYPE_LABELS[c.type] || c.type}
+                </span>
+                <span className="flex items-center gap-1">
+                    <TrendingUp className="h-3.5 w-3.5" />
+                    目標 {c.targetValue} {CHALLENGE_TYPE_UNITS[c.type]}
+                </span>
+                <span className="flex items-center gap-1">
+                    <Users className="h-3.5 w-3.5" />
+                    {c.participantCount} 人
+                </span>
+            </div>
+
+            {c.exercise && (
+                <div className="text-xs text-muted-foreground">
+                    動作：<span className="text-foreground font-medium">{c.exercise.name}</span>
+                </div>
+            )}
+
+            {/* Participants progress */}
+            {c.participants.length > 0 && (
+                <div className="space-y-1.5">
+                    {c.participants.slice(0, 5).map(p => {
+                        const pct = Math.min(100, (p.currentValue / c.targetValue) * 100)
+                        return (
+                            <div key={p.userId} className="flex items-center gap-2">
+                                <span className="text-xs w-20 truncate font-medium">
+                                    {p.completed ? "✅ " : ""}{p.user.name}
+                                </span>
+                                <div className="flex-1 h-2 bg-secondary rounded-full overflow-hidden">
+                                    <div
+                                        className={cn(
+                                            "h-full rounded-full transition-all",
+                                            p.completed ? "bg-green-500" : "bg-primary"
+                                        )}
+                                        style={{ width: `${pct}%` }}
+                                    />
+                                </div>
+                                <span className="text-xs tabular-nums text-muted-foreground w-16 text-right">
+                                    {p.currentValue}/{c.targetValue}
+                                </span>
+                            </div>
+                        )
+                    })}
+                </div>
+            )}
+
+            {/* My progress highlight */}
+            {c.isJoined && c.myProgress && (
+                <div className="bg-primary/10 rounded-lg p-2.5 flex items-center justify-between">
+                    <span className="text-xs font-medium">你的進度</span>
+                    <span className="text-sm font-bold text-primary tabular-nums">
+                        {c.myProgress.currentValue} / {c.targetValue} {CHALLENGE_TYPE_UNITS[c.type]}
+                        {c.myProgress.completed && " ✅"}
+                    </span>
+                </div>
+            )}
+
+            {/* Join button */}
+            {!c.isJoined && !isEnded && (
+                <button
+                    onClick={onJoin}
+                    className="w-full flex items-center justify-center gap-1.5 bg-primary text-primary-foreground rounded-xl py-2 text-sm font-medium hover:bg-primary/90 transition-colors"
+                >
+                    <ArrowRight className="h-4 w-4" />
+                    加入挑戰
+                </button>
+            )}
+        </div>
+    )
+}
+
+// ─── Create Challenge Form ──────────────────────────────────────────────────
+
+function CreateChallengeForm({ onCreated, onCancel }: { onCreated: () => void; onCancel: () => void }) {
+    const [title, setTitle] = useState("")
+    const [description, setDescription] = useState("")
+    const [type, setType] = useState("TOTAL_SESSIONS")
+    const [targetValue, setTargetValue] = useState("")
+    const [startDate, setStartDate] = useState(new Date().toISOString().split("T")[0])
+    const [endDate, setEndDate] = useState("")
+    const [submitting, setSubmitting] = useState(false)
+    const [error, setError] = useState("")
+
+    // Default end date: 30 days from now
+    useState(() => {
+        const d = new Date()
+        d.setDate(d.getDate() + 30)
+        setEndDate(d.toISOString().split("T")[0])
+    })
+
+    async function handleSubmit(e: React.FormEvent) {
+        e.preventDefault()
+        if (!title || !targetValue) {
+            setError("請填寫標題和目標值")
+            return
+        }
+        setSubmitting(true)
+        setError("")
+
+        const res = await fetch("/api/challenges", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                title,
+                description: description || null,
+                type,
+                targetValue: Number(targetValue),
+                startDate: new Date(startDate).toISOString(),
+                endDate: new Date(endDate).toISOString(),
+            }),
+        })
+
+        if (res.ok) {
+            onCreated()
+        } else {
+            const data = await res.json()
+            setError(data.error || "建立失敗")
+        }
+        setSubmitting(false)
+    }
+
+    return (
+        <form onSubmit={handleSubmit} className="bg-card rounded-xl border border-border p-4 space-y-3">
+            <h3 className="text-sm font-bold">建立新挑戰</h3>
+
+            <div>
+                <label className="text-xs text-muted-foreground block mb-1">挑戰名稱</label>
+                <input
+                    type="text"
+                    value={title}
+                    onChange={e => setTitle(e.target.value)}
+                    placeholder="例：30天深蹲挑戰"
+                    className="w-full bg-secondary/50 border border-border rounded-xl px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
+                />
+            </div>
+
+            <div>
+                <label className="text-xs text-muted-foreground block mb-1">說明（選填）</label>
+                <input
+                    type="text"
+                    value={description}
+                    onChange={e => setDescription(e.target.value)}
+                    placeholder="挑戰說明..."
+                    className="w-full bg-secondary/50 border border-border rounded-xl px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
+                />
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+                <div>
+                    <label className="text-xs text-muted-foreground block mb-1">挑戰類型</label>
+                    <select
+                        value={type}
+                        onChange={e => setType(e.target.value)}
+                        className="w-full bg-secondary/50 border border-border rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
+                    >
+                        <option value="TOTAL_SESSIONS">訓練次數</option>
+                        <option value="STREAK">連續天數</option>
+                        <option value="VOLUME">總訓練量 (kg)</option>
+                        <option value="WEIGHT_PR">重量目標 (kg)</option>
+                    </select>
+                </div>
+                <div>
+                    <label className="text-xs text-muted-foreground block mb-1">
+                        目標值 ({CHALLENGE_TYPE_UNITS[type]})
+                    </label>
+                    <input
+                        type="number"
+                        value={targetValue}
+                        onChange={e => setTargetValue(e.target.value)}
+                        placeholder="例：30"
+                        className="w-full bg-secondary/50 border border-border rounded-xl px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
+                    />
+                </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+                <div>
+                    <label className="text-xs text-muted-foreground block mb-1">開始日期</label>
+                    <input
+                        type="date"
+                        value={startDate}
+                        onChange={e => setStartDate(e.target.value)}
+                        className="w-full bg-secondary/50 border border-border rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
+                    />
+                </div>
+                <div>
+                    <label className="text-xs text-muted-foreground block mb-1">結束日期</label>
+                    <input
+                        type="date"
+                        value={endDate}
+                        onChange={e => setEndDate(e.target.value)}
+                        className="w-full bg-secondary/50 border border-border rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
+                    />
+                </div>
+            </div>
+
+            {error && <p className="text-xs text-destructive">{error}</p>}
+
+            <div className="flex gap-2">
+                <button
+                    type="button"
+                    onClick={onCancel}
+                    className="flex-1 bg-secondary text-foreground rounded-xl py-2 text-sm font-medium hover:bg-secondary/80 transition-colors"
+                >
+                    取消
+                </button>
+                <button
+                    type="submit"
+                    disabled={submitting}
+                    className="flex-1 bg-primary text-primary-foreground rounded-xl py-2 text-sm font-medium hover:bg-primary/90 disabled:opacity-50 transition-colors"
+                >
+                    {submitting ? "建立中..." : "建立"}
+                </button>
+            </div>
+        </form>
+    )
+}
+
+// ─── Template Card ──────────────────────────────────────────────────────────
+
+function TemplateCard({ template: t, onLike, onImport }: {
+    template: TemplateData
+    onLike: () => void
+    onImport: () => void
+}) {
+    return (
+        <div className="bg-card rounded-xl border border-border p-4 space-y-3">
+            <div className="flex items-start justify-between">
+                <div className="space-y-1">
+                    <h3 className="text-sm font-bold">{t.name}</h3>
+                    {t.description && (
+                        <p className="text-xs text-muted-foreground line-clamp-2">{t.description}</p>
+                    )}
+                </div>
+                <span className={cn(
+                    "text-xs px-2 py-0.5 rounded-full border font-medium",
+                    DIFFICULTY_COLORS[t.difficulty] || "text-muted-foreground bg-secondary"
+                )}>
+                    {DIFFICULTY_LABELS[t.difficulty] || t.difficulty}
+                </span>
+            </div>
+
+            <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                <span className="flex items-center gap-1">
+                    <Calendar className="h-3.5 w-3.5" />
+                    {t.daysPerWeek} 天/週
+                </span>
+                <span>
+                    by {t.creator.name}
+                </span>
+                <span>{timeAgo(t.createdAt)}</span>
+            </div>
+
+            {/* Target muscles */}
+            {t.targetMuscles.length > 0 && (
+                <div className="flex flex-wrap gap-1">
+                    {t.targetMuscles.map((m: string) => (
+                        <span key={m} className="text-xs bg-secondary text-secondary-foreground rounded-lg px-2 py-0.5">
+                            {m}
+                        </span>
+                    ))}
+                </div>
+            )}
+
+            {/* Actions */}
+            <div className="flex items-center justify-between pt-1">
+                <div className="flex items-center gap-3">
+                    <button
+                        onClick={onLike}
+                        className={cn(
+                            "flex items-center gap-1 text-xs transition-colors",
+                            t.isLiked ? "text-red-400" : "text-muted-foreground hover:text-red-400"
+                        )}
+                    >
+                        <Heart className={cn("h-4 w-4", t.isLiked && "fill-current")} />
+                        {t.likes}
+                    </button>
+                    <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                        <Download className="h-3.5 w-3.5" />
+                        {t.downloads}
+                    </span>
+                </div>
+                <button
+                    onClick={onImport}
+                    className="flex items-center gap-1 bg-primary/15 text-primary rounded-lg px-3 py-1.5 text-xs font-medium hover:bg-primary/25 transition-colors"
+                >
+                    <Download className="h-3.5 w-3.5" />
+                    匯入計畫
+                </button>
+            </div>
+        </div>
+    )
+}
+
+// ─── Leaderboard Section ────────────────────────────────────────────────────
 
 function LeaderboardSection({ title, icon, items, emptyText }: {
     title: string
