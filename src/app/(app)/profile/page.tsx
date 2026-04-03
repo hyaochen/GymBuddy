@@ -213,7 +213,6 @@ export default function ProfilePage() {
                             ref={fileInputRef}
                             type="file"
                             accept="image/*"
-                            capture="user"
                             onChange={handleFileSelect}
                             className="hidden"
                         />
