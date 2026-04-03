@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useRef, useEffect, Fragment } from "react"
-import { Send, BookOpen, AlertCircle, BrainCircuit } from "lucide-react"
+import { Send, BookOpen, AlertCircle, BrainCircuit, Database, TrendingUp, Lightbulb, Search } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 // ── Minimal Markdown renderer ────────────────────────────────────────────────
@@ -84,13 +84,33 @@ function MarkdownContent({ text, streaming }: { text: string; streaming?: boolea
 
     flushList()
 
-    // Append cursor after last node if streaming and last line was a list
-    if (streaming && listItems.length === 0 && nodes.length > 0) {
-        // cursor already appended above for last normal line
-    }
-
     return <div className="leading-relaxed space-y-0">{nodes}</div>
 }
+
+// ── Query type badge config ──────────────────────────────────────────────────
+
+type QueryType = 'direct' | 'analysis' | 'recommendation' | 'book-knowledge'
+
+const QUERY_TYPE_CONFIG: Record<QueryType, { label: string; icon: typeof Database; color: string }> = {
+    'direct': { label: '直接查詢', icon: Database, color: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30' },
+    'analysis': { label: '分析', icon: TrendingUp, color: 'bg-blue-500/15 text-blue-400 border-blue-500/30' },
+    'recommendation': { label: '推薦', icon: Lightbulb, color: 'bg-amber-500/15 text-amber-400 border-amber-500/30' },
+    'book-knowledge': { label: '書籍知識', icon: BookOpen, color: 'bg-purple-500/15 text-purple-400 border-purple-500/30' },
+}
+
+function QueryBadge({ type }: { type: QueryType }) {
+    const config = QUERY_TYPE_CONFIG[type]
+    if (!config) return null
+    const Icon = config.icon
+    return (
+        <span className={cn("inline-flex items-center gap-1 text-[11px] font-medium rounded-full px-2 py-0.5 border", config.color)}>
+            <Icon className="h-3 w-3" />
+            {config.label}
+        </span>
+    )
+}
+
+// ── Types ────────────────────────────────────────────────────────────────────
 
 interface SourceInfo {
     page_number: number
@@ -108,7 +128,10 @@ interface Message {
     elapsed?: number
     error?: boolean
     streaming?: boolean
+    queryType?: QueryType
 }
+
+// ── Constants ────────────────────────────────────────────────────────────────
 
 const BOOK_OPTIONS = [
     { value: "", label: "兩本書" },
@@ -122,6 +145,15 @@ const SAMPLE_QUESTIONS = [
     "深蹲時如何保護膝蓋和腰椎？",
     "訓練後有哪些適合的伸展放鬆動作？",
 ]
+
+const QUICK_BUTTONS = [
+    { label: "我的 PR", question: "我的 PR 紀錄" },
+    { label: "本週訓練量", question: "我這週的訓練頻率和訓練量？" },
+    { label: "推薦今天練什麼", question: "根據我最近的訓練，推薦今天練什麼？" },
+    { label: "肌群平衡分析", question: "分析我的肌群訓練平衡，有哪些不足？" },
+]
+
+// ── Components ───────────────────────────────────────────────────────────────
 
 function ThinkingDots() {
     return (
@@ -139,6 +171,8 @@ function ThinkingDots() {
         </div>
     )
 }
+
+// ── Main Page ────────────────────────────────────────────────────────────────
 
 export default function AIAssistantPage() {
     const [messages, setMessages] = useState<Message[]>([])
@@ -201,6 +235,15 @@ export default function AIAssistantPage() {
                         return
                     }
 
+                    // Capture query type from first SSE event
+                    if (parsed.queryType) {
+                        setMessages(prev => prev.map(m =>
+                            m.id === assistantId
+                                ? { ...m, queryType: parsed.queryType as QueryType }
+                                : m
+                        ))
+                    }
+
                     if (parsed.token) {
                         setMessages(prev => prev.map(m =>
                             m.id === assistantId
@@ -255,9 +298,9 @@ export default function AIAssistantPage() {
                 <div className="flex items-center gap-2">
                     <BrainCircuit className="h-5 w-5 text-primary" />
                     <div>
-                        <h1 className="text-base font-bold leading-tight">AI 書籍助理</h1>
+                        <h1 className="text-base font-bold leading-tight">AI 健身助理</h1>
                         <p className="text-[11px] text-muted-foreground leading-tight mt-0.5">
-                            核心訓練圖解聖經 · 肌力訓練
+                            訓練數據分析 · 書籍知識
                         </p>
                     </div>
                 </div>
@@ -276,21 +319,40 @@ export default function AIAssistantPage() {
                 {messages.length === 0 && (
                     <div className="space-y-4">
                         <div className="text-center py-6">
-                            <BookOpen className="h-10 w-10 text-muted-foreground mx-auto mb-3 opacity-60" />
-                            <p className="text-sm text-muted-foreground font-medium">詢問書中的健身知識</p>
-                            <p className="text-xs text-muted-foreground mt-1">回答會標注來自哪本書的哪一頁</p>
+                            <BrainCircuit className="h-10 w-10 text-muted-foreground mx-auto mb-3 opacity-60" />
+                            <p className="text-sm text-muted-foreground font-medium">你的 AI 健身助理</p>
+                            <p className="text-xs text-muted-foreground mt-1">查詢訓練紀錄、分析進步趨勢、取得訓練建議</p>
                         </div>
-                        <div className="grid grid-cols-1 gap-2">
-                            {SAMPLE_QUESTIONS.map(q => (
+
+                        {/* Quick action buttons */}
+                        <div className="grid grid-cols-2 gap-2">
+                            {QUICK_BUTTONS.map(btn => (
                                 <button
-                                    key={q}
-                                    onClick={() => sendMessage(q)}
+                                    key={btn.label}
+                                    onClick={() => sendMessage(btn.question)}
                                     disabled={loading}
-                                    className="text-left text-sm bg-card border border-border rounded-xl px-4 py-3 hover:border-primary/50 hover:bg-accent transition-colors text-muted-foreground hover:text-foreground"
+                                    className="flex items-center gap-2 text-left text-sm bg-card border border-border rounded-xl px-3 py-2.5 hover:border-primary/50 hover:bg-accent transition-colors text-muted-foreground hover:text-foreground"
                                 >
-                                    {q}
+                                    <Search className="h-3.5 w-3.5 flex-shrink-0 text-primary/70" />
+                                    <span>{btn.label}</span>
                                 </button>
                             ))}
+                        </div>
+
+                        <div className="pt-2">
+                            <p className="text-[11px] text-muted-foreground font-medium mb-2 px-1">或問書本知識：</p>
+                            <div className="grid grid-cols-1 gap-2">
+                                {SAMPLE_QUESTIONS.map(q => (
+                                    <button
+                                        key={q}
+                                        onClick={() => sendMessage(q)}
+                                        disabled={loading}
+                                        className="text-left text-sm bg-card border border-border rounded-xl px-4 py-3 hover:border-primary/50 hover:bg-accent transition-colors text-muted-foreground hover:text-foreground"
+                                    >
+                                        {q}
+                                    </button>
+                                ))}
+                            </div>
                         </div>
                     </div>
                 )}
@@ -305,6 +367,13 @@ export default function AIAssistantPage() {
                                 ? "bg-destructive/10 text-destructive border border-destructive/20 rounded-bl-sm"
                                 : "bg-card border border-border rounded-bl-sm"
                         )}>
+                            {/* Query type badge */}
+                            {msg.role === "assistant" && msg.queryType && !msg.error && (
+                                <div className="mb-2">
+                                    <QueryBadge type={msg.queryType} />
+                                </div>
+                            )}
+
                             {msg.error && (
                                 <div className="flex items-center gap-1.5 mb-1.5">
                                     <AlertCircle className="h-4 w-4 flex-shrink-0" />
@@ -371,7 +440,7 @@ export default function AIAssistantPage() {
                     </button>
                 </div>
                 <p className="text-[10px] text-muted-foreground mt-1.5 px-1">
-                    回答來自書籍 OCR 內容，僅供參考。
+                    訓練紀錄查詢即時回覆，書籍問答來自 OCR 內容，僅供參考。
                 </p>
             </div>
         </div>
