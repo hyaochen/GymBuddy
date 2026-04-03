@@ -65,8 +65,8 @@ export async function POST(req: NextRequest) {
     const buffer = Buffer.from(bytes)
     await writeFile(path.join(uploadDir, fileName), buffer)
 
-    // Build URL with cache-busting timestamp
-    const avatarUrl = `/uploads/avatars/${fileName}?t=${Date.now()}`
+    // Use API route to serve (Next.js production doesn't serve dynamic public/ files)
+    const avatarUrl = `/api/avatar/${fileName}?t=${Date.now()}`
 
     // Update database
     await prisma.userProfile.upsert({

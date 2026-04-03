@@ -11,7 +11,7 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-workout_dev_password}
       TZ: Asia/Taipei
     ports:
-      - "${DB_PORT:-5435}:5432"
+      - "127.0.0.1:${DB_PORT:-5435}:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
@@ -46,6 +46,8 @@ services:
       DATABASE_URL: postgresql://${POSTGRES_USER:-workout}:${POSTGRES_PASSWORD:-workout_dev_password}@workout-db:5432/${POSTGRES_DB:-workout}
       COOKIE_SECURE: ${COOKIE_SECURE:-false}
       RAG_API_URL: ${RAG_API_URL:-http://rag-api:8080}
+    volumes:
+      - ./uploads:/app/public/uploads
     logging:
       driver: json-file
       options:
