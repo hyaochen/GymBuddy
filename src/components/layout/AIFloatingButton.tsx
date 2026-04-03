@@ -10,9 +10,6 @@ export default function AIFloatingButton() {
     const pathname = usePathname()
     const [showPulse, setShowPulse] = useState(false)
 
-    // Don't show on the AI page itself
-    if (pathname.startsWith("/ai")) return null
-
     useEffect(() => {
         const hasVisited = localStorage.getItem("gymbuddy-ai-visited")
         if (!hasVisited) {
@@ -24,6 +21,9 @@ export default function AIFloatingButton() {
         localStorage.setItem("gymbuddy-ai-visited", "1")
         setShowPulse(false)
     }
+
+    // Don't show on the AI page itself (moved AFTER hooks)
+    if (pathname.startsWith("/ai")) return null
 
     return (
         <Link
