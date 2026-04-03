@@ -42,6 +42,14 @@ enum BodyRegion {
   CARDIO
 }
 
+// ─── Social Enums ────────────────────────────────────────────────────────────
+
+enum FriendshipStatus {
+  PENDING
+  ACCEPTED
+  BLOCKED
+}
+
 // ─── Users ───────────────────────────────────────────────────────────────────
 
 model User {
@@ -58,6 +66,12 @@ model User {
   personalRecords    PersonalRecord[]
   exerciseSummaries  UserExerciseSummary[]
   passkeys           Passkey[]
+
+  friendRequestsSent     Friendship[]       @relation("FriendRequestsSent")
+  friendRequestsReceived Friendship[]       @relation("FriendRequestsReceived")
+  activityFeed           ActivityFeedItem[]
+  kudos                  Kudo[]
+  profile                UserProfile?
 
   @@index([email])
   @@map("users")
@@ -313,4 +327,73 @@ model PersonalRecord {
   @@index([userId, exerciseId])
   @@index([userId])
   @@map("personal_records")
+}
+
+// ─── Social: Friendships ────────────────────────────────────────────────────
+
+model Friendship {
+  id          String           @id @default(cuid())
+  requesterId String
+  receiverId  String
+  status      FriendshipStatus @default(PENDING)
+  createdAt   DateTime         @default(now())
+
+  requester User @relation("FriendRequestsSent", fields: [requesterId], references: [id])
+  receiver  User @relation("FriendRequestsReceived", fields: [receiverId], references: [id])
+
+  @@unique([requesterId, receiverId])
+  @@index([receiverId, status])
+  @@map("friendships")
+}
+
+// ─── Social: Activity Feed ──────────────────────────────────────────────────
+
+model ActivityFeedItem {
+  id        String   @id @default(cuid())
+  userId    String
+  type      String   // PR_ACHIEVED, WORKOUT_COMPLETED, STREAK_MILESTONE
+  data      String?  // JSON string
+  isPublic  Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user  User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  kudos Kudo[]
+
+  @@index([userId, createdAt])
+  @@index([createdAt])
+  @@map("activity_feed_items")
+}
+
+// ─── Social: Kudos ──────────────────────────────────────────────────────────
+
+model Kudo {
+  id         String   @id @default(cuid())
+  userId     String
+  feedItemId String
+  emoji      String   @default("💪")
+  createdAt  DateTime @default(now())
+
+  user     User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  feedItem ActivityFeedItem @relation(fields: [feedItemId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, feedItemId])
+  @@map("kudos")
+}
+
+// ─── Social: User Profile ───────────────────────────────────────────────────
+
+model UserProfile {
+  id           String  @id @default(cuid())
+  userId       String  @unique
+  displayName  String?
+  bio          String?
+  avatarUrl    String?
+  showStreak   Boolean @default(true)
+  showWorkouts Boolean @default(true)
+  showPRs      Boolean @default(false)
+  showWeight   Boolean @default(false)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_profiles")
 }

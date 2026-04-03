@@ -1,0 +1,223 @@
+"use client"
+
+import { useEffect, useState, useCallback } from "react"
+import { User, Flame, Dumbbell, Calendar, Shield } from "lucide-react"
+import { cn } from "@/lib/utils"
+
+interface ProfileData {
+    name: string
+    email: string
+    createdAt: string
+    profile: {
+        displayName: string | null
+        bio: string | null
+        avatarUrl: string | null
+        showStreak: boolean
+        showWorkouts: boolean
+        showPRs: boolean
+        showWeight: boolean
+    }
+    stats: {
+        totalSessions: number
+        currentStreak: number
+        longestStreak: number
+    }
+}
+
+export default function ProfilePage() {
+    const [data, setData] = useState<ProfileData | null>(null)
+    const [loading, setLoading] = useState(true)
+    const [saving, setSaving] = useState(false)
+    const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null)
+
+    // Form state
+    const [displayName, setDisplayName] = useState("")
+    const [bio, setBio] = useState("")
+    const [showStreak, setShowStreak] = useState(true)
+    const [showWorkouts, setShowWorkouts] = useState(true)
+    const [showPRs, setShowPRs] = useState(false)
+    const [showWeight, setShowWeight] = useState(false)
+
+    const fetchProfile = useCallback(async () => {
+        const res = await fetch("/api/profile")
+        if (res.ok) {
+            const d: ProfileData = await res.json()
+            setData(d)
+            setDisplayName(d.profile.displayName || "")
+            setBio(d.profile.bio || "")
+            setShowStreak(d.profile.showStreak)
+            setShowWorkouts(d.profile.showWorkouts)
+            setShowPRs(d.profile.showPRs)
+            setShowWeight(d.profile.showWeight)
+        }
+        setLoading(false)
+    }, [])
+
+    useEffect(() => { fetchProfile() }, [fetchProfile])
+
+    async function handleSave() {
+        setSaving(true)
+        setMessage(null)
+        const res = await fetch("/api/profile", {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                displayName: displayName || null,
+                bio: bio || null,
+                showStreak,
+                showWorkouts,
+                showPRs,
+                showWeight,
+            }),
+        })
+        if (res.ok) {
+            setMessage({ type: "success", text: "已儲存！" })
+        } else {
+            setMessage({ type: "error", text: "儲存失敗" })
+        }
+        setSaving(false)
+    }
+
+    if (loading) {
+        return <div className="text-center py-10 text-muted-foreground text-sm">載入中...</div>
+    }
+
+    if (!data) {
+        return <div className="text-center py-10 text-destructive text-sm">載入失敗</div>
+    }
+
+    return (
+        <div className="space-y-5">
+            <h1 className="text-xl font-bold">個人檔案</h1>
+
+            {/* Avatar + basic info */}
+            <div className="bg-card rounded-xl border border-border p-5">
+                <div className="flex items-center gap-4">
+                    <div className="h-16 w-16 rounded-full bg-primary/20 flex items-center justify-center text-2xl font-bold text-primary">
+                        {data.name.charAt(0).toUpperCase()}
+                    </div>
+                    <div>
+                        <p className="font-bold text-lg">{data.name}</p>
+                        <p className="text-sm text-muted-foreground">{data.email}</p>
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                            加入於 {new Date(data.createdAt).toLocaleDateString("zh-TW", { year: "numeric", month: "long", day: "numeric" })}
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            {/* Stats */}
+            <div className="grid grid-cols-3 gap-3">
+                <div className="bg-card rounded-xl border border-border p-3 text-center">
+                    <Dumbbell className="h-5 w-5 mx-auto text-primary mb-1" />
+                    <p className="text-2xl font-bold tabular-nums">{data.stats.totalSessions}</p>
+                    <p className="text-xs text-muted-foreground">總訓練次數</p>
+                </div>
+                <div className="bg-card rounded-xl border border-border p-3 text-center">
+                    <Flame className="h-5 w-5 mx-auto text-orange-400 mb-1" />
+                    <p className="text-2xl font-bold tabular-nums">{data.stats.currentStreak}</p>
+                    <p className="text-xs text-muted-foreground">連續天數</p>
+                </div>
+                <div className="bg-card rounded-xl border border-border p-3 text-center">
+                    <Calendar className="h-5 w-5 mx-auto text-blue-400 mb-1" />
+                    <p className="text-2xl font-bold tabular-nums">{data.stats.longestStreak}</p>
+                    <p className="text-xs text-muted-foreground">最長連續</p>
+                </div>
+            </div>
+
+            {/* Edit profile */}
+            <div className="bg-card rounded-xl border border-border p-5 space-y-4">
+                <div className="flex items-center gap-2">
+                    <User className="h-5 w-5 text-primary" />
+                    <h2 className="font-semibold">編輯資料</h2>
+                </div>
+
+                <div className="space-y-3">
+                    <div>
+                        <label className="text-sm text-muted-foreground mb-1 block">顯示名稱</label>
+                        <input
+                            type="text"
+                            value={displayName}
+                            onChange={e => setDisplayName(e.target.value)}
+                            placeholder={data.name}
+                            className="w-full bg-secondary/50 border border-border rounded-xl px-3 py-2.5 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
+                        />
+                    </div>
+                    <div>
+                        <label className="text-sm text-muted-foreground mb-1 block">個人簡介</label>
+                        <textarea
+                            value={bio}
+                            onChange={e => setBio(e.target.value)}
+                            placeholder="告訴大家你的訓練風格..."
+                            rows={3}
+                            className="w-full bg-secondary/50 border border-border rounded-xl px-3 py-2.5 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 resize-none"
+                        />
+                    </div>
+                </div>
+            </div>
+
+            {/* Privacy settings */}
+            <div className="bg-card rounded-xl border border-border p-5 space-y-4">
+                <div className="flex items-center gap-2">
+                    <Shield className="h-5 w-5 text-primary" />
+                    <h2 className="font-semibold">隱私設定</h2>
+                </div>
+                <p className="text-xs text-muted-foreground">控制好友能看到哪些資訊</p>
+
+                <div className="space-y-3">
+                    <PrivacyToggle label="顯示連續訓練天數" checked={showStreak} onChange={setShowStreak} />
+                    <PrivacyToggle label="顯示訓練紀錄" checked={showWorkouts} onChange={setShowWorkouts} />
+                    <PrivacyToggle label="顯示個人最佳紀錄" checked={showPRs} onChange={setShowPRs} />
+                    <PrivacyToggle label="顯示重量數據" checked={showWeight} onChange={setShowWeight} />
+                </div>
+            </div>
+
+            {/* Save */}
+            {message && (
+                <div className={cn(
+                    "rounded-lg px-3 py-2 text-sm",
+                    message.type === "success"
+                        ? "bg-green-500/15 text-green-400 border border-green-500/30"
+                        : "bg-destructive/15 text-destructive border border-destructive/30"
+                )}>
+                    {message.text}
+                </div>
+            )}
+
+            <button
+                onClick={handleSave}
+                disabled={saving}
+                className="w-full bg-primary text-primary-foreground rounded-xl py-3 text-sm font-medium hover:bg-primary/90 disabled:opacity-50 transition-colors"
+            >
+                {saving ? "儲存中..." : "儲存變更"}
+            </button>
+        </div>
+    )
+}
+
+function PrivacyToggle({ label, checked, onChange }: {
+    label: string
+    checked: boolean
+    onChange: (v: boolean) => void
+}) {
+    return (
+        <div className="flex items-center justify-between">
+            <span className="text-sm">{label}</span>
+            <button
+                type="button"
+                role="switch"
+                aria-checked={checked}
+                onClick={() => onChange(!checked)}
+                className={cn(
+                    "relative inline-flex h-6 w-11 items-center rounded-full transition-colors",
+                    checked ? "bg-primary" : "bg-secondary"
+                )}
+            >
+                <span className={cn(
+                    "inline-block h-4 w-4 rounded-full bg-white transition-transform",
+                    checked ? "translate-x-6" : "translate-x-1"
+                )} />
+            </button>
+        </div>
+    )
+}

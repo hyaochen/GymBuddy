@@ -3,6 +3,7 @@ import prisma from '@/lib/prisma'
 import { getCurrentUser } from '@/lib/auth'
 import { generateOverloadSuggestion } from '@/lib/progressive-overload'
 import { updateExerciseSummary } from '@/lib/exercise-summary'
+import { generateSessionFeedItems } from '@/lib/feed'
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
     const user = await getCurrentUser()
@@ -95,6 +96,10 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     const totalVolume = session.exercises.reduce((sum, se) =>
         sum + se.sets.reduce((s2, set) => s2 + (Number(set.weightKg) * set.repsPerformed), 0), 0
     )
+
+    // Generate social feed items (fire-and-forget)
+    generateSessionFeedItems(user.id, sessionId, durationMin, totalSets, totalVolume)
+        .catch(console.error)
 
     return NextResponse.json({
         success: true,

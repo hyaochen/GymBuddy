@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Home, Dumbbell, Play, ClipboardList, History, BarChart3 } from "lucide-react"
+import { Home, Dumbbell, Play, ClipboardList, Users, BarChart3 } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 const navItems = [
@@ -10,7 +10,7 @@ const navItems = [
     { href: "/exercises", label: "動作庫", icon: Dumbbell },
     { href: "/session", label: "開始", icon: Play, primary: true },
     { href: "/plans", label: "計畫", icon: ClipboardList },
-    { href: "/history", label: "記錄", icon: History },
+    { href: "/social", label: "社交", icon: Users },
     { href: "/analytics", label: "分析", icon: BarChart3 },
 ]
 
