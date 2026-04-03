@@ -25,6 +25,9 @@ export async function generateSessionFeedItems(
 
     if (!session) return
 
+    // Skip feed item if session has no real training data (0 sets or no duration)
+    if (totalSets === 0 || !durationMin || durationMin <= 0) return
+
     const exerciseNames = session.exercises.map(e => {
         const name = e.exercise.name
         return name.includes(' / ') ? name.split(' / ')[1] : name
