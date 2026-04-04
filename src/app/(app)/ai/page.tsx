@@ -24,56 +24,83 @@ function renderInline(text: string): React.ReactNode[] {
 function MarkdownContent({ text, streaming }: { text: string; streaming?: boolean }) {
     const lines = text.split("\n")
     const nodes: React.ReactNode[] = []
-    let listItems: React.ReactNode[] = []
+    let ulItems: React.ReactNode[] = []
+    let olItems: React.ReactNode[] = []
     let key = 0
 
-    function flushList() {
-        if (listItems.length > 0) {
-            nodes.push(<ul key={key++} className="list-disc pl-5 space-y-0.5 my-1">{listItems}</ul>)
-            listItems = []
+    function flushUl() {
+        if (ulItems.length > 0) {
+            nodes.push(<ul key={key++} className="list-disc pl-5 space-y-1 my-2">{ulItems}</ul>)
+            ulItems = []
         }
     }
+
+    function flushOl() {
+        if (olItems.length > 0) {
+            nodes.push(<ol key={key++} className="list-decimal pl-5 space-y-1 my-2">{olItems}</ol>)
+            olItems = []
+        }
+    }
+
+    function flushAll() { flushUl(); flushOl() }
 
     for (let i = 0; i < lines.length; i++) {
         const line = lines[i]
         const isLast = i === lines.length - 1
 
-        // Heading
-        const headingMatch = line.match(/^(#{1,3})\s+(.+)/)
+        // Heading (1-6 levels)
+        const headingMatch = line.match(/^(#{1,6})\s+(.+)/)
         if (headingMatch) {
-            flushList()
-            const level = headingMatch[1].length
-            const cls = level === 1 ? "text-base font-bold mt-2 mb-1" : level === 2 ? "text-sm font-semibold mt-2 mb-0.5" : "text-sm font-medium mt-1"
+            flushAll()
+            const level = Math.min(headingMatch[1].length, 4)
+            const cls = level === 1
+                ? "text-base font-bold mt-3 mb-1.5"
+                : level === 2
+                ? "text-[15px] font-semibold mt-2.5 mb-1"
+                : level === 3
+                ? "text-sm font-semibold mt-2 mb-0.5"
+                : "text-sm font-medium mt-1.5 mb-0.5 text-primary/90"
             nodes.push(<p key={key++} className={cls}>{renderInline(headingMatch[2])}</p>)
             continue
         }
 
-        // List item
-        const listMatch = line.match(/^[-*•]\s+(.+)/)
-        if (listMatch) {
-            listItems.push(<li key={key++}>{renderInline(listMatch[1])}</li>)
+        // Unordered list item (supports indented sub-items)
+        const ulMatch = line.match(/^(\s*)[-*•]\s+(.+)/)
+        if (ulMatch) {
+            flushOl()
+            const indent = ulMatch[1].length > 0
+            ulItems.push(
+                <li key={key++} className={indent ? "ml-4" : ""}>
+                    {renderInline(ulMatch[2])}
+                </li>
+            )
             continue
         }
 
-        // Numbered list
-        const numMatch = line.match(/^\d+\.\s+(.+)/)
-        if (numMatch) {
-            flushList()
-            nodes.push(<p key={key++} className="my-0.5">{renderInline(line)}</p>)
+        // Numbered list item
+        const olMatch = line.match(/^(\s*)\d+[.)]\s+(.+)/)
+        if (olMatch) {
+            flushUl()
+            const indent = olMatch[1].length > 0
+            olItems.push(
+                <li key={key++} className={indent ? "ml-4" : ""}>
+                    {renderInline(olMatch[2])}
+                </li>
+            )
             continue
         }
 
         // Blank line → paragraph break
         if (line.trim() === "") {
-            flushList()
+            flushAll()
             continue
         }
 
         // Normal text
-        flushList()
+        flushAll()
         const content = renderInline(line)
         nodes.push(
-            <p key={key++} className="my-0.5">
+            <p key={key++} className="my-0.5 leading-relaxed">
                 {content}
                 {isLast && streaming && (
                     <span className="inline-block w-0.5 h-[1em] bg-current ml-0.5 align-text-bottom animate-pulse" />
@@ -82,9 +109,9 @@ function MarkdownContent({ text, streaming }: { text: string; streaming?: boolea
         )
     }
 
-    flushList()
+    flushAll()
 
-    return <div className="leading-relaxed space-y-0">{nodes}</div>
+    return <div className="space-y-0.5">{nodes}</div>
 }
 
 // ── Query type badge config ──────────────────────────────────────────────────
