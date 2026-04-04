@@ -62,6 +62,9 @@ type State = {
     reps: number
     weight: number
     duration: number      // seconds for time-based exercises
+    isTiming: boolean     // true when stopwatch is running for time-based
+    timingStart: number   // wall-clock ms when timing started
+    timingElapsed: number // live elapsed seconds (updated by interval)
     restLeft: number
     restTotal: number
     restEndTime: number | null   // wall-clock ms when rest ends
@@ -78,6 +81,9 @@ type Action =
     | { type: 'ADJ_WEIGHT'; delta: number }
     | { type: 'ADJ_REPS'; delta: number }
     | { type: 'ADJ_DURATION'; delta: number }
+    | { type: 'TIMING_START' }
+    | { type: 'TIMING_TICK' }
+    | { type: 'TIMING_STOP' }
     | { type: 'SET_DONE'; set: LoggedSet; restSeconds: number; restEndTime: number; isNewPR: boolean; exerciseName: string }
     | { type: 'REST_TICK' }
     | { type: 'SET_REST_LEFT'; value: number }
@@ -138,6 +144,7 @@ function navigateTo(state: State, nextIdx: number): State {
         weight: lastSet ? Number(lastSet.weightKg) || 20 : getInitWeight(state.session, nextIdx, state.defaults),
         reps: getInitReps(state.session, nextIdx, state.defaults),
         duration: getInitDuration(state.session, nextIdx, state.defaults),
+        isTiming: false, timingStart: 0, timingElapsed: 0,
         loggedSets: dbSets,
         restLeft: 0,
         restEndTime: null,
@@ -155,6 +162,9 @@ const initState: State = {
     reps: 10,
     weight: 20,
     duration: 30,
+    isTiming: false,
+    timingStart: 0,
+    timingElapsed: 0,
     restLeft: 0,
     restTotal: 90,
     restEndTime: null,
@@ -205,6 +215,7 @@ function reducer(state: State, action: Action): State {
                 weight: lastSet ? Number(lastSet.weightKg) || 20 : getInitWeight(action.session, startIdx, action.defaults),
                 reps: getInitReps(action.session, startIdx, action.defaults),
                 duration: getInitDuration(action.session, startIdx, action.defaults),
+                isTiming: false, timingStart: 0, timingElapsed: 0,
                 loggedSets: startSets,
                 restEndTime: null,
                 alarmRinging: false,
@@ -216,6 +227,14 @@ function reducer(state: State, action: Action): State {
             return { ...state, reps: Math.max(1, state.reps + action.delta) }
         case 'ADJ_DURATION':
             return { ...state, duration: Math.max(5, state.duration + action.delta) }
+        case 'TIMING_START':
+            return { ...state, isTiming: true, timingStart: Date.now(), timingElapsed: 0 }
+        case 'TIMING_TICK': {
+            const elapsed = Math.round((Date.now() - state.timingStart) / 1000)
+            return { ...state, timingElapsed: elapsed }
+        }
+        case 'TIMING_STOP':
+            return { ...state, isTiming: false, duration: state.timingElapsed || state.duration }
         case 'SET_DONE': {
             if (!state.session) return state
             const updatedExercises = state.session.exercises.map((ex, i) =>
@@ -308,6 +327,7 @@ export default function ActiveSessionPage({ params }: { params: Promise<{ id: st
     const router = useRouter()
     const [state, dispatch] = useReducer(reducer, initState)
     const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
+    const timingIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
     const [submitting, setSubmitting] = useState(false)
     const swRegRef = useRef<ServiceWorkerRegistration | null>(null)
     // Keep a live ref to state so event listeners don't capture stale closures
@@ -445,6 +465,18 @@ export default function ActiveSessionPage({ params }: { params: Promise<{ id: st
             })
             .catch(() => dispatch({ type: 'ERROR' }))
     }, [sessionId])
+
+    // ── Time-based exercise stopwatch ──────────────────────────────────────────
+    useEffect(() => {
+        if (state.isTiming) {
+            timingIntervalRef.current = setInterval(() => {
+                dispatch({ type: 'TIMING_TICK' })
+            }, 200)
+        } else {
+            if (timingIntervalRef.current) { clearInterval(timingIntervalRef.current); timingIntervalRef.current = null }
+        }
+        return () => { if (timingIntervalRef.current) { clearInterval(timingIntervalRef.current); timingIntervalRef.current = null } }
+    }, [state.isTiming])
 
     // ── Rest countdown — wall-clock for background accuracy ───────────────────
     useEffect(() => {
@@ -965,55 +997,65 @@ export default function ActiveSessionPage({ params }: { params: Promise<{ id: st
 
                 {isTimeBased ? (
                     <>
-                        {/* Duration countdown display */}
+                        {/* Stopwatch display */}
                         <div className="flex justify-center">
-                            <div className="relative w-36 h-36">
-                                <svg width={144} height={144} className="-rotate-90">
-                                    <circle cx={72} cy={72} r={58} fill="none" stroke="hsl(var(--border))" strokeWidth={8} />
-                                    <circle
-                                        cx={72} cy={72} r={58}
-                                        fill="none"
-                                        stroke="hsl(var(--primary))"
-                                        strokeWidth={8}
-                                        strokeLinecap="round"
-                                        strokeDasharray={2 * Math.PI * 58}
-                                        strokeDashoffset={0}
-                                    />
+                            <div className="relative w-44 h-44">
+                                <svg width={176} height={176} className="-rotate-90">
+                                    <circle cx={88} cy={88} r={72} fill="none" stroke="hsl(var(--border))" strokeWidth={8} />
+                                    {state.isTiming && (
+                                        <circle
+                                            cx={88} cy={88} r={72}
+                                            fill="none"
+                                            stroke="hsl(var(--primary))"
+                                            strokeWidth={8}
+                                            strokeLinecap="round"
+                                            strokeDasharray={2 * Math.PI * 72}
+                                            strokeDashoffset={2 * Math.PI * 72 * Math.max(0, 1 - state.timingElapsed / Math.max(duration, 1))}
+                                            className="transition-all duration-200"
+                                        />
+                                    )}
                                 </svg>
                                 <div className="absolute inset-0 flex flex-col items-center justify-center">
-                                    <span className="text-4xl font-bold tabular-nums">{duration}</span>
-                                    <span className="text-xs text-muted-foreground">秒</span>
+                                    <span className="text-5xl font-bold tabular-nums">
+                                        {state.isTiming ? state.timingElapsed : duration}
+                                    </span>
+                                    <span className="text-sm text-muted-foreground">
+                                        {state.isTiming ? '計時中...' : '秒（目標）'}
+                                    </span>
                                 </div>
                             </div>
                         </div>
 
-                        {/* Duration adjuster */}
-                        <div className="flex items-center justify-center gap-3">
+                        {state.isTiming ? (
+                            /* Stop button while timing */
                             <button
-                                onClick={() => dispatch({ type: 'ADJ_DURATION', delta: -10 })}
-                                className="h-12 px-5 rounded-xl bg-secondary text-secondary-foreground font-semibold text-sm active:scale-95 transition-transform"
+                                onClick={() => dispatch({ type: 'TIMING_STOP' })}
+                                className="w-full h-14 rounded-xl bg-destructive text-destructive-foreground font-semibold text-base active:scale-98 transition-transform"
                             >
-                                −10s
+                                ⏹ 停止計時（{state.timingElapsed} 秒）
                             </button>
-                            <button
-                                onClick={() => dispatch({ type: 'ADJ_DURATION', delta: -5 })}
-                                className="h-12 px-4 rounded-xl bg-secondary text-secondary-foreground font-semibold text-sm active:scale-95 transition-transform"
-                            >
-                                −5s
-                            </button>
-                            <button
-                                onClick={() => dispatch({ type: 'ADJ_DURATION', delta: 5 })}
-                                className="h-12 px-4 rounded-xl bg-secondary text-secondary-foreground font-semibold text-sm active:scale-95 transition-transform"
-                            >
-                                +5s
-                            </button>
-                            <button
-                                onClick={() => dispatch({ type: 'ADJ_DURATION', delta: 10 })}
-                                className="h-12 px-5 rounded-xl bg-secondary text-secondary-foreground font-semibold text-sm active:scale-95 transition-transform"
-                            >
-                                +10s
-                            </button>
-                        </div>
+                        ) : (
+                            <>
+                                {/* Start timer + manual adjust */}
+                                <button
+                                    onClick={() => dispatch({ type: 'TIMING_START' })}
+                                    className="w-full h-14 rounded-xl bg-primary text-primary-foreground font-semibold text-lg active:scale-98 transition-transform"
+                                >
+                                    ▶ 開始計時
+                                </button>
+                                <div className="flex items-center justify-center gap-3">
+                                    <button onClick={() => dispatch({ type: 'ADJ_DURATION', delta: -10 })}
+                                        className="h-10 px-4 rounded-xl bg-secondary text-secondary-foreground font-semibold text-sm active:scale-95 transition-transform">−10s</button>
+                                    <button onClick={() => dispatch({ type: 'ADJ_DURATION', delta: -5 })}
+                                        className="h-10 px-3 rounded-xl bg-secondary text-secondary-foreground font-semibold text-sm active:scale-95 transition-transform">−5s</button>
+                                    <span className="text-sm text-muted-foreground">或手動設定</span>
+                                    <button onClick={() => dispatch({ type: 'ADJ_DURATION', delta: 5 })}
+                                        className="h-10 px-3 rounded-xl bg-secondary text-secondary-foreground font-semibold text-sm active:scale-95 transition-transform">+5s</button>
+                                    <button onClick={() => dispatch({ type: 'ADJ_DURATION', delta: 10 })}
+                                        className="h-10 px-4 rounded-xl bg-secondary text-secondary-foreground font-semibold text-sm active:scale-95 transition-transform">+10s</button>
+                                </div>
+                            </>
+                        )}
                     </>
                 ) : (
                     <>
@@ -1070,14 +1112,16 @@ export default function ActiveSessionPage({ params }: { params: Promise<{ id: st
                     </>
                 )}
 
-                {/* Log set */}
+                {/* Log set — hidden while stopwatch is running */}
+                {!(isTimeBased && state.isTiming) && (
                 <button
                     onClick={logSet}
                     disabled={submitting}
                     className="w-full h-14 rounded-xl bg-primary text-primary-foreground font-semibold text-base disabled:opacity-50 active:scale-98 transition-transform"
                 >
-                    {submitting ? '記錄中...' : (isTimeBased ? `完成 ${duration} 秒 ✓` : `完成第 ${setNum} 組 ✓`)}
+                    {submitting ? '記錄中...' : (isTimeBased ? `記錄 ${duration} 秒 ✓` : `完成第 ${setNum} 組 ✓`)}
                 </button>
+                )}
             </div>
 
             {/* Equipment busy */}
