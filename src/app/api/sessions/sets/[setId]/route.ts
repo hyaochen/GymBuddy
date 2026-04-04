@@ -20,8 +20,8 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ se
     if (!existing) return NextResponse.json({ error: 'Not found' }, { status: 404 })
 
     const body = await req.json()
-    const { repsPerformed, weightKg } = body
-    if (repsPerformed === undefined && weightKg === undefined) {
+    const { repsPerformed, weightKg, durationSeconds } = body
+    if (repsPerformed === undefined && weightKg === undefined && durationSeconds === undefined) {
         return NextResponse.json({ error: 'Nothing to update' }, { status: 400 })
     }
 
@@ -30,6 +30,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ se
         data: {
             ...(repsPerformed !== undefined && { repsPerformed: Number(repsPerformed) }),
             ...(weightKg !== undefined && { weightKg: Number(weightKg) }),
+            ...(durationSeconds !== undefined && { durationSeconds: durationSeconds !== null ? Number(durationSeconds) : null }),
         },
     })
 

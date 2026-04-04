@@ -28,7 +28,7 @@ export async function GET() {
     for (const s of sessions) {
         const dateKey = s.startedAt.toISOString().split('T')[0]
         const volume = s.exercises.reduce((sum, se) =>
-            sum + se.sets.reduce((s2, set) => s2 + Number(set.weightKg) * set.repsPerformed, 0), 0
+            sum + se.sets.reduce((s2, set) => s2 + (set.durationSeconds ? 0 : Number(set.weightKg) * set.repsPerformed), 0), 0
         )
         dailyMap.set(dateKey, (dailyMap.get(dateKey) || 0) + Math.round(volume))
     }

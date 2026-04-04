@@ -14,6 +14,7 @@ type SetRecord = {
     setNumber: number
     repsPerformed: number
     weightKg: string
+    durationSeconds: number | null
 }
 
 type ExerciseRecord = {
@@ -49,7 +50,7 @@ function formatDateFull(iso: string) {
 }
 function calcVolume(session: SessionSummary) {
     return Math.round(session.exercises.reduce((s, e) =>
-        s + e.sets.reduce((s2, set) => s2 + Number(set.weightKg) * set.repsPerformed, 0), 0))
+        s + e.sets.reduce((s2, set) => s2 + (set.durationSeconds ? 0 : Number(set.weightKg) * set.repsPerformed), 0), 0))
 }
 function calcSets(session: SessionSummary) {
     return session.exercises.reduce((s, e) => s + e.sets.length, 0)
@@ -66,17 +67,23 @@ function SetRow({
     onDelete,
 }: {
     set: SetRecord
-    onUpdate: (id: string, reps: number, weight: number) => Promise<void>
+    onUpdate: (id: string, reps: number, weight: number, durationSeconds?: number | null) => Promise<void>
     onDelete: (id: string) => Promise<void>
 }) {
+    const isTimeBased = !!set.durationSeconds
     const [editing, setEditing] = useState(false)
     const [reps, setReps] = useState(set.repsPerformed)
     const [weight, setWeight] = useState(Number(set.weightKg))
+    const [dur, setDur] = useState(set.durationSeconds ?? 0)
     const [saving, setSaving] = useState(false)
 
     const save = async () => {
         setSaving(true)
-        await onUpdate(set.id, reps, weight)
+        if (isTimeBased) {
+            await onUpdate(set.id, 1, 0, dur)
+        } else {
+            await onUpdate(set.id, reps, weight)
+        }
         setSaving(false)
         setEditing(false)
     }
@@ -84,6 +91,7 @@ function SetRow({
     const cancel = () => {
         setReps(set.repsPerformed)
         setWeight(Number(set.weightKg))
+        setDur(set.durationSeconds ?? 0)
         setEditing(false)
     }
 
@@ -91,21 +99,35 @@ function SetRow({
         return (
             <div className="flex items-center gap-2 py-1.5">
                 <span className="text-xs text-muted-foreground w-10 flex-shrink-0">第 {set.setNumber} 組</span>
-                <input
-                    type="number"
-                    value={weight}
-                    onChange={e => setWeight(Number(e.target.value))}
-                    className="w-20 h-10 rounded-lg bg-secondary text-foreground text-base text-center border border-border focus:outline-none focus:border-primary"
-                    step="0.5"
-                />
-                <span className="text-xs text-muted-foreground">kg ×</span>
-                <input
-                    type="number"
-                    value={reps}
-                    onChange={e => setReps(Number(e.target.value))}
-                    className="w-16 h-10 rounded-lg bg-secondary text-foreground text-base text-center border border-border focus:outline-none focus:border-primary"
-                />
-                <span className="text-xs text-muted-foreground flex-1">下</span>
+                {isTimeBased ? (
+                    <>
+                        <input
+                            type="number"
+                            value={dur}
+                            onChange={e => setDur(Number(e.target.value))}
+                            className="w-20 h-10 rounded-lg bg-secondary text-foreground text-base text-center border border-border focus:outline-none focus:border-primary"
+                        />
+                        <span className="text-xs text-muted-foreground flex-1">秒</span>
+                    </>
+                ) : (
+                    <>
+                        <input
+                            type="number"
+                            value={weight}
+                            onChange={e => setWeight(Number(e.target.value))}
+                            className="w-20 h-10 rounded-lg bg-secondary text-foreground text-base text-center border border-border focus:outline-none focus:border-primary"
+                            step="0.5"
+                        />
+                        <span className="text-xs text-muted-foreground">kg ×</span>
+                        <input
+                            type="number"
+                            value={reps}
+                            onChange={e => setReps(Number(e.target.value))}
+                            className="w-16 h-10 rounded-lg bg-secondary text-foreground text-base text-center border border-border focus:outline-none focus:border-primary"
+                        />
+                        <span className="text-xs text-muted-foreground flex-1">下</span>
+                    </>
+                )}
                 <button onClick={save} disabled={saving} className="text-green-500 min-w-[44px] min-h-[44px] flex items-center justify-center" aria-label="儲存">
                     <Check className="h-5 w-5" />
                 </button>
@@ -119,7 +141,9 @@ function SetRow({
     return (
         <div className="flex items-center gap-2 py-1.5">
             <span className="text-xs text-muted-foreground w-10 flex-shrink-0">第 {set.setNumber} 組</span>
-            <span className="text-sm font-medium flex-1">{set.repsPerformed} 下 × {Number(set.weightKg)} kg</span>
+            <span className="text-sm font-medium flex-1">
+                {isTimeBased ? `${set.durationSeconds} 秒` : `${set.repsPerformed} 下 × ${Number(set.weightKg)} kg`}
+            </span>
             <button
                 onClick={() => setEditing(true)}
                 className="text-muted-foreground hover:text-foreground min-w-[36px] min-h-[36px] flex items-center justify-center rounded-lg hover:bg-accent transition-colors"
@@ -164,16 +188,23 @@ function SessionCard({
         onDelete(session.id)
     }
 
-    const handleUpdateSet = async (setId: string, reps: number, weight: number) => {
+    const handleUpdateSet = async (setId: string, reps: number, weight: number, durationSeconds?: number | null) => {
+        const payload: Record<string, unknown> = { repsPerformed: reps, weightKg: weight }
+        if (durationSeconds !== undefined) payload.durationSeconds = durationSeconds
         await fetch(`/api/sessions/sets/${setId}`, {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ repsPerformed: reps, weightKg: weight }),
+            body: JSON.stringify(payload),
         })
         // Update local state
         setLocalExercises(prev => prev.map(ex => ({
             ...ex,
-            sets: ex.sets.map(s => s.id === setId ? { ...s, repsPerformed: reps, weightKg: String(weight) } : s),
+            sets: ex.sets.map(s => s.id === setId ? {
+                ...s,
+                repsPerformed: reps,
+                weightKg: String(weight),
+                ...(durationSeconds !== undefined && { durationSeconds }),
+            } : s),
         })))
     }
 

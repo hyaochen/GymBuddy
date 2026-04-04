@@ -290,7 +290,7 @@ export default async function DashboardPage() {
                             const totalSets = sess.exercises.reduce((s, e) => s + e.sets.length, 0)
                             const volume = Math.round(
                                 sess.exercises.reduce((s, e) =>
-                                    s + e.sets.reduce((s2, set) => s2 + Number(set.weightKg) * set.repsPerformed, 0), 0
+                                    s + e.sets.reduce((s2, set) => s2 + (set.durationSeconds ? 0 : Number(set.weightKg) * set.repsPerformed), 0), 0
                                 )
                             )
                             return (

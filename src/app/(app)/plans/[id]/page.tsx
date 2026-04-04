@@ -85,9 +85,12 @@ export default async function PlanDetailPage({
                                         </div>
                                         <div className="text-right">
                                             <p className="text-xs text-muted-foreground">
-                                                {pe.defaultSets} 組 × {pe.defaultRepsMin}-{pe.defaultRepsMax} 下
+                                                {pe.exercise.isTimeBased
+                                                    ? `${pe.defaultSets} 組 × ${pe.defaultDurationMin ?? 20}-${pe.defaultDurationMax ?? 30} 秒`
+                                                    : `${pe.defaultSets} 組 × ${pe.defaultRepsMin}-${pe.defaultRepsMax} 下`
+                                                }
                                             </p>
-                                            {pe.defaultWeightKg && (
+                                            {!pe.exercise.isTimeBased && pe.defaultWeightKg && (
                                                 <p className="text-xs text-primary">{Number(pe.defaultWeightKg)}kg</p>
                                             )}
                                         </div>

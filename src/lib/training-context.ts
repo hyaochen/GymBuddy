@@ -283,7 +283,7 @@ export async function getRecommendationContext(userId: string): Promise<string> 
         SELECT
             mg.name       AS "muscleGroup",
             mg."bodyRegion" AS "bodyRegion",
-            COALESCE(SUM(ss."weightKg" * ss."repsPerformed"), 0)::float AS "totalVolume"
+            COALESCE(SUM(CASE WHEN ss."durationSeconds" IS NULL THEN ss."weightKg" * ss."repsPerformed" ELSE 0 END), 0)::float AS "totalVolume"
         FROM session_sets ss
         JOIN session_exercises se ON se.id = ss."sessionExerciseId"
         JOIN workout_sessions ws ON ws.id = se."sessionId"

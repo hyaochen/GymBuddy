@@ -67,7 +67,7 @@ export async function GET() {
         const p = profileMap.get(s.userId)
         if (p && !p.showWorkouts && s.userId !== user.id) continue
         const vol = s.exercises.reduce((sum, e) =>
-            sum + e.sets.reduce((s2, set) => s2 + Number(set.weightKg) * set.repsPerformed, 0), 0
+            sum + e.sets.reduce((s2, set) => s2 + (set.durationSeconds ? 0 : Number(set.weightKg) * set.repsPerformed), 0), 0
         )
         volumeMap.set(s.userId, (volumeMap.get(s.userId) || 0) + vol)
     }

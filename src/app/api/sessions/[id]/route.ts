@@ -32,7 +32,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     }
 
     // Enrich with plan exercise defaults (for rest times and target reps)
-    let planExerciseDefaults: Record<string, { defaultSets: number; defaultRepsMin: number; defaultRepsMax: number; defaultWeightKg: unknown; restSeconds: number }> = {}
+    let planExerciseDefaults: Record<string, { defaultSets: number; defaultRepsMin: number; defaultRepsMax: number; defaultWeightKg: unknown; restSeconds: number; defaultDurationMin: number | null; defaultDurationMax: number | null }> = {}
 
     if (session.dayId) {
         const planExercises = await prisma.workoutPlanExercise.findMany({
@@ -45,6 +45,8 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
                 defaultRepsMax: pe.defaultRepsMax,
                 // Prisma Decimal serialises as string — convert to number explicitly
                 defaultWeightKg: pe.defaultWeightKg !== null ? Number(pe.defaultWeightKg) : null,
+                defaultDurationMin: pe.defaultDurationMin,
+                defaultDurationMax: pe.defaultDurationMax,
                 restSeconds: pe.restSeconds,
             }])
         )

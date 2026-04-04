@@ -220,7 +220,7 @@ export async function updateChallengeProgress(userId: string): Promise<string[]>
                     sessions.reduce((total, s) =>
                         total + s.exercises.reduce((eTotal, e) =>
                             eTotal + e.sets.reduce((sTotal, set) =>
-                                sTotal + Number(set.weightKg) * set.repsPerformed, 0
+                                sTotal + (set.durationSeconds ? 0 : Number(set.weightKg) * set.repsPerformed), 0
                             ), 0
                         ), 0
                     )

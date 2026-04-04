@@ -9,7 +9,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
     const { id: sessionId } = await params
     const body = await req.json()
-    const { sessionExerciseId, setNumber, repsPerformed, weightKg, restAfterSeconds } = body
+    const { sessionExerciseId, setNumber, repsPerformed, weightKg, durationSeconds, restAfterSeconds } = body
 
     if (!sessionExerciseId || !setNumber || repsPerformed === undefined || weightKg === undefined) {
         return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
@@ -31,31 +31,34 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
             setNumber,
             repsPerformed,
             weightKg,
+            durationSeconds: durationSeconds ?? null,
             restAfterSeconds,
             completedAt: new Date(),
         },
     })
 
-    // Check for personal record
-    const estimated1rm = epley1rm(Number(weightKg), repsPerformed)
-    const existingPR = await prisma.personalRecord.findFirst({
-        where: { userId: user.id, exerciseId: sessionExercise.exerciseId },
-        orderBy: { estimated1rm: 'desc' },
-    })
-
+    // Check for personal record (skip for time-based exercises — no weight-based PR)
     let isNewPR = false
-    if (!existingPR || estimated1rm > Number(existingPR.estimated1rm)) {
-        await prisma.personalRecord.create({
-            data: {
-                userId: user.id,
-                exerciseId: sessionExercise.exerciseId,
-                weightKg,
-                reps: repsPerformed,
-                estimated1rm,
-                achievedAt: new Date(),
-            },
+    if (!durationSeconds) {
+        const estimated1rm = epley1rm(Number(weightKg), repsPerformed)
+        const existingPR = await prisma.personalRecord.findFirst({
+            where: { userId: user.id, exerciseId: sessionExercise.exerciseId },
+            orderBy: { estimated1rm: 'desc' },
         })
-        isNewPR = true
+
+        if (!existingPR || estimated1rm > Number(existingPR.estimated1rm)) {
+            await prisma.personalRecord.create({
+                data: {
+                    userId: user.id,
+                    exerciseId: sessionExercise.exerciseId,
+                    weightKg,
+                    reps: repsPerformed,
+                    estimated1rm,
+                    achievedAt: new Date(),
+                },
+            })
+            isNewPR = true
+        }
     }
 
     return NextResponse.json({ set, isNewPR }, { status: 201 })

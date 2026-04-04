@@ -72,7 +72,7 @@ export async function GET() {
 
             for (const se of s.exercises) {
                 const volume = se.sets.reduce((sum, set) =>
-                    sum + Number(set.weightKg) * set.repsPerformed, 0
+                    sum + (set.durationSeconds ? 0 : Number(set.weightKg) * set.repsPerformed), 0
                 )
 
                 // Get primary muscle group

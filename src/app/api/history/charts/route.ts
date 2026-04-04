@@ -32,7 +32,7 @@ export async function GET(req: NextRequest) {
                 const maxWeight = Math.max(...sets.map(set => Number(set.weightKg)))
                 const maxRepsAtMax = sets.filter(set => Number(set.weightKg) === maxWeight).reduce((max, set) => Math.max(max, set.repsPerformed), 0)
                 const estimated1rm = epley1rm(maxWeight, maxRepsAtMax)
-                const totalVolume = sets.reduce((sum, set) => sum + Number(set.weightKg) * set.repsPerformed, 0)
+                const totalVolume = sets.reduce((sum, set) => sum + (set.durationSeconds ? 0 : Number(set.weightKg) * set.repsPerformed), 0)
                 return {
                     date: s.startedAt.toISOString().split('T')[0],
                     maxWeight,
@@ -55,7 +55,7 @@ export async function GET(req: NextRequest) {
 
     const chartData = sessions.map(s => {
         const totalVolume = s.exercises.reduce((sum, se) =>
-            sum + se.sets.reduce((s2, set) => s2 + Number(set.weightKg) * set.repsPerformed, 0), 0
+            sum + se.sets.reduce((s2, set) => s2 + (set.durationSeconds ? 0 : Number(set.weightKg) * set.repsPerformed), 0), 0
         )
         const totalSets = s.exercises.reduce((sum, se) => sum + se.sets.length, 0)
         return {

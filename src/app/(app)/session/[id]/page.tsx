@@ -12,6 +12,7 @@ type LoggedSet = {
     setNumber: number
     repsPerformed: number
     weightKg: number
+    durationSeconds?: number | null
     restAfterSeconds?: number
 }
 
@@ -24,10 +25,11 @@ type SessionExercise = {
         name: string
         gifUrl: string | null
         stepInstructions: unknown
+        isTimeBased: boolean
         muscles: Array<{ muscleGroup: { name: string }; isPrimary: boolean }>
         equipment: Array<{ equipment: { name: string } }>
     }
-    sets: Array<{ id: string; setNumber: number; repsPerformed: number; weightKg: string; restAfterSeconds: number | null }>
+    sets: Array<{ id: string; setNumber: number; repsPerformed: number; weightKg: string; durationSeconds: number | null; restAfterSeconds: number | null }>
 }
 
 type Session = {
@@ -44,6 +46,8 @@ type PlanDefaults = {
     defaultRepsMin: number
     defaultRepsMax: number
     defaultWeightKg: number | null
+    defaultDurationMin: number | null
+    defaultDurationMax: number | null
     restSeconds: number
 }
 
@@ -57,6 +61,7 @@ type State = {
     setNum: number        // 1-based, current set to log
     reps: number
     weight: number
+    duration: number      // seconds for time-based exercises
     restLeft: number
     restTotal: number
     restEndTime: number | null   // wall-clock ms when rest ends
@@ -72,6 +77,7 @@ type Action =
     | { type: 'LOADED'; session: Session; defaults: Record<string, PlanDefaults> }
     | { type: 'ADJ_WEIGHT'; delta: number }
     | { type: 'ADJ_REPS'; delta: number }
+    | { type: 'ADJ_DURATION'; delta: number }
     | { type: 'SET_DONE'; set: LoggedSet; restSeconds: number; restEndTime: number; isNewPR: boolean; exerciseName: string }
     | { type: 'REST_TICK' }
     | { type: 'SET_REST_LEFT'; value: number }
@@ -99,12 +105,19 @@ function getInitReps(session: Session, idx: number, defaults: Record<string, Pla
     return defaults[ex.exerciseId]?.defaultRepsMin ?? 10
 }
 
+function getInitDuration(session: Session, idx: number, defaults: Record<string, PlanDefaults>): number {
+    const ex = session.exercises[idx]
+    if (!ex) return 30
+    return defaults[ex.exerciseId]?.defaultDurationMax ?? 30
+}
+
 function dbSetsToLogged(sets: SessionExercise['sets']): LoggedSet[] {
     return sets.map(s => ({
         id: s.id,
         setNumber: s.setNumber,
         repsPerformed: s.repsPerformed,
         weightKg: Number(s.weightKg),
+        durationSeconds: s.durationSeconds,
     }))
 }
 
@@ -124,6 +137,7 @@ function navigateTo(state: State, nextIdx: number): State {
         setNum: dbSets.length + 1,
         weight: lastSet ? Number(lastSet.weightKg) || 20 : getInitWeight(state.session, nextIdx, state.defaults),
         reps: getInitReps(state.session, nextIdx, state.defaults),
+        duration: getInitDuration(state.session, nextIdx, state.defaults),
         loggedSets: dbSets,
         restLeft: 0,
         restEndTime: null,
@@ -140,6 +154,7 @@ const initState: State = {
     setNum: 1,
     reps: 10,
     weight: 20,
+    duration: 30,
     restLeft: 0,
     restTotal: 90,
     restEndTime: null,
@@ -189,6 +204,7 @@ function reducer(state: State, action: Action): State {
                 setNum: startSets.length + 1,
                 weight: lastSet ? Number(lastSet.weightKg) || 20 : getInitWeight(action.session, startIdx, action.defaults),
                 reps: getInitReps(action.session, startIdx, action.defaults),
+                duration: getInitDuration(action.session, startIdx, action.defaults),
                 loggedSets: startSets,
                 restEndTime: null,
                 alarmRinging: false,
@@ -198,6 +214,8 @@ function reducer(state: State, action: Action): State {
             return { ...state, weight: Math.max(0, Math.round((state.weight + action.delta) * 4) / 4) }
         case 'ADJ_REPS':
             return { ...state, reps: Math.max(1, state.reps + action.delta) }
+        case 'ADJ_DURATION':
+            return { ...state, duration: Math.max(5, state.duration + action.delta) }
         case 'SET_DONE': {
             if (!state.session) return state
             const updatedExercises = state.session.exercises.map((ex, i) =>
@@ -209,6 +227,7 @@ function reducer(state: State, action: Action): State {
                             setNumber: action.set.setNumber,
                             repsPerformed: action.set.repsPerformed,
                             weightKg: String(action.set.weightKg),
+                            durationSeconds: action.set.durationSeconds ?? null,
                             restAfterSeconds: action.restSeconds,
                         }],
                     }
@@ -486,6 +505,7 @@ export default function ActiveSessionPage({ params }: { params: Promise<{ id: st
             Notification.requestPermission().catch(() => {})
         }
         const ex = state.session.exercises[state.exIdx]
+        const isTimeBased = ex.exercise.isTimeBased
         const restSeconds = state.defaults[ex.exerciseId]?.restSeconds ?? 90
         const restEndTime = Date.now() + restSeconds * 1000
         try {
@@ -495,8 +515,9 @@ export default function ActiveSessionPage({ params }: { params: Promise<{ id: st
                 body: JSON.stringify({
                     sessionExerciseId: ex.id,
                     setNumber: state.setNum,
-                    repsPerformed: state.reps,
-                    weightKg: state.weight,
+                    repsPerformed: isTimeBased ? 1 : state.reps,
+                    weightKg: isTimeBased ? 0 : state.weight,
+                    durationSeconds: isTimeBased ? state.duration : null,
                     restAfterSeconds: restSeconds,
                 }),
             })
@@ -520,7 +541,13 @@ export default function ActiveSessionPage({ params }: { params: Promise<{ id: st
             }).catch(() => {})
             dispatch({
                 type: 'SET_DONE',
-                set: { id: data.set?.id, setNumber: state.setNum, repsPerformed: state.reps, weightKg: state.weight },
+                set: {
+                    id: data.set?.id,
+                    setNumber: state.setNum,
+                    repsPerformed: isTimeBased ? 1 : state.reps,
+                    weightKg: isTimeBased ? 0 : state.weight,
+                    durationSeconds: isTimeBased ? state.duration : null,
+                },
                 restSeconds,
                 restEndTime,
                 isNewPR: data.isNewPR ?? false,
@@ -599,8 +626,9 @@ export default function ActiveSessionPage({ params }: { params: Promise<{ id: st
     }
 
     // ── Derived data ─────────────────────────────────────────────────────────
-    const { session, defaults, exIdx, setNum, reps, weight, phase, loggedSets } = state
+    const { session, defaults, exIdx, setNum, reps, weight, duration, phase, loggedSets } = state
     const ex = session.exercises[exIdx]
+    const isTimeBased = ex.exercise.isTimeBased
     const d = defaults[ex.exerciseId]
     const targetSets = d?.defaultSets ?? 3
     const targetRepsMin = d?.defaultRepsMin ?? 8
@@ -650,7 +678,10 @@ export default function ActiveSessionPage({ params }: { params: Promise<{ id: st
                 <div className="text-center">
                     <p className="text-xs text-muted-foreground mb-0.5">剛完成 — {exName}</p>
                     <p className="text-sm text-muted-foreground">
-                        第 {setNum - 1} 組 · {reps} 下 × {weight} kg
+                        {isTimeBased
+                            ? `第 ${setNum - 1} 組 · ${duration} 秒`
+                            : `第 ${setNum - 1} 組 · ${reps} 下 × ${weight} kg`
+                        }
                     </p>
                 </div>
 
@@ -757,7 +788,9 @@ export default function ActiveSessionPage({ params }: { params: Promise<{ id: st
                         {loggedSets.map((s, i) => (
                             <div key={i} className="flex justify-between text-muted-foreground px-4">
                                 <span>第 {s.setNumber} 組</span>
-                                <span className="font-medium text-foreground">{s.repsPerformed} 下 × {s.weightKg} kg</span>
+                                <span className="font-medium text-foreground">
+                                    {s.durationSeconds ? `${s.durationSeconds} 秒` : `${s.repsPerformed} 下 × ${s.weightKg} kg`}
+                                </span>
                             </div>
                         ))}
                     </div>
@@ -908,7 +941,9 @@ export default function ActiveSessionPage({ params }: { params: Promise<{ id: st
                             <div key={i} className="flex items-center gap-2 text-sm">
                                 <span className="text-green-500 text-xs">✓</span>
                                 <span className="text-muted-foreground text-xs">第 {s.setNumber} 組</span>
-                                <span className="font-medium ml-auto">{s.repsPerformed} 下 × {s.weightKg} kg</span>
+                                <span className="font-medium ml-auto">
+                                    {s.durationSeconds ? `${s.durationSeconds} 秒` : `${s.repsPerformed} 下 × ${s.weightKg} kg`}
+                                </span>
                             </div>
                         ))}
                     </div>
@@ -920,59 +955,120 @@ export default function ActiveSessionPage({ params }: { params: Promise<{ id: st
                 <p className="text-sm font-medium text-center">
                     第 <span className="text-primary font-bold text-base">{setNum}</span> 組
                     <span className="text-muted-foreground ml-1">/ {targetSets} 組</span>
-                    <span className="text-xs text-muted-foreground ml-2">（目標 {targetRepsMin}–{targetRepsMax} 下）</span>
+                    {!isTimeBased && (
+                        <span className="text-xs text-muted-foreground ml-2">（目標 {targetRepsMin}–{targetRepsMax} 下）</span>
+                    )}
+                    {isTimeBased && d?.defaultDurationMin && d?.defaultDurationMax && (
+                        <span className="text-xs text-muted-foreground ml-2">（目標 {d.defaultDurationMin}–{d.defaultDurationMax} 秒）</span>
+                    )}
                 </p>
 
-                {/* Weight adjuster */}
-                <div>
-                    <p className="text-xs text-muted-foreground text-center mb-2">重量 (kg)</p>
-                    <div className="flex items-center gap-1.5">
-                        {([-5, -2.5] as number[]).map(delta => (
-                            <button
-                                key={delta}
-                                onClick={() => dispatch({ type: 'ADJ_WEIGHT', delta })}
-                                className="flex-1 h-12 rounded-xl bg-secondary text-secondary-foreground font-semibold text-sm active:scale-95 transition-transform"
-                            >
-                                {delta}
-                            </button>
-                        ))}
-                        <div className="flex-[1.5] text-center">
-                            <span className="text-2xl font-bold tabular-nums">{weight}</span>
+                {isTimeBased ? (
+                    <>
+                        {/* Duration countdown display */}
+                        <div className="flex justify-center">
+                            <div className="relative w-36 h-36">
+                                <svg width={144} height={144} className="-rotate-90">
+                                    <circle cx={72} cy={72} r={58} fill="none" stroke="hsl(var(--border))" strokeWidth={8} />
+                                    <circle
+                                        cx={72} cy={72} r={58}
+                                        fill="none"
+                                        stroke="hsl(var(--primary))"
+                                        strokeWidth={8}
+                                        strokeLinecap="round"
+                                        strokeDasharray={2 * Math.PI * 58}
+                                        strokeDashoffset={0}
+                                    />
+                                </svg>
+                                <div className="absolute inset-0 flex flex-col items-center justify-center">
+                                    <span className="text-4xl font-bold tabular-nums">{duration}</span>
+                                    <span className="text-xs text-muted-foreground">秒</span>
+                                </div>
+                            </div>
                         </div>
-                        {([2.5, 5] as number[]).map(delta => (
-                            <button
-                                key={delta}
-                                onClick={() => dispatch({ type: 'ADJ_WEIGHT', delta })}
-                                className="flex-1 h-12 rounded-xl bg-secondary text-secondary-foreground font-semibold text-sm active:scale-95 transition-transform"
-                            >
-                                +{delta}
-                            </button>
-                        ))}
-                    </div>
-                </div>
 
-                {/* Reps adjuster */}
-                <div>
-                    <p className="text-xs text-muted-foreground text-center mb-2">次數</p>
-                    <div className="flex items-center gap-3">
-                        <button
-                            onClick={() => dispatch({ type: 'ADJ_REPS', delta: -1 })}
-                            className="flex-1 h-14 rounded-xl bg-secondary text-secondary-foreground font-bold text-2xl active:scale-95 transition-transform"
-                        >
-                            −
-                        </button>
-                        <div className="flex-1 text-center">
-                            <span className="text-4xl font-bold tabular-nums">{reps}</span>
-                            <p className="text-xs text-muted-foreground">下</p>
+                        {/* Duration adjuster */}
+                        <div className="flex items-center justify-center gap-3">
+                            <button
+                                onClick={() => dispatch({ type: 'ADJ_DURATION', delta: -10 })}
+                                className="h-12 px-5 rounded-xl bg-secondary text-secondary-foreground font-semibold text-sm active:scale-95 transition-transform"
+                            >
+                                −10s
+                            </button>
+                            <button
+                                onClick={() => dispatch({ type: 'ADJ_DURATION', delta: -5 })}
+                                className="h-12 px-4 rounded-xl bg-secondary text-secondary-foreground font-semibold text-sm active:scale-95 transition-transform"
+                            >
+                                −5s
+                            </button>
+                            <button
+                                onClick={() => dispatch({ type: 'ADJ_DURATION', delta: 5 })}
+                                className="h-12 px-4 rounded-xl bg-secondary text-secondary-foreground font-semibold text-sm active:scale-95 transition-transform"
+                            >
+                                +5s
+                            </button>
+                            <button
+                                onClick={() => dispatch({ type: 'ADJ_DURATION', delta: 10 })}
+                                className="h-12 px-5 rounded-xl bg-secondary text-secondary-foreground font-semibold text-sm active:scale-95 transition-transform"
+                            >
+                                +10s
+                            </button>
                         </div>
-                        <button
-                            onClick={() => dispatch({ type: 'ADJ_REPS', delta: 1 })}
-                            className="flex-1 h-14 rounded-xl bg-secondary text-secondary-foreground font-bold text-2xl active:scale-95 transition-transform"
-                        >
-                            +
-                        </button>
-                    </div>
-                </div>
+                    </>
+                ) : (
+                    <>
+                        {/* Weight adjuster */}
+                        <div>
+                            <p className="text-xs text-muted-foreground text-center mb-2">重量 (kg)</p>
+                            <div className="flex items-center gap-1.5">
+                                {([-5, -2.5] as number[]).map(delta => (
+                                    <button
+                                        key={delta}
+                                        onClick={() => dispatch({ type: 'ADJ_WEIGHT', delta })}
+                                        className="flex-1 h-12 rounded-xl bg-secondary text-secondary-foreground font-semibold text-sm active:scale-95 transition-transform"
+                                    >
+                                        {delta}
+                                    </button>
+                                ))}
+                                <div className="flex-[1.5] text-center">
+                                    <span className="text-2xl font-bold tabular-nums">{weight}</span>
+                                </div>
+                                {([2.5, 5] as number[]).map(delta => (
+                                    <button
+                                        key={delta}
+                                        onClick={() => dispatch({ type: 'ADJ_WEIGHT', delta })}
+                                        className="flex-1 h-12 rounded-xl bg-secondary text-secondary-foreground font-semibold text-sm active:scale-95 transition-transform"
+                                    >
+                                        +{delta}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* Reps adjuster */}
+                        <div>
+                            <p className="text-xs text-muted-foreground text-center mb-2">次數</p>
+                            <div className="flex items-center gap-3">
+                                <button
+                                    onClick={() => dispatch({ type: 'ADJ_REPS', delta: -1 })}
+                                    className="flex-1 h-14 rounded-xl bg-secondary text-secondary-foreground font-bold text-2xl active:scale-95 transition-transform"
+                                >
+                                    −
+                                </button>
+                                <div className="flex-1 text-center">
+                                    <span className="text-4xl font-bold tabular-nums">{reps}</span>
+                                    <p className="text-xs text-muted-foreground">下</p>
+                                </div>
+                                <button
+                                    onClick={() => dispatch({ type: 'ADJ_REPS', delta: 1 })}
+                                    className="flex-1 h-14 rounded-xl bg-secondary text-secondary-foreground font-bold text-2xl active:scale-95 transition-transform"
+                                >
+                                    +
+                                </button>
+                            </div>
+                        </div>
+                    </>
+                )}
 
                 {/* Log set */}
                 <button
@@ -980,7 +1076,7 @@ export default function ActiveSessionPage({ params }: { params: Promise<{ id: st
                     disabled={submitting}
                     className="w-full h-14 rounded-xl bg-primary text-primary-foreground font-semibold text-base disabled:opacity-50 active:scale-98 transition-transform"
                 >
-                    {submitting ? '記錄中...' : `完成第 ${setNum} 組 ✓`}
+                    {submitting ? '記錄中...' : (isTimeBased ? `完成 ${duration} 秒 ✓` : `完成第 ${setNum} 組 ✓`)}
                 </button>
             </div>
 

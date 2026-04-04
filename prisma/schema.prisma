@@ -140,6 +140,7 @@ model Exercise {
   stepInstructions Json         @default("[]")
   difficulty       Difficulty   @default(INTERMEDIATE)
   exerciseType     ExerciseType @default(COMPOUND)
+  isTimeBased      Boolean      @default(false)
   gifUrl           String?
   videoUrl         String?
   createdAt        DateTime     @default(now())
@@ -238,10 +239,12 @@ model WorkoutPlanExercise {
   exercise        Exercise       @relation(fields: [exerciseId], references: [id])
   orderIndex      Int            @default(0)
   defaultSets     Int            @default(3)
-  defaultRepsMin  Int            @default(8)
-  defaultRepsMax  Int            @default(12)
-  defaultWeightKg Decimal?       @db.Decimal(6, 2)
-  restSeconds     Int            @default(90)
+  defaultRepsMin     Int            @default(8)
+  defaultRepsMax     Int            @default(12)
+  defaultWeightKg    Decimal?       @db.Decimal(6, 2)
+  defaultDurationMin Int?
+  defaultDurationMax Int?
+  restSeconds        Int            @default(90)
   notes           String?
 
   @@index([dayId])
@@ -295,6 +298,7 @@ model SessionSet {
   setNumber         Int
   repsPerformed     Int
   weightKg          Decimal         @db.Decimal(6, 2)
+  durationSeconds   Int?
   restAfterSeconds  Int?
   completedAt       DateTime        @default(now())
 

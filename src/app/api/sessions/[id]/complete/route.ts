@@ -43,10 +43,11 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         data: { completedAt: now, durationMin, notes },
     })
 
-    // Generate overload suggestions for each exercise
+    // Generate overload suggestions for each exercise (skip time-based)
     const suggestions = []
     for (const se of session.exercises) {
         if (se.sets.length === 0) continue
+        if (se.exercise.isTimeBased) continue
 
         // Get plan exercise defaults
         let planDefaults = {
@@ -92,10 +93,10 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         exerciseIds.map(eid => updateExerciseSummary(user.id, eid))
     ).catch(console.error)
 
-    // Calculate session summary
+    // Calculate session summary (skip time-based sets for volume)
     const totalSets = session.exercises.reduce((sum, se) => sum + se.sets.length, 0)
     const totalVolume = session.exercises.reduce((sum, se) =>
-        sum + se.sets.reduce((s2, set) => s2 + (Number(set.weightKg) * set.repsPerformed), 0), 0
+        sum + se.sets.reduce((s2, set) => s2 + (set.durationSeconds ? 0 : Number(set.weightKg) * set.repsPerformed), 0), 0
     )
 
     // Generate social feed items (fire-and-forget)
