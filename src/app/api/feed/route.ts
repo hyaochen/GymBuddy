@@ -62,6 +62,7 @@ export async function GET(req: NextRequest) {
             userName: k.user.name,
         })),
         hasKudoed: item.kudos.some(k => k.userId === user.id),
+        myKudoEmoji: item.kudos.find(k => k.userId === user.id)?.emoji || null,
         kudoCount: item.kudos.length,
     }))
 

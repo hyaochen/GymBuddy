@@ -78,10 +78,13 @@ export default function DesktopSidebar({ userName, avatarUrl }: DesktopSidebarPr
     }
 
     return (
-        <aside className={cn(
-            "hidden md:flex flex-col flex-shrink-0 h-full border-r border-border bg-card/50 transition-all duration-200",
-            collapsed ? "w-16" : "w-60"
-        )}>
+        <aside
+            suppressHydrationWarning
+            className={cn(
+                "hidden md:flex flex-col flex-shrink-0 h-full border-r border-border bg-card/50 transition-all duration-200",
+                collapsed ? "w-16" : "w-60"
+            )}
+        >
             {/* Logo */}
             <div className={cn(
                 "flex items-center h-14 px-4 border-b border-border",

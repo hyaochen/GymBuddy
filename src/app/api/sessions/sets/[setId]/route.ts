@@ -1,12 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
 import { getCurrentUser } from '@/lib/auth'
+import { updateExerciseSummary } from '@/lib/exercise-summary'
 
 async function verifySetOwnership(setId: string, userId: string) {
     return prisma.sessionSet.findFirst({
         where: {
             id: setId,
             sessionExercise: { session: { userId } },
+        },
+        include: {
+            sessionExercise: { select: { exerciseId: true } },
         },
     })
 }
@@ -34,6 +38,9 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ se
         },
     })
 
+    // Recalculate PR/Summary after edit
+    updateExerciseSummary(user.id, existing.sessionExercise.exerciseId).catch(console.error)
+
     return NextResponse.json({ set: updated })
 }
 
@@ -45,6 +52,11 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ s
     const existing = await verifySetOwnership(setId, user.id)
     if (!existing) return NextResponse.json({ error: 'Not found' }, { status: 404 })
 
+    const exerciseId = existing.sessionExercise.exerciseId
     await prisma.sessionSet.delete({ where: { id: setId } })
+
+    // Recalculate PR/Summary after delete
+    updateExerciseSummary(user.id, exerciseId).catch(console.error)
+
     return NextResponse.json({ success: true })
 }

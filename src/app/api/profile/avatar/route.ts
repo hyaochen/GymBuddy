@@ -41,6 +41,33 @@ export async function POST(req: NextRequest) {
         )
     }
 
+    // Magic-byte validation: verify file content matches declared MIME type
+    const headerBytes = await file.slice(0, 12).arrayBuffer()
+    const header = new Uint8Array(headerBytes)
+
+    const isValidJpeg = header[0] === 0xFF && header[1] === 0xD8 && header[2] === 0xFF
+    const isValidPng = header[0] === 0x89 && header[1] === 0x50 && header[2] === 0x4E && header[3] === 0x47
+    const isValidWebp = header[0] === 0x52 && header[1] === 0x49 && header[2] === 0x46 && header[3] === 0x46 &&
+                        header[8] === 0x57 && header[9] === 0x45 && header[10] === 0x42 && header[11] === 0x50
+
+    if (
+        (file.type === "image/jpeg" && !isValidJpeg) ||
+        (file.type === "image/png" && !isValidPng) ||
+        (file.type === "image/webp" && !isValidWebp)
+    ) {
+        return NextResponse.json(
+            { error: "File content does not match declared type." },
+            { status: 400 }
+        )
+    }
+
+    if (!isValidJpeg && !isValidPng && !isValidWebp) {
+        return NextResponse.json(
+            { error: "Invalid file content. Only JPG, PNG, and WebP are allowed." },
+            { status: 400 }
+        )
+    }
+
     const ext = EXT_MAP[file.type]
     const fileName = `${user.id}.${ext}`
     const uploadDir = path.join(process.cwd(), "public", "uploads", "avatars")

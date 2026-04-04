@@ -18,6 +18,13 @@ import { URL } from 'url'
 import webpush from 'web-push'
 
 // In-memory stores (survive as long as the Docker container is running)
+// LIMITATION: All scheduled pushes and subscriptions are lost on container restart.
+// TODO: Persist PushSubscription records in the database (a PushSubscription table
+// with userId, endpoint, keys_p256dh, keys_auth, createdAt). On startup, reload
+// active subscriptions from DB. Scheduled timers cannot be persisted, but since
+// rest timers are typically < 5 minutes, losing them on restart is acceptable.
+// The subscriptions are the critical piece — without DB persistence, users must
+// re-subscribe after every container restart.
 const subscriptions = new Map<string, webpush.PushSubscription>()
 const timers        = new Map<string, ReturnType<typeof setTimeout>>()
 

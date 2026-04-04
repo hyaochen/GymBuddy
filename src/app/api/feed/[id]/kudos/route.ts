@@ -22,6 +22,22 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         return NextResponse.json({ error: '找不到該動態' }, { status: 404 })
     }
 
+    // Privacy check: non-public items require friendship (or being the owner)
+    if (!feedItem.isPublic && feedItem.userId !== user.id) {
+        const friendship = await prisma.friendship.findFirst({
+            where: {
+                status: 'ACCEPTED',
+                OR: [
+                    { requesterId: user.id, receiverId: feedItem.userId },
+                    { requesterId: feedItem.userId, receiverId: user.id },
+                ],
+            },
+        })
+        if (!friendship) {
+            return NextResponse.json({ error: '無權限對此動態按讚' }, { status: 403 })
+        }
+    }
+
     // Upsert kudo (update emoji if already exists)
     const kudo = await prisma.kudo.upsert({
         where: { userId_feedItemId: { userId: user.id, feedItemId } },

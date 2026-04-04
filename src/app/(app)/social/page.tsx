@@ -46,6 +46,7 @@ interface FeedItem {
     createdAt: string
     kudos: { id: string; userId: string; emoji: string; userName: string }[]
     hasKudoed: boolean
+    myKudoEmoji: string | null
     kudoCount: number
 }
 
@@ -385,7 +386,7 @@ export default function SocialPage() {
                                             )}
                                         >
                                             {item.hasKudoed
-                                                ? item.kudos.find(k => k.userId === item.userId)?.emoji || "💪"
+                                                ? item.myKudoEmoji || "💪"
                                                 : "💪"}
                                             {item.kudoCount > 0 && (
                                                 <span className="font-medium">{item.kudoCount}</span>
@@ -811,6 +812,8 @@ function CreateChallengeForm({ onCreated, onCancel }: { onCreated: () => void; o
     const [startDate, setStartDate] = useState(new Date().toISOString().split("T")[0])
     const [endDate, setEndDate] = useState("")
     const [submitting, setSubmitting] = useState(false)
+    const [exerciseId, setExerciseId] = useState("")
+    const [exercises, setExercises] = useState<{ id: string; name: string }[]>([])
     const [error, setError] = useState("")
 
     // Default end date: 30 days from now
@@ -820,10 +823,29 @@ function CreateChallengeForm({ onCreated, onCancel }: { onCreated: () => void; o
         setEndDate(d.toISOString().split("T")[0])
     })
 
+    // Fetch exercises when WEIGHT_PR is selected
+    useEffect(() => {
+        if (type === "WEIGHT_PR" && exercises.length === 0) {
+            fetch("/api/exercises?limit=200")
+                .then(r => r.ok ? r.json() : { exercises: [] })
+                .then(data => {
+                    const list = (data.exercises || [])
+                        .filter((e: { isTimeBased?: boolean }) => !e.isTimeBased)
+                        .map((e: { id: string; name: string }) => ({ id: e.id, name: e.name }))
+                    setExercises(list)
+                })
+                .catch(() => {})
+        }
+    }, [type, exercises.length])
+
     async function handleSubmit(e: React.FormEvent) {
         e.preventDefault()
         if (!title || !targetValue) {
             setError("請填寫標題和目標值")
+            return
+        }
+        if (type === "WEIGHT_PR" && !exerciseId) {
+            setError("重量目標挑戰需選擇動作")
             return
         }
         setSubmitting(true)
@@ -837,6 +859,7 @@ function CreateChallengeForm({ onCreated, onCancel }: { onCreated: () => void; o
                 description: description || null,
                 type,
                 targetValue: Number(targetValue),
+                exerciseId: type === "WEIGHT_PR" ? exerciseId : undefined,
                 startDate: new Date(startDate).toISOString(),
                 endDate: new Date(endDate).toISOString(),
             }),
@@ -904,6 +927,22 @@ function CreateChallengeForm({ onCreated, onCancel }: { onCreated: () => void; o
                     />
                 </div>
             </div>
+
+            {type === "WEIGHT_PR" && (
+                <div>
+                    <label className="text-xs text-muted-foreground block mb-1">目標動作</label>
+                    <select
+                        value={exerciseId}
+                        onChange={e => setExerciseId(e.target.value)}
+                        className="w-full bg-secondary/50 border border-border rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
+                    >
+                        <option value="">選擇動作...</option>
+                        {exercises.map(ex => (
+                            <option key={ex.id} value={ex.id}>{ex.name}</option>
+                        ))}
+                    </select>
+                </div>
+            )}
 
             <div className="grid grid-cols-2 gap-3">
                 <div>

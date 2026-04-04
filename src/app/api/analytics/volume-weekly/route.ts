@@ -35,7 +35,6 @@ export async function GET() {
                     exercise: {
                         include: {
                             muscles: {
-                                where: { isPrimary: true },
                                 include: { muscleGroup: true },
                             },
                         },
@@ -75,11 +74,26 @@ export async function GET() {
                     sum + (set.durationSeconds ? 0 : Number(set.weightKg) * set.repsPerformed), 0
                 )
 
-                // Get primary muscle group
-                if (se.exercise.muscles.length > 0) {
-                    const region = se.exercise.muscles[0].muscleGroup.bodyRegion
+                // Distribute volume using 70/30 primary/secondary split (consistent with muscle-balance radar)
+                const primaryMuscles = se.exercise.muscles.filter(m => m.isPrimary)
+                const secondaryMuscles = se.exercise.muscles.filter(m => !m.isPrimary)
+
+                const primaryShare = primaryMuscles.length > 0
+                    ? (secondaryMuscles.length > 0 ? volume * 0.7 : volume) / primaryMuscles.length
+                    : 0
+                const secondaryShare = secondaryMuscles.length > 0
+                    ? (volume * 0.3) / secondaryMuscles.length
+                    : 0
+
+                for (const m of primaryMuscles) {
+                    const region = m.muscleGroup.bodyRegion
                     const cat = REGION_MAP[region] || 'Core'
-                    entry[cat] = (entry[cat] as number) + Math.round(volume)
+                    entry[cat] = (entry[cat] as number) + Math.round(primaryShare)
+                }
+                for (const m of secondaryMuscles) {
+                    const region = m.muscleGroup.bodyRegion
+                    const cat = REGION_MAP[region] || 'Core'
+                    entry[cat] = (entry[cat] as number) + Math.round(secondaryShare)
                 }
             }
         }

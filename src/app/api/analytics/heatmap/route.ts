@@ -22,31 +22,43 @@ export async function GET() {
         orderBy: { startedAt: 'asc' },
     })
 
-    // Aggregate volume per day
-    const dailyMap = new Map<string, number>()
+    // Aggregate per day: count completed sets (volume OR duration-based)
+    const dailyVolumeMap = new Map<string, number>()
+    const dailySetCountMap = new Map<string, number>()
 
     for (const s of sessions) {
         const dateKey = s.startedAt.toISOString().split('T')[0]
-        const volume = s.exercises.reduce((sum, se) =>
-            sum + se.sets.reduce((s2, set) => s2 + (set.durationSeconds ? 0 : Number(set.weightKg) * set.repsPerformed), 0), 0
-        )
-        dailyMap.set(dateKey, (dailyMap.get(dateKey) || 0) + Math.round(volume))
+        let volume = 0
+        let setCount = 0
+        for (const se of s.exercises) {
+            for (const set of se.sets) {
+                setCount++
+                if (!set.durationSeconds) {
+                    volume += Number(set.weightKg) * set.repsPerformed
+                }
+            }
+        }
+        dailyVolumeMap.set(dateKey, (dailyVolumeMap.get(dateKey) || 0) + Math.round(volume))
+        dailySetCountMap.set(dateKey, (dailySetCountMap.get(dateKey) || 0) + setCount)
     }
 
-    const days: { date: string; volume: number }[] = []
+    const days: { date: string; volume: number; trained: boolean }[] = []
     for (let i = 89; i >= 0; i--) {
         const d = new Date(Date.now() - i * 24 * 60 * 60 * 1000)
         const key = d.toISOString().split('T')[0]
-        days.push({ date: key, volume: dailyMap.get(key) || 0 })
+        const volume = dailyVolumeMap.get(key) || 0
+        const setCount = dailySetCountMap.get(key) || 0
+        // A day counts as trained if it has ANY completed sets (including duration-only)
+        days.push({ date: key, volume, trained: setCount > 0 })
     }
 
-    // Calculate streaks
+    // Calculate streaks using 'trained' flag instead of volume > 0
     let currentStreak = 0
     let longestStreak = 0
     let tempStreak = 0
 
     for (let i = days.length - 1; i >= 0; i--) {
-        if (days[i].volume > 0) {
+        if (days[i].trained) {
             if (i === days.length - 1 || (i < days.length - 1 && currentStreak > 0)) {
                 currentStreak++
             }
@@ -55,19 +67,18 @@ export async function GET() {
         }
     }
 
-    // If today has no volume but yesterday did, current streak = 0 but check from yesterday
-    if (days[days.length - 1].volume === 0) {
+    // If today has no training but yesterday did, current streak = 0 but check from yesterday
+    if (!days[days.length - 1].trained) {
         currentStreak = 0
-        // Check if yesterday started a streak
         for (let i = days.length - 2; i >= 0; i--) {
-            if (days[i].volume > 0) currentStreak++
+            if (days[i].trained) currentStreak++
             else break
         }
     }
 
     // Longest streak
     for (const day of days) {
-        if (day.volume > 0) {
+        if (day.trained) {
             tempStreak++
             if (tempStreak > longestStreak) longestStreak = tempStreak
         } else {

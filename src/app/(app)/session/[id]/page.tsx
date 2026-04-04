@@ -233,8 +233,13 @@ function reducer(state: State, action: Action): State {
             const elapsed = Math.round((Date.now() - state.timingStart) / 1000)
             return { ...state, timingElapsed: elapsed }
         }
-        case 'TIMING_STOP':
-            return { ...state, isTiming: false, duration: state.timingElapsed || state.duration }
+        case 'TIMING_STOP': {
+            // Recalculate elapsed from actual timestamps to avoid losing up to 1 second
+            const finalElapsed = state.timingStart
+                ? Math.round((Date.now() - state.timingStart) / 1000)
+                : state.timingElapsed
+            return { ...state, isTiming: false, duration: finalElapsed || state.duration }
+        }
         case 'SET_DONE': {
             if (!state.session) return state
             const updatedExercises = state.session.exercises.map((ex, i) =>
