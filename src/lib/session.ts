@@ -5,7 +5,10 @@ export type SessionPayload = {
     issuedAt: number;
 };
 
-const SECRET = process.env.SESSION_SECRET || "dev-secret-change-in-production";
+const SECRET = process.env.SESSION_SECRET;
+if (!SECRET) {
+    throw new Error("SESSION_SECRET environment variable is required. Generate one with: openssl rand -hex 32");
+}
 const SESSION_MAX_AGE_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
 const encoder = new TextEncoder();
 

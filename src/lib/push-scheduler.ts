@@ -153,17 +153,50 @@ export function schedulePush(userId: string, endTime: number, title: string, bod
         if (!sub) { addPushLog('NO_SUBSCRIPTION', userId); console.warn(`[push] ❌ No subscription for user ${userId}`); return }
         try {
             console.log(`[push] 📤 Sending push to user ${userId}`)
-            const result = await sendNotificationWithOneHourJwt(
+            let result = await sendNotificationWithOneHourJwt(
                 sub, JSON.stringify({ title, body, tag: 'rest-end' }),
             )
-            const ok = result.statusCode >= 200 && result.statusCode < 300
+            let ok = result.statusCode >= 200 && result.statusCode < 300
+
+            // Retry once after 5 seconds on transient errors (5xx or network-level)
+            if (!ok && result.statusCode !== 410 && result.statusCode >= 500) {
+                addPushLog('PUSH_RETRY', userId, `status=${result.statusCode}, retrying in 5s`)
+                console.log(`[push] ⏳ Retrying in 5s for user ${userId} (status=${result.statusCode})`)
+                await new Promise(resolve => setTimeout(resolve, 5000))
+                result = await sendNotificationWithOneHourJwt(
+                    sub, JSON.stringify({ title, body, tag: 'rest-end' }),
+                )
+                ok = result.statusCode >= 200 && result.statusCode < 300
+            }
+
             const status = ok ? '✅' : '❌'
             addPushLog(ok ? 'PUSH_SENT_OK' : 'PUSH_SENT_FAIL', userId, `status=${result.statusCode} body=${result.body}`)
             console.log(`[push] ${status} Sent — status=${result.statusCode} body=${result.body} user=${userId}`)
-            if (result.statusCode === 410) subscriptions.delete(userId)
+            // 410 Gone = subscription expired, remove it
+            if (result.statusCode === 410) {
+                subscriptions.delete(userId)
+                addPushLog('SUBSCRIPTION_REMOVED', userId, 'Expired (410 Gone)')
+            }
         } catch (err) {
             addPushLog('PUSH_ERROR', userId, String(err))
             console.error(`[push] ❌ Error for user ${userId}:`, err)
+            // Retry once on network error
+            try {
+                await new Promise(resolve => setTimeout(resolve, 5000))
+                addPushLog('PUSH_RETRY_NETWORK', userId, 'Retrying after network error')
+                const retryResult = await sendNotificationWithOneHourJwt(
+                    sub, JSON.stringify({ title, body, tag: 'rest-end' }),
+                )
+                const retryOk = retryResult.statusCode >= 200 && retryResult.statusCode < 300
+                addPushLog(retryOk ? 'PUSH_RETRY_OK' : 'PUSH_RETRY_FAIL', userId, `status=${retryResult.statusCode}`)
+                if (retryResult.statusCode === 410) {
+                    subscriptions.delete(userId)
+                    addPushLog('SUBSCRIPTION_REMOVED', userId, 'Expired (410 Gone)')
+                }
+            } catch (retryErr) {
+                addPushLog('PUSH_RETRY_ERROR', userId, String(retryErr))
+                console.error(`[push] ❌ Retry also failed for user ${userId}:`, retryErr)
+            }
         }
     }, delay)
     timers.set(userId, timer)

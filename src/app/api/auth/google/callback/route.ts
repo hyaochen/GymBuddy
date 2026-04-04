@@ -31,6 +31,15 @@ export async function GET(req: NextRequest) {
         return NextResponse.redirect(new URL("/login?error=" + encodeURIComponent("Google 登入失敗"), baseUrl))
     }
 
+    // Verify OAuth state parameter to prevent CSRF
+    const cookieStore = await cookies()
+    const storedState = cookieStore.get("oauth-state")?.value
+    cookieStore.delete("oauth-state")
+    const returnedState = req.nextUrl.searchParams.get("state")
+    if (!storedState || !returnedState || storedState !== returnedState) {
+        return NextResponse.redirect(new URL("/login?error=" + encodeURIComponent("驗證失敗，請重新登入"), baseUrl))
+    }
+
     const clientId = process.env.GOOGLE_CLIENT_ID!
     const clientSecret = process.env.GOOGLE_CLIENT_SECRET!
     const redirectUri = `${appUrl}/api/auth/google/callback`
@@ -107,7 +116,6 @@ export async function GET(req: NextRequest) {
 
         // Create session
         const token = await signSession({ userId: user.id, issuedAt: Date.now() })
-        const cookieStore = await cookies()
         cookieStore.set(SESSION_COOKIE, token, {
             httpOnly: true,
             secure: process.env.COOKIE_SECURE === "true",

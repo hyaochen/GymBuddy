@@ -336,7 +336,7 @@ model PersonalRecord {
   userId       String
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   exerciseId   String
-  exercise     Exercise @relation(fields: [exerciseId], references: [id])
+  exercise     Exercise @relation(fields: [exerciseId], references: [id], onDelete: Cascade)
   weightKg     Decimal  @db.Decimal(6, 2)
   reps         Int
   estimated1rm Decimal  @db.Decimal(6, 2)
@@ -344,6 +344,7 @@ model PersonalRecord {
 
   @@index([userId, exerciseId])
   @@index([userId])
+  @@index([userId, achievedAt])
   @@map("personal_records")
 }
 
@@ -356,8 +357,8 @@ model Friendship {
   status      FriendshipStatus @default(PENDING)
   createdAt   DateTime         @default(now())
 
-  requester User @relation("FriendRequestsSent", fields: [requesterId], references: [id])
-  receiver  User @relation("FriendRequestsReceived", fields: [receiverId], references: [id])
+  requester User @relation("FriendRequestsSent", fields: [requesterId], references: [id], onDelete: Cascade)
+  receiver  User @relation("FriendRequestsReceived", fields: [receiverId], references: [id], onDelete: Cascade)
 
   @@unique([requesterId, receiverId])
   @@index([receiverId, status])
@@ -378,6 +379,7 @@ model ActivityFeedItem {
   kudos Kudo[]
 
   @@index([userId, createdAt])
+  @@index([isPublic, createdAt])
   @@index([createdAt])
   @@map("activity_feed_items")
 }
@@ -395,6 +397,7 @@ model Kudo {
   feedItem ActivityFeedItem @relation(fields: [feedItemId], references: [id], onDelete: Cascade)
 
   @@unique([userId, feedItemId])
+  @@index([feedItemId])
   @@map("kudos")
 }
 
@@ -431,8 +434,8 @@ model Challenge {
   isPublic    Boolean       @default(true)
   createdAt   DateTime      @default(now())
 
-  creator      User                   @relation(fields: [creatorId], references: [id])
-  exercise     Exercise?              @relation(fields: [exerciseId], references: [id])
+  creator      User                   @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+  exercise     Exercise?              @relation(fields: [exerciseId], references: [id], onDelete: SetNull)
   participants ChallengeParticipant[]
 
   @@index([endDate])
@@ -449,9 +452,10 @@ model ChallengeParticipant {
   joinedAt     DateTime  @default(now())
 
   challenge Challenge @relation(fields: [challengeId], references: [id], onDelete: Cascade)
-  user      User      @relation(fields: [userId], references: [id])
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([challengeId, userId])
+  @@index([userId])
   @@map("challenge_participants")
 }
 
@@ -471,7 +475,7 @@ model SharedTemplate {
   isPublic      Boolean    @default(true)
   createdAt     DateTime   @default(now())
 
-  creator       User           @relation(fields: [creatorId], references: [id])
+  creator       User           @relation(fields: [creatorId], references: [id], onDelete: Cascade)
   templateLikes TemplateLike[]
 
   @@index([likes])
@@ -485,7 +489,7 @@ model TemplateLike {
   templateId String
   createdAt  DateTime @default(now())
 
-  user     User           @relation(fields: [userId], references: [id])
+  user     User           @relation(fields: [userId], references: [id], onDelete: Cascade)
   template SharedTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
 
   @@unique([userId, templateId])
@@ -500,7 +504,7 @@ model UserBadge {
   badgeKey String
   earnedAt DateTime @default(now())
 
-  user User @relation(fields: [userId], references: [id])
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, badgeKey])
   @@index([userId])
