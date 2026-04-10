@@ -1,0 +1,1766 @@
+[
+  {
+    "name_zh": "頸部伸展與彎曲",
+    "name_en": "Neck Extension and Flexion",
+    "description": "這項簡單的动作可以使用站姿或是坐姿來施行，它有助于改善颈部僵硬，并强化某些在需要头部姿势的运动中所需的肌肉。",
+    "stepInstructions": [
+      "在放鬆的状态下保持身体正直,双手自然下垂或是紧贴在身体两侧以防止耸肩。直视前方並保持脊柱在中立位置。",
+      "將下巴慢慢抬高至可以目視到天花板的角度來伸展頸部肌肉並維持數秒。",
+      "收縮頸部肌肉，把頭慢慢放下，但是不要过度用力。將頭慢慢回復至開始姿勢,並且以緩慢的節奏重複整個過程。",
+      "在舒适范围内进行动作"
+    ],
+    "difficulty": "BEGINNER",
+    "exerciseType": "STRETCH",
+    "primaryMuscles": [],
+    "secondaryMuscles": [],
+    "equipment": [
+      "Bodyweight / 自體重量"
+    ],
+    "sourceBook": "strength_training",
+    "sourcePageNumber": 41
+  },
+  {
+    "name_zh": "肩部迴旋",
+    "name_en": "Shoulder Rotation",
+    "description": "此動作可增加血液流動，提高肌肉溫度並增加關節活動的流暢性。",
+    "stepInstructions": [
+      "保持縮腹挺胸",
+      "將肩膀往上往內移動，並且慢慢的往耳朵的方向抬起",
+      "讓雙手自然下垂不彎曲"
+    ],
+    "difficulty": "BEGINNER",
+    "exerciseType": "STRETCH",
+    "primaryMuscles": [],
+    "secondaryMuscles": [],
+    "equipment": [
+      "Bodyweight / 自體重量"
+    ],
+    "sourceBook": "strength_training",
+    "sourcePageNumber": 43
+  },
+  {
+    "name_zh": "髓部迴旋",
+    "name_en": "Hip Circle",
+    "description": "這個動作可以用來幫助放鬆核心肌群，以增加其柔軟度。",
+    "stepInstructions": [
+      "身體保持正直, 將雙手置於髄部。",
+      "雙腿打直, 分開與肩同寛或是略寬。",
+      "平順地往右邊旋轉，保持手肘與前臂同高。",
+      "將身體迴轉至準備位置，保持動作流暢，不要甩動。"
+    ],
+    "difficulty": "BEGINNER",
+    "exerciseType": "STRETCH",
+    "primaryMuscles": [],
+    "secondaryMuscles": [],
+    "equipment": [
+      "Bodyweight / 自體重量"
+    ],
+    "sourceBook": "strength_training",
+    "sourcePageNumber": 45
+  },
+  {
+    "name_zh": "徒手蹲舉",
+    "name_en": "Squat",
+    "description": "此為下半身與核心肌群的基础動作，同時也是所有蹲舉相關肌力訓練之前重要的暖身動作。",
+    "stepInstructions": [
+      "站直，雙腳稍微向外側開",
+      "雙手平舉並與地平行，保持挺胸",
+      "臀部向下向後移動",
+      "吸氣並開始彎曲膝關節與籠關節"
+    ],
+    "difficulty": "BEGINNER",
+    "exerciseType": "COMPOUND",
+    "primaryMuscles": [],
+    "secondaryMuscles": [],
+    "equipment": [
+      "Bodyweight / 自體重量"
+    ],
+    "sourceBook": "strength_training",
+    "sourcePageNumber": 49
+  },
+  {
+    "name_zh": "徒手蹲舉",
+    "name_en": "Bodyweight Squat",
+    "description": "主要目的是訓練大腿和臀部肌肉，提高下肢力量和柔軟度。",
+    "stepInstructions": [
+      "始終保持躯幹正直 ，不要向前倒",
+      "儘量把腿伸直",
+      "腳尖向外",
+      "將腳平放在地板上,勿晃動",
+      "右腿伸直向外擺動, 尽可能伸展開 （勿猛然用力 ，以免摔倒 ），重複數次後換腿再做 。下蹲至大腿與地面平行 （若柔軟度許可，可以蹲更低 ，但不要坐下去休息 ）。",
+      "回復至開始姿勢"
+    ],
+    "difficulty": "BEGINNER",
+    "exerciseType": "COMPOUND",
+    "primaryMuscles": [],
+    "secondaryMuscles": [],
+    "equipment": [
+      "Bodyweight / 自體重量"
+    ],
+    "sourceBook": "strength_training",
+    "sourcePageNumber": 50
+  },
+  {
+    "name_zh": "過頭弓步蹲",
+    "name_en": "Overhead Lunge",
+    "description": "這個動作主要訓練臀部與大腿的柔軟度。",
+    "stepInstructions": [
+      "保持挺胸與肩膀後收，準備姿勢。",
+      "握住槓鈴寬握高舉過頭。",
+      "右腳下蹲，槓鈴重量落在兩腳之間。",
+      "回復至開始姿勢並重複左腳。"
+    ],
+    "difficulty": "INTERMEDIATE",
+    "exerciseType": "COMPOUND",
+    "primaryMuscles": [],
+    "secondaryMuscles": [],
+    "equipment": [
+      "Olympic Barbell / 奧林匹克槓鈴"
+    ],
+    "sourceBook": "strength_training",
+    "sourcePageNumber": 52
+  },
+  {
+    "name_zh": "Back Squat",
+    "name_en": "Back Squat",
+    "description": "這個多關節動作對於發展腿部肌肉有非常好的效果，這也是一個對於發展全身肌力與爆發力最好的基礎運動。",
+    "stepInstructions": [
+      "站直，腳比肩寬稍開，腳尖微向外。",
+      "握緊奧林匹克槓鈴，將杠放置在後頸或肩部。",
+      "慢慢下蹲，臀部向後坐，直到大腿與地面平行。",
+      "保持背部挺直，視線水平向前看。"
+    ],
+    "difficulty": "INTERMEDIATE",
+    "exerciseType": "COMPOUND",
+    "primaryMuscles": [],
+    "secondaryMuscles": [],
+    "equipment": [
+      "Olympic Barbell / 奧林匹克槓鈴"
+    ],
+    "sourceBook": "strength_training",
+    "sourcePageNumber": 53
+  },
+  {
+    "name_zh": "橫鈴蹲舉",
+    "name_en": "Barbell Front Squat",
+    "description": "這個動作主要訓練大腿和臀部的肌群，同時也對核心肌群有良好的穩定作用。",
+    "stepInstructions": [
+      "從槓鈴架上以平均的寬度握住槓鈴。",
+      "往下方扛住槓鈴，並站起來。雙腳應在槓鈴正下方。",
+      "後退一步並保持身體直立，讓槓扛在你上背部的中央。",
+      "深吸氣，並收緊腹部與臀部，開始下蹲。",
+      "保持兩腳腳尖微微向外，當屈膝時，讓腳尖與膝蓋同一方向，並慢慢讓臀部往後移動。"
+    ],
+    "difficulty": "INTERMEDIATE",
+    "exerciseType": "COMPOUND",
+    "primaryMuscles": [],
+    "secondaryMuscles": [],
+    "equipment": [
+      "Olympic Barbell / 奧林匹克槓鈴"
+    ],
+    "sourceBook": "strength_training",
+    "sourcePageNumber": 54
+  },
+  {
+    "name_zh": " FRONT BARBELL SQUAT ",
+    "name_en": "Front Barbell Squat",
+    "description": "這個動作主要強調核心與股四頭肌的訓練。",
+    "stepInstructions": [
+      "握住槓鈴置於鎖骨與三角肌上方",
+      "雙腳略寬於肩，腳尖微微向外打開",
+      "保持上半身正直，屈膝將臀部往後移動",
+      "從架子上舉起槓鈴至肩膀高度"
+    ],
+    "difficulty": "INTERMEDIATE",
+    "exerciseType": "COMPOUND",
+    "primaryMuscles": [],
+    "secondaryMuscles": [],
+    "equipment": [
+      "Olympic Barbell / 奧林匹克槓鈴"
+    ],
+    "sourceBook": "strength_training",
+    "sourcePageNumber": 55
+  },
+  {
+    "name_zh": "杠铃哈克蹲举",
+    "name_en": "Barbell Hack Squat",
+    "description": "這個動作主要訓練股四頭肌，同時也對臀肌和腿後肌有良好的刺激效果。",
+    "stepInstructions": [
+      "雙手在臀部外側握住握把",
+      "收緊核心肌肉以支撑你的靈活性",
+      "保持背部挺直並收縮臀部",
+      "下蹲到大腿平行於地面"
+    ],
+    "difficulty": "INTERMEDIATE",
+    "exerciseType": "COMPOUND",
+    "primaryMuscles": [],
+    "secondaryMuscles": [],
+    "equipment": [
+      "Bodyweight / 自體重量"
+    ],
+    "sourceBook": "strength_training",
+    "sourcePageNumber": 56
+  },
+  {
+    "name_zh": "啞鈴分腿蹲",
+    "name_en": "Dumbbell Split Squat",
+    "description": "這個動作可以強化股四頭肌的肌力，同時發展臀部的柔軟度以及良好的肩部姿勢。",
+    "stepInstructions": [
+      "從站姿開始，雙腳打開與肩同寬, 双手握住啞鈴放在身體兩側。",
+      "前腳踩一步向前，保持挺胸與直視正前方。",
+      "後腳腳跟抬起, 前腳踩平。",
+      "彎屈膝關節與罷關節，慢慢往下蹲至弓箭步姿勢。你的前膝不应该超過腳尖，同時後膝不應該碰到地面。",
+      "始終保持身俏正直，將肩膀後收並保持身正直"
+    ],
+    "difficulty": "INTERMEDIATE",
+    "exerciseType": "COMPOUND",
+    "primaryMuscles": [],
+    "secondaryMuscles": [],
+    "equipment": [
+      "Dumbbells / 啞鈴"
+    ],
+    "sourceBook": "strength_training",
+    "sourcePageNumber": 57
+  },
+  {
+    "name_zh": "過頭分腿蹲",
+    "name_en": "Overhead Split Squat",
+    "description": "這個動作主要訓練腿部和核心肌群，同時提高肩關節的柔軟度。",
+    "stepInstructions": [
+      "立姿開始，雙腳打開與肩同寬。",
+      "將啞鈴高舉過頭，並向前跨出一步。",
+      "伸直前腿，回復至開始姿勢。",
+      "確保前膝不超過 toes，後腳跟不著地。"
+    ],
+    "difficulty": "INTERMEDIATE",
+    "exerciseType": "COMPOUND",
+    "primaryMuscles": [],
+    "secondaryMuscles": [],
+    "equipment": [
+      "Dumbbells / 啞鈴"
+    ],
+    "sourceBook": "strength_training",
+    "sourcePageNumber": 58
+  },
+  {
+    "name_zh": "保加利亞式槓鈴分腿 squat",
+    "name_en": "Bulgarian Barbell Split Squat",
+    "description": "這個進階的動作是保加利亞國家舉重隊所發明，用來發展選手的肌力、平衡與柔軟度。",
+    "stepInstructions": [
+      "開始時槓鈴置於上背部，雙腳打開與肩同寬",
+      "彎曲後腿置於後方板凳上",
+      "慢慢向地面彎曲後膝，在你前大腿平行於地面時停止",
+      "收緊核心肌肉，在動作時保持上身正直",
+      "在動作的最低位置開始伸直前腿，回復至開始位置，不要鎖死膝關節"
+    ],
+    "difficulty": "ADVANCED",
+    "exerciseType": "COMPOUND",
+    "primaryMuscles": [],
+    "secondaryMuscles": [],
+    "equipment": [
+      "Olympic Barbell / 奧林匹克槓鈴"
+    ],
+    "sourceBook": "strength_training",
+    "sourcePageNumber": 59
+  },
+  {
+    "name_zh": "槓鈴弓步蹲",
+    "name_en": "Barbell Lunge",
+    "description": "這個動作可以讓腿部與臀部肌肉發達，特別在網球之類的運動訓練裏非常有用。",
+    "stepInstructions": [
+      "放鬆膝關節 ，將槓鈴扛在背部上方 ，雙手寬握,手臂向後。",
+      "收緊核心肌肉 ，並踩一步向前 。同時將後膝往地面移動並吸氣。",
+      "直視正前方保持雙膝微彎。",
+      "讓後膝幾乎與地面接觸 ，然後伸直前腳 ，並後退至開始姿勢。"
+    ],
+    "difficulty": "INTERMEDIATE",
+    "exerciseType": "COMPOUND",
+    "primaryMuscles": [],
+    "secondaryMuscles": [],
+    "equipment": [
+      "Bodyweight / 自體重量"
+    ],
+    "sourceBook": "strength_training",
+    "sourcePageNumber": 61
+  },
+  {
+    "name_zh": "過頭槓鈴弓步蹲",
+    "name_en": "Overhead Barbell Lunge",
+    "description": "這個動作主要訓練股四頭肌、臀大肌和腿後肌，同時也挑戰平衡能力。",
+    "stepInstructions": [
+      "採用寬握槓鈴，高舉過頭，手背向後，肘微彎。",
+      "保持前腳掌平樹，收縮核心肌肉，向前踩一步。",
+      "將後膝往地面移動，直到幾乎碰到地面。",
+      "動作時保持深吸氣，彎屈膝關節，在前腳掌上方停頓一下，然後伸直前膝，往後退一步。"
+    ],
+    "difficulty": "INTERMEDIATE",
+    "exerciseType": "COMPOUND",
+    "primaryMuscles": [],
+    "secondaryMuscles": [],
+    "equipment": [
+      "Olympic Barbell / 奧林匹克槓鈴"
+    ],
+    "sourceBook": "strength_training",
+    "sourcePageNumber": 62
+  },
+  {
+    "name_zh": "前跨步弓步蹲",
+    "name_en": "Forward Lunge",
+    "description": "這個動作主要用於發展腿部與臀部的肌力。",
+    "stepInstructions": [
+      "保持後腳在韻關節正下方，並離地一點點。",
+      "下蹲直到雙膝都達到90度為止。",
+      "停頓一下再回復到開始姿勢。",
+      "踩一步向前並保持上半身正直，在穩定的控制之下彎屈膝關節、膝關節以及踝關節下蹲。"
+    ],
+    "difficulty": "BEGINNER",
+    "exerciseType": "COMPOUND",
+    "primaryMuscles": [],
+    "secondaryMuscles": [],
+    "equipment": [
+      "Bodyweight / 自體重量"
+    ],
+    "sourceBook": "strength_training",
+    "sourcePageNumber": 63
+  },
+  {
+    "name_zh": "側跨步弓步蹲",
+    "name_en": "Lateral Lunge",
+    "description": "此動作主要訓練大腿後側肌群和小腿肌肉，同時也锻炼臀部和腿部的穩定性。",
+    "stepInstructions": [
+      "站立姿勢，雙腳與肩同寬。",
+      "向側方跨出一步。",
+      "下蹲時保持上半身正直，前膝不要超過腳尖。",
+      "下蹲至大腿平行於地面。",
+      "站起回到初始姿勢。",
+      "換邊重複動作。"
+    ],
+    "difficulty": "INTERMEDIATE",
+    "exerciseType": "COMPOUND",
+    "primaryMuscles": [],
+    "secondaryMuscles": [],
+    "equipment": [
+      "Dumbbells / 啞鈴"
+    ],
+    "sourceBook": "strength_training",
+    "sourcePageNumber": 64
+  },
+  {
+    "name_zh": "杠铃上跨步",
+    "name_en": "Barbell Step-Up",
+    "description": "訓練腿部的主要肌肉群：股四頭肌、腿後肌與臀部肌肉。",
+    "stepInstructions": [
+      "手持啞鈴站立在踏板前。",
+      "將右腳踏上踏板，左腳跟隨。",
+      "保持核心緊繃，身體直立。",
+      "慢慢放下左腳回到起始位置。"
+    ],
+    "difficulty": "BEGINNER",
+    "exerciseType": "COMPOUND",
+    "primaryMuscles": [],
+    "secondaryMuscles": [],
+    "equipment": [
+      "Dumbbells / 啞鈴"
+    ],
+    "sourceBook": "strength_training",
+    "sourcePageNumber": 65
+  },
+  {
+    "name_zh": "45度腿推舉",
+    "name_en": "45-Degree Leg Press",
+    "description": "這個動作主要用於訓練大腿前側肌肉，同時也可以提高腿部力量。",
+    "stepInstructions": [
+      "調整腿推舉機器的位置至符合身高與腿長。",
+      "讓頭部和背部支撑在靠墊上。",
+      "選擇適當的重量並坐躺於器材上。",
+      "雙腳打開與肩同寬，並將重量支撐在雙腳上。",
+      "將機器上的安全鎖鬆開，並握好握把。"
+    ],
+    "difficulty": "BEGINNER",
+    "exerciseType": "COMPOUND",
+    "primaryMuscles": [],
+    "secondaryMuscles": [],
+    "equipment": [
+      "Leg Press Machine / 腿推機"
+    ],
+    "sourceBook": "strength_training",
+    "sourcePageNumber": 67
+  },
+  {
+    "name_zh": "45度角睫推舉",
+    "name_en": "45 Degree Incline Chest Press",
+    "description": "主要目的是鍛煉胸部肌群，同時也訓練肩部和三頭肌。",
+    "stepInstructions": [
+      "將下背靠牢在靠墊上，避免抬起頭。",
+      "在下放過程中，如果感覺下背開始抬起離開靠墊時停止動作。",
+      "在推到頂點時，避免鎖死膝關節，並確保慢慢上推與下放。",
+      "可以單腳操作大腿推舉以調整兩腿的肌力不平衡。"
+    ],
+    "difficulty": "INTERMEDIATE",
+    "exerciseType": "COMPOUND",
+    "primaryMuscles": [],
+    "secondaryMuscles": [],
+    "equipment": [
+      "Olympic Barbell / 奧林匹克槓鈴"
+    ],
+    "sourceBook": "strength_training",
+    "sourcePageNumber": 68
+  },
+  {
+    "name_zh": "機器式大腿伸展",
+    "name_en": "Machine Leg Extension",
+    "description": "主要目的是鍛煉大腿前側肌群，提高腿部力量和柔軟度。",
+    "stepInstructions": [
+      "選擇適當的重量 ，並坐在機器上。",
+      "調整好腿部的靠墊使其剛好在腳踝後方。",
+      "完全收縮腿後肌 ，將大腿平順地往後勾回。",
+      "然後再穩定地復至開始位置。"
+    ],
+    "difficulty": "BEGINNER",
+    "exerciseType": "ISOLATION",
+    "primaryMuscles": [],
+    "secondaryMuscles": [],
+    "equipment": [
+      "Leg Extension Machine / 腿屈伸機"
+    ],
+    "sourceBook": "strength_training",
+    "sourcePageNumber": 70
+  },
+  {
+    "name_zh": "直腿硬舉",
+    "name_en": "Straight-Leg Deadlift",
+    "description": "這個常被忽略的動作可以強化你的下背，並發展腿部及臀部。",
+    "stepInstructions": [
+      "身體正直，雙腳與肩同寬，槓鈴放置於背部",
+      "抬頭向正前方，雙膝不完全鎖死，屈膝把槓鈴降下，同時吸氣。",
+      "如果你的競部柔軟度夠好，試著站在墊高的平台上進行。這樣可以將槓鈴下放至低於腳掌的位置並增加肌肉的訓練範圍。",
+      "然後以臀部為支點將上半身抬起，同時吐氣。"
+    ],
+    "difficulty": "INTERMEDIATE",
+    "exerciseType": "COMPOUND",
+    "primaryMuscles": [],
+    "secondaryMuscles": [],
+    "equipment": [
+      "Olympic Barbell / 奧林匹克槓鈴"
+    ],
+    "sourceBook": "strength_training",
+    "sourcePageNumber": 74
+  },
+  {
+    "name_zh": "木貝鈴硬舉",
+    "name_en": "Barbell Deadlift",
+    "description": "此動作主要訓練腿部與背部的肌力，也是健力三個比賽動作之一。",
+    "stepInstructions": [
+      "握緊槓鈴以防止槓鈴在手中轉動",
+      "保持背部打直並用力",
+      "雙手一正一反握住槓鈴，握幅應比肩略寬",
+      "持續舉起槓鈴 ，直到上半身正直 ，雙膝也伸直"
+    ],
+    "difficulty": "INTERMEDIATE",
+    "exerciseType": "COMPOUND",
+    "primaryMuscles": [],
+    "secondaryMuscles": [],
+    "equipment": [
+      "Olympic Barbell / 奧林匹克槓鈴"
+    ],
+    "sourceBook": "strength_training",
+    "sourcePageNumber": 75
+  },
+  {
+    "name_zh": "輔助引體向上",
+    "name_en": "Assisted Chin-Up",
+    "description": "這對於訓練背部大肌肉群是一項很好的運動，特別是當你的肌力對於一般引體向上的動作會有困難時。",
+    "stepInstructions": [
+      "選擇適合的背部施力往上拉提,拉到下巴與手同高",
+      "選擇適當重量 ，雙腳踝在機器兩邊的踏墊上 ，調整好雙手的握幅。將雙膝先後放在膝部墊子上,雙臂放直 。",
+      "彎曲手肘與收緊肩膀 ，利用背部的力量將身體拉起 。",
+      "保持身体正直 ，往上拉時呼氣,往下放時吸氣 。"
+    ],
+    "difficulty": "BEGINNER",
+    "exerciseType": "ISOLATION",
+    "primaryMuscles": [],
+    "secondaryMuscles": [],
+    "equipment": [
+      "Bodyweight / 自體重量"
+    ],
+    "sourceBook": "strength_training",
+    "sourcePageNumber": 79
+  },
+  {
+    "name_zh": "單臂坐姿划船",
+    "name_en": "Seated Single-Arm Pulley Row",
+    "description": "這個動作主要用於增加背部肌肉量與肌力發展。",
+    "stepInstructions": [
+      "坐在划船機上，雙膝彎曲，保持下背直。",
+      "握把（或槓）移動的路線應該是水平的直線。",
+      "始終保持這樣的姿勢，不要前俯後仰。",
+      "慢慢拉起重量至腹部位置，然後緩慢放回原位。"
+    ],
+    "difficulty": "INTERMEDIATE",
+    "exerciseType": "COMPOUND",
+    "primaryMuscles": [],
+    "secondaryMuscles": [],
+    "equipment": [
+      "Seated Row Machine / 坐姿划船機"
+    ],
+    "sourceBook": "strength_training",
+    "sourcePageNumber": 83
+  },
+  {
+    "name_zh": "單腿站姿划船",
+    "name_en": "Single-Leg Standing Row",
+    "description": "這個動作主要用於鍛煉背部肌群，特別是後三角肌和背闊肌。",
+    "stepInstructions": [
+      "站立，一腿置於板凳上，維持背部挺直。",
+      "採立姿淺蹲姿勢，保持淺蹲姿態。",
+      "將滑輪固定在下方，並選擇適當重量。",
+      "使用另一隻手支撐身體重量，另一隻手握住啞鈴。",
+      "將啞鈴往身體方向上提。",
+      "將手肘儘可能提高後，再慢慢放下至開始位置。"
+    ],
+    "difficulty": "INTERMEDIATE",
+    "exerciseType": "COMPOUND",
+    "primaryMuscles": [],
+    "secondaryMuscles": [],
+    "equipment": [
+      "Dumbbells / 啞鈴"
+    ],
+    "sourceBook": "strength_training",
+    "sourcePageNumber": 86
+  },
+  {
+    "name_zh": "屈膝划船",
+    "name_en": "Knee Flexion Row",
+    "description": "這個動作主要訓練背部肌群，特別是背闊肌和菱形肌。",
+    "stepInstructions": [
+      "向前蹲到膝盖位於槓鈴的上方，脊柱保持中立 ，雙腳打開與肩同寬並直視正前方 。",
+      "雙手由膝蓋外側正握槓鈴 ，背部打直 ，腳底採穩 ，並保持頭部向前。",
+      "將肩膀向前向下移動到積鈴上方脊柱中立在膝禮外側握住頂鈴緊，腳尖在槓鈴下方 。",
+      "將肩膀往後收 ，並稍微向下一些不要聳肩 。",
+      "整個過程中始終保持背部正直。",
+      "將植鈴上提至靈幹中央，不要猛然蹟睫拉起梧鈴簡部向下蒂動身S8下移。",
+      "雙腿略為伸直以提高身體 ，背部維持相同姿勢 ，槓鈴略低於5把槓鈴上提 ，彎曲雙臂提高手肘直到槓鈴觸碰到身體 。",
+      "稍每一組結束後 ，膝蓋彎曲慢慢下蹲，背部保持姿勢 ，將槓鈴膝蓋的位置 。"
+    ],
+    "difficulty": "INTERMEDIATE",
+    "exerciseType": "COMPOUND",
+    "primaryMuscles": [],
+    "secondaryMuscles": [],
+    "equipment": [
+      "Olympic Barbell / 奧林匹克槓鈴"
+    ],
+    "sourceBook": "strength_training",
+    "sourcePageNumber": 88
+  },
+  {
+    "name_zh": "槓鈴肩伸",
+    "name_en": "Barbell Pull-Over",
+    "description": "這個動作對於增大胸部與上半身整體姿態非常有用，適合投擲專項運動或武術運動的肌力訓練。",
+    "stepInstructions": [
+      "平躺在平板凳上，雙腳平踩於地。",
+      "握緊奧林匹克槓鈴，手臂伸直舉過頭。",
+      "慢慢將槓鈴下放至背部後方，手肘可稍微彎曲。",
+      "回到起始位置，重複動作。"
+    ],
+    "difficulty": "BEGINNER",
+    "exerciseType": "COMPOUND",
+    "primaryMuscles": [],
+    "secondaryMuscles": [],
+    "equipment": [
+      "Bodyweight / 自體重量"
+    ],
+    "sourceBook": "strength_training",
+    "sourcePageNumber": 89
+  },
+  {
+    "name_zh": "橫鈴肩伸",
+    "name_en": "Barbell Lateral Raise",
+    "description": "主要目的是鍛煉側三角肌，提高肩膀的側向提升能力。",
+    "stepInstructions": [
+      "仰躺在板凳上，頭部與凳子邊緣切齊。讓你的肩部、臀部與頭部平躺於凳子上。",
+      "雙手握住槓鈴比肩略寬，並上舉至上胸位置。",
+      "將槓鈴從頭部上方往後移動，槓鈴保持水平。能放到多低則依你的肩膀柔軟度而定。",
+      "下放的過程中會感覺到胸部有輕微的拉扯感，儘可能打直手臂，若是感覺有點不舒服，也可以微微彎曲手臂。槓鈴往 下放的時候吸氣。",
+      "在動作最底端停頓一下，然後保持手臂打直，將槓鈴向上舉回原來的位置。上舉的時候吐氣。回到開始姿勢後，先感覺一下身體位置有無偏移，以及雙腳是否有踩穩，調整之後再做下一次動作"
+    ],
+    "difficulty": "INTERMEDIATE",
+    "exerciseType": "ISOLATION",
+    "primaryMuscles": [],
+    "secondaryMuscles": [],
+    "equipment": [
+      "Olympic Barbell / 奧林匹克槓鈴"
+    ],
+    "sourceBook": "strength_training",
+    "sourcePageNumber": 90
+  },
+  {
+    "name_zh": "下背伸展",
+    "name_en": "Lower Back Stretch",
+    "description": "此動作主要用於伸展和放鬆下背部肌肉，提高柔軟度。",
+    "stepInstructions": [
+      "身體站正，把槓鈴置於頸部後方的上背部，雙膝微彎，下背挺直。",
+      "保持下巴抬起以避免拱背。",
+      "以罷關節為支點，胸勲儘可能往前彎到背部往前傾，保持背部三部接近與地面平行。",
+      "打直，微屈雙膝。回復到開始姿勢時，同時吐氣。",
+      "調整羅馬椅的高度，大腿靠在靠墊上，讓髄關節可以自由彎曲。",
+      "雙腳平踩於踏板上，脊柱中立,手放在頭側，手肘往外張開。",
+      "彎曲髄關節並往地面的方向下放你的身體，同時保持背部打直。",
+      "此時會拉扯到腿後肌，其柔軟度會限制你彎下的高度。",
+      "回復至開始姿勢，收縮腿後肌、臀大肌與豎脊肌。不要過度伸展下背超過預備姿勢以避免下背傷害。"
+    ],
+    "difficulty": "BEGINNER",
+    "exerciseType": "STRETCH",
+    "primaryMuscles": [],
+    "secondaryMuscles": [],
+    "equipment": [
+      "Bodyweight / 自體重量"
+    ],
+    "sourceBook": "strength_training",
+    "sourcePageNumber": 92
+  },
+  {
+    "name_zh": "構鈴仰臥推举",
+    "name_en": "Dumbbell Incline Press",
+    "description": "主要目的是鍛煉上胸和前三角肌，增強胸部力量。",
+    "stepInstructions": [
+      "躺在傾斜躺椅上，雙腳平放地面。",
+      "握住比肩稍寬的啞鈴，拇指與其他四指在相反側。",
+      "從架上舉起啞鈴至鎖骨上方。",
+      "頭部、肩部和臀部緊靠住躺椅。"
+    ],
+    "difficulty": "INTERMEDIATE",
+    "exerciseType": "COMPOUND",
+    "primaryMuscles": [],
+    "secondaryMuscles": [],
+    "equipment": [
+      "Dumbbells / 啞鈴"
+    ],
+    "sourceBook": "strength_training",
+    "sourcePageNumber": 96
+  },
+  {
+    "name_zh": "上斜飛鳥",
+    "name_en": "Incline Flye",
+    "description": "主要目的是伸展胸肌，同時也锻炼肩部和背部肌肉。",
+    "stepInstructions": [
+      "設定椅背傾斜45度。",
+      "雙手掌心朝內拿穩啞鈴。",
+      "深吸氣並將啞鈴以弧形路徑緩慢舉高。",
+      "在肩膀上將啞鈴輕緩下降。"
+    ],
+    "difficulty": "BEGINNER",
+    "exerciseType": "ISOLATION",
+    "primaryMuscles": [],
+    "secondaryMuscles": [],
+    "equipment": [
+      "Dumbbells / 啞鈴"
+    ],
+    "sourceBook": "strength_training",
+    "sourcePageNumber": 100
+  },
+  {
+    "name_zh": "滑索飛烏",
+    "name_en": "Slide Cable Fly",
+    "description": "主要目的是鍛煉胸部肌群，特別是上胸。",
+    "stepInstructions": [
+      "將滑輪設定在最高的位置並選擇重量。",
+      "身體向前傾斜並利用腿支撐。",
+      "雙手以弧形路徑往後略超過軀幹中線。",
+      "保持肘關節微彎，頭部不動，視線向前。",
+      "雙手以大弧度像是擁抱的動作將握把帶向身體前方稍微低一點的位置。",
+      "拉動時雙臂微彎，用力時吐氣。"
+    ],
+    "difficulty": "INTERMEDIATE",
+    "exerciseType": "COMPOUND",
+    "primaryMuscles": [],
+    "secondaryMuscles": [],
+    "equipment": [
+      "Cable Machine / 纜繩機"
+    ],
+    "sourceBook": "strength_training",
+    "sourcePageNumber": 102
+  },
+  {
+    "name_zh": "機械飛鳥",
+    "name_en": "Machinery Fly",
+    "description": "主要目的是鍛煉胸部肌肉，增加胸肌的大小和力量。",
+    "stepInstructions": [
+      "設定適當的重量。",
+      "手把的位置稍微在你的身體中線後方一點，雙臂的弧線活動範圍較大。",
+      "深吸氣，然後在你穩定慢慢推動手把時吐氣。",
+      "整個過程中，身體要靠於靠墊。"
+    ],
+    "difficulty": "INTERMEDIATE",
+    "exerciseType": "ISOLATION",
+    "primaryMuscles": [],
+    "secondaryMuscles": [],
+    "equipment": [
+      "Chest Press Machine / 胸推機"
+    ],
+    "sourceBook": "strength_training",
+    "sourcePageNumber": 104
+  },
+  {
+    "name_zh": "球上俯身撑",
+    "name_en": "Push-Up on Ball",
+    "description": "這個動作主要訓練胸部、肩膀和手臂，同時也強化核心穩定性。",
+    "stepInstructions": [
+      "以兩腳尖及伸直的雙手支撐身體，雙手略比肩寬。",
+      "吸氣同時以緩慢速度控制降低身體，直至輕觸地面。",
+      "維持伏下的姿勢停一下，然後吐氣將身體上推，直至雙手伸直並回到開始姿勢。",
+      "背部的角度要固定，頭部向前，軀幹挺住不要變成上彎的姿勢。"
+    ],
+    "difficulty": "BEGINNER",
+    "exerciseType": "COMPOUND",
+    "primaryMuscles": [],
+    "secondaryMuscles": [],
+    "equipment": [
+      "Bodyweight / 自體重量"
+    ],
+    "sourceBook": "strength_training",
+    "sourcePageNumber": 105
+  },
+  {
+    "name_zh": "輔助架伏地挺身",
+    "name_en": "Frame-Supported Press-Up",
+    "description": "此動作主要訓練胸大肌、腹直肌和三角肌前束，同時也涉及肱二頭肌和股四頭肌。",
+    "stepInstructions": [
+      "將輔助架放在略比肩寬位置。",
+      "以腳趾與雙臂支撑體重。",
+      "吸氣緩慢下降身體，直到身體的高度低於彎曲的手肘高度。",
+      "腿打直保持題幹繃緊在動作的低點稍停。",
+      "然後推回到開始姿勢。"
+    ],
+    "difficulty": "INTERMEDIATE",
+    "exerciseType": "COMPOUND",
+    "primaryMuscles": [],
+    "secondaryMuscles": [],
+    "equipment": [
+      "Bodyweight / 自體重量"
+    ],
+    "sourceBook": "strength_training",
+    "sourcePageNumber": 106
+  },
+  {
+    "name_zh": "槓鈴肩推",
+    "name_en": "Military Barbell Press",
+    "description": "一個基本而且常用的上肩部訓練動作，可以有效鍛煉肩膀。",
+    "stepInstructions": [
+      "緊握槓鈴,以弧形路徑下降經過頭部",
+      "回到開始姿勢",
+      "使用肩膀力量將槓上推",
+      "以一個弧形路徑經過臉部到頭頂正上方稍後面一點的位置"
+    ],
+    "difficulty": "INTERMEDIATE",
+    "exerciseType": "COMPOUND",
+    "primaryMuscles": [],
+    "secondaryMuscles": [],
+    "equipment": [
+      "Olympic Barbell / 奧林匹克槓鈴"
+    ],
+    "sourceBook": "strength_training",
+    "sourcePageNumber": 107
+  },
+  {
+    "name_zh": "直立划船",
+    "name_en": "Upright Row",
+    "description": "這個動作可以發展肩部及上背肌力，並且有助於矯正體態。",
+    "stepInstructions": [
+      "站立，握啞鈴。",
+      "保持背部筆直，將啞鈴向上拉至下巴高度。",
+      "慢慢放回起始位置。",
+      "重複進行。"
+    ],
+    "difficulty": "BEGINNER",
+    "exerciseType": "COMPOUND",
+    "primaryMuscles": [],
+    "secondaryMuscles": [],
+    "equipment": [
+      "Dumbbells / 啞鈴"
+    ],
+    "sourceBook": "strength_training",
+    "sourcePageNumber": 109
+  },
+  {
+    "name_zh": "直立划船",
+    "name_en": "Standing Row",
+    "description": "主要目的是鍛煉背部肌群，特別是背闊肌和菱形肌。",
+    "stepInstructions": [
+      "提高手肘，雙腳與髄部同寬，双手正―握與窄握槓鈴 ，讓手心朝向身體。",
+      "將槓鈴自然提在大腿前方。",
+      "將槓鈴在平順的速度下朝向下巴的方向提起。",
+      "槓鈴靠近身體，並讓手肘在槓鈴上方，保持背部用力與正直。",
+      "將槓鈴上提至下巴的位置，保持雙手在手肘的高度之下，在動作的頂端短暫停頓一下。",
+      "保持雙膝微曲，務必注意直立划船的操作需要保持正確的姿勢，以避免背部與肩部的傷害。如有肩痛的病史應該避免這個動作。在能力範圍內操作，不要拱背，保持動作穩定避免猛一拉起的動作。",
+      "槓鈴舉起時不要超過中胸的高度，以免造成肩部強大的內始終確保頂鈴平衡。",
+      "將槓鈴在穩定的控制下回復至開始位置。",
+      "讓動作平順，保持雙手在槓鈴之上，並收緊背部。",
+      "双手完全伸直，回復至開始位置。下放時吐氣，完成一組後將槓鈴慢慢放回地面。如果在操作過程中感到疼痛則應該立刻停止。"
+    ],
+    "difficulty": "INTERMEDIATE",
+    "exerciseType": "COMPOUND",
+    "primaryMuscles": [],
+    "secondaryMuscles": [],
+    "equipment": [
+      "Olympic Barbell / 奧林匹克槓鈴"
+    ],
+    "sourceBook": "strength_training",
+    "sourcePageNumber": 110
+  },
+  {
+    "name_zh": "啞鈴肩前舉",
+    "name_en": "Front Dumbbell Raise",
+    "description": "這個動作可以發展與訓練肩部的小肌肉群，並能幫助你在表現其他運動時維持良好的姿勢。",
+    "stepInstructions": [
+      "將啞鈴緩慢上舉到眼睛的高度，同時吸氣。",
+      "將啞鈴緩慢放下至開始姿勢",
+      "再用另一手操作同樣的動作"
+    ],
+    "difficulty": "BEGINNER",
+    "exerciseType": "ISOLATION",
+    "primaryMuscles": [],
+    "secondaryMuscles": [],
+    "equipment": [
+      "Dumbbells / 啞鈴"
+    ],
+    "sourceBook": "strength_training",
+    "sourcePageNumber": 111
+  },
+  {
+    "name_zh": "啞鈴肩側舉",
+    "name_en": "Lateral Dumbbell Raise",
+    "description": "這個動作對於加大上背寬度很有幫助，同時可以提高網球和田徑等體育項目的競爭力。",
+    "stepInstructions": [
+      "雙腳與罷部—1同寬，雙膝微彎。",
+      "將啞鈴置於身體前方 ，指關節朝向側面 。",
+      "收緊腹部肌肉，手肘微彎, 將啞鈴左右上舉至高於眼睛的高度 。",
+      "停頓一秒後, 以穩定控制的速度將啞鈴下放至開始位置, 同時吐氣。"
+    ],
+    "difficulty": "BEGINNER",
+    "exerciseType": "ISOLATION",
+    "primaryMuscles": [],
+    "secondaryMuscles": [],
+    "equipment": [
+      "Dumbbells / 啞鈴"
+    ],
+    "sourceBook": "strength_training",
+    "sourcePageNumber": 112
+  },
+  {
+    "name_zh": "反向肩側舉",
+    "name_en": "Rear Lateral Raise",
+    "description": "這個動作對於發展肩膀以及上背部中間部位的肌肉非常有幫助，特別是菱形肌。",
+    "stepInstructions": [
+      "俯臥在上斜板凳上操作這個動作",
+      "保持身體正直來訓練三角肌後束以及菱形肌",
+      "確保雙腳固定以增加孤立性",
+      "動作過程中保持緩慢而平衡"
+    ],
+    "difficulty": "BEGINNER",
+    "exerciseType": "ISOLATION",
+    "primaryMuscles": [],
+    "secondaryMuscles": [],
+    "equipment": [
+      "Bodyweight / 自體重量"
+    ],
+    "sourceBook": "strength_training",
+    "sourcePageNumber": 113
+  },
+  {
+    "name_zh": "反向側舉",
+    "name_en": "Reverse Lateral Raise",
+    "description": "這個動作主要訓練側三角肌，同時也锻炼背部和腹部肌肉。",
+    "stepInstructions": [
+      "保持膝關節微彎 ，背—1部打直 。身體微微前傾，頭部略微下垂 ，凝視正前方偏下面。",
+      "握住啞鈴，肘關節微彎 ，並將啞鈴置於大腿前方。",
+      "雙腳與贖部保持肩勝下收,並讓頸部自然伸展。",
+      "以平順的動作同時由下往 上舉離身體 ，啞鈴與肩部保持一直線 ，並確保背部保持正直 。動作往上時吐氣。",
+      "將啞鈴抬至肩膀高度，並同時收縮肩胛骨。在動作頂端短暫停留,並自然呼吸 。",
+      "在穩定控制之下慢慢回復 ，將啞鈴下放 至開始姿勢 。在下放時保持肌肉用力 ，而不要讓重量往下掉 。"
+    ],
+    "difficulty": "BEGINNER",
+    "exerciseType": "ISOLATION",
+    "primaryMuscles": [],
+    "secondaryMuscles": [],
+    "equipment": [
+      "Dumbbells / 啞鈴"
+    ],
+    "sourceBook": "strength_training",
+    "sourcePageNumber": 114
+  },
+  {
+    "name_zh": "稻草人外旋",
+    "name_en": "Scarecrow Rotation",
+    "description": "這個動作幫助你強化轉肌袖，並幫助預防受傷。",
+    "stepInstructions": [
+      "握緊外部的哑铃。",
+      "保持核心穩定，將手臂向外旋轉。",
+      "慢慢回到起始位置。",
+      "重複進行。"
+    ],
+    "difficulty": "BEGINNER",
+    "exerciseType": "ISOLATION",
+    "primaryMuscles": [],
+    "secondaryMuscles": [],
+    "equipment": [
+      "Bodyweight / 自體重量"
+    ],
+    "sourceBook": "strength_training",
+    "sourcePageNumber": 115
+  },
+  {
+    "name_zh": "稻草人外旋",
+    "name_en": "Rope-A-Dope External Rotation",
+    "description": "主要目的是锻炼深層肌群，提高肩部的穩定性和柔軟度。",
+    "stepInstructions": [
+      "以站姿面對低滑索，并正握住握把。",
+      "將上臂保持不動，緩慢地旋轉你的前臂至手肘往側邊抬起，與肩膀垂直姿勢。",
+      "在板凳上操作啞鈴，加大動作範圍。",
+      "將身體支撐在上斜角度約45度的板凳上，使用你的前臂當支點，在你的掌控之下操作稻草人外旋。"
+    ],
+    "difficulty": "INTERMEDIATE",
+    "exerciseType": "ISOLATION",
+    "primaryMuscles": [],
+    "secondaryMuscles": [],
+    "equipment": [
+      "Dumbbells / 啞鈴"
+    ],
+    "sourceBook": "strength_training",
+    "sourcePageNumber": 116
+  },
+  {
+    "name_zh": "側向滑索內旋",
+    "name_en": "Side Cable Inward Rotations",
+    "description": "此動作主要訓練側三角肌和穩定核心。",
+    "stepInstructions": [
+      "側向滑索架，並固定滑索在腰部高度。",
+      "保持手關節90度並將手部往身體外側打開。",
+      "保持肩部、髄部與腿部呈一直線。",
+      "將握把在緩慢的控制之下往身體中心拉近。",
+      "將你的前臀在舒適範圍內盡可能拉近。"
+    ],
+    "difficulty": "BEGINNER",
+    "exerciseType": "ISOLATION",
+    "primaryMuscles": [],
+    "secondaryMuscles": [],
+    "equipment": [
+      "Cable Machine / 纜繩機"
+    ],
+    "sourceBook": "strength_training",
+    "sourcePageNumber": 118
+  },
+  {
+    "name_zh": "啞鈴肱三頭肌伸展",
+    "name_en": "Dumbbell Triceps Extension",
+    "description": "主要目標在於肱三頭肌，是上臂最大的肌肉群。",
+    "stepInstructions": [
+      "採取站姿 ，雙腳與肩部同寬 ，雙膝放鬆 。",
+      "單手握住啞鈴高舉過頭, 使用另一隻手置於身體前側保持支撐 。",
+      "口頭部下後方下放啞鈴 ，並保持背部打直。",
+      "在動作最低點停頓一秒，並緩慢回復至開始位置 。"
+    ],
+    "difficulty": "BEGINNER",
+    "exerciseType": "ISOLATION",
+    "primaryMuscles": [],
+    "secondaryMuscles": [],
+    "equipment": [
+      "Bodyweight / 自體重量"
+    ],
+    "sourceBook": "strength_training",
+    "sourcePageNumber": 119
+  },
+  {
+    "name_zh": "肱三頭肌伸展",
+    "name_en": "Triceps Extension",
+    "description": "這個動作主要訓練肱三頭肌，同時也可以訓練到腹直肌和股四頭肌。",
+    "stepInstructions": [
+      "坐在板凳邊緣，雙手持槓鈴高舉過頭，握幅與肩同寬,手指關節朝向後方",
+      "收縮核心肌肉,保持穩定",
+      "緩慢而穩定地將槓鈴從頭部後方往上背的方向下放 ，直到前臂接觸到肱二頭肌為止",
+      "保持核心肌肉緊，並回復至開始位置，在緩慢與控制的速度下移動你的手臂"
+    ],
+    "difficulty": "BEGINNER",
+    "exerciseType": "ISOLATION",
+    "primaryMuscles": [],
+    "secondaryMuscles": [],
+    "equipment": [
+      "Bodyweight / 自體重量"
+    ],
+    "sourceBook": "strength_training",
+    "sourcePageNumber": 120
+  },
+  {
+    "name_zh": "肱三頭肌伸展",
+    "name_en": "Triceps Extension (Prone)",
+    "description": "此動作主要鍛煉肱三頭肌，同時也涉及胸大肌和腹直肌。",
+    "stepInstructions": [
+      "躺在平板凳上，腳部固定。",
+      "握住槓鈴，手臂垂直於身體上方。",
+      "慢慢將槓鈴向後下放至接近頭部。",
+      "然後將槓鈴推回起始位置。"
+    ],
+    "difficulty": "INTERMEDIATE",
+    "exerciseType": "ISOLATION",
+    "primaryMuscles": [],
+    "secondaryMuscles": [],
+    "equipment": [
+      "Bodyweight / 自體重量"
+    ],
+    "sourceBook": "strength_training",
+    "sourcePageNumber": 121
+  },
+  {
+    "name_zh": "窄握仰臥推舉",
+    "name_en": "Narrow-Grip Bench Press",
+    "description": "主要目的是鍛煉胸大肌，同時也锻炼手臂和肩膀。",
+    "stepInstructions": [
+      "仰臥在板凳上，頭部平放，兩腳踩實地面。",
+      "雙手正握 EZ 槓比肩略窄，伸直持槓。",
+      "彎曲肘關節，雙手往內收，開始緩慢地往胸部的方向下放槓鈴。",
+      "手指關節在乳頭位置附近，接觸到胸部持續下放槓鈴，直到槓與胸部接觸。"
+    ],
+    "difficulty": "INTERMEDIATE",
+    "exerciseType": "COMPOUND",
+    "primaryMuscles": [],
+    "secondaryMuscles": [],
+    "equipment": [
+      "EZ Bar / EZ槓"
+    ],
+    "sourceBook": "strength_training",
+    "sourcePageNumber": 124
+  },
+  {
+    "name_zh": "肱三頭肌下拉",
+    "name_en": "Triceps Cable Pull-Down",
+    "description": "此動作主要訓練肱三頭肌，提高手臂後側的力量和柔軟度。",
+    "stepInstructions": [
+      "選擇適當的重量並將繩索連結在滑索上。",
+      "採取一個穩定的分腿站姿，握住繩索，讓你的肘關節朝向前方，同時雙手緊靠在頭部兩側。",
+      "從穩定的姿勢開始，收緊腹部與核心，緩慢地收縮肱三頭肌同時伸直手臂。",
+      "保持軀幹、骨盆與腿部穩定，在動作底端完全收縮肱三頭肌。"
+    ],
+    "difficulty": "INTERMEDIATE",
+    "exerciseType": "COMPOUND",
+    "primaryMuscles": [],
+    "secondaryMuscles": [],
+    "equipment": [
+      "Cable Machine / 纜繩機"
+    ],
+    "sourceBook": "strength_training",
+    "sourcePageNumber": 126
+  },
+  {
+    "name_zh": "反握槓鈴槌式彎舉",
+    "name_en": "Reverse Grip Barbell Curl (Hammer Curl)",
+    "description": "主要訓練肱二頭肌，同時也锻炼前臂肌肉。",
+    "stepInstructions": [
+      "站穩，雙腳與肩同寬，反握住槓鈴。",
+      "肩膀下放，直背挺胸。",
+      "以圓弧型的路線彎舉槓鈴至上胸位置。",
+      "保持背部打直，並將手肘緊靠在身體兩側。"
+    ],
+    "difficulty": "INTERMEDIATE",
+    "exerciseType": "ISOLATION",
+    "primaryMuscles": [],
+    "secondaryMuscles": [],
+    "equipment": [
+      "Olympic Barbell / 奧林匹克槓鈴"
+    ],
+    "sourceBook": "strength_training",
+    "sourcePageNumber": 128
+  },
+  {
+    "name_zh": "斜板間舉",
+    "name_en": "Dumbbell Upright Row (Incline)",
+    "description": "這個動作主要訓練上胸部和後三角肌，同時也對肩部有一定刺激。",
+    "stepInstructions": [
+      "坐或跪在板凳上，上臂放在斜板上，手掌朝上握住啞鈴。",
+      "把啞鈴朝向肩部的方向以完整的活動範圍上舉，同時吐氣。",
+      "把啞鈴在緩慢的控制下放至開始位置。",
+      "完成一組後再換另外一隻手操作。"
+    ],
+    "difficulty": "INTERMEDIATE",
+    "exerciseType": "ISOLATION",
+    "primaryMuscles": [],
+    "secondaryMuscles": [],
+    "equipment": [
+      "Dumbbells / 啞鈴"
+    ],
+    "sourceBook": "strength_training",
+    "sourcePageNumber": 132
+  },
+  {
+    "name_zh": "反握槓鈴彎舉",
+    "name_en": "Reverse Barbell Curl",
+    "description": "訓練前臂的小肌肉以及肱二頭肌。",
+    "stepInstructions": [
+      "站立，雙腳與肩同寬，持奧林匹克槓鈴。",
+      "手臂自然下垂，掌心朝前。",
+      "慢慢將槓鈴彎曲至肩膀高度，同時轉動手腕使手掌朝後。",
+      "回到起始位置。"
+    ],
+    "difficulty": "BEGINNER",
+    "exerciseType": "ISOLATION",
+    "primaryMuscles": [],
+    "secondaryMuscles": [],
+    "equipment": [
+      "Bodyweight / 自體重量"
+    ],
+    "sourceBook": "strength_training",
+    "sourcePageNumber": 133
+  },
+  {
+    "name_zh": "反握滑索上舉",
+    "name_en": "Reverse Grip Cable Press",
+    "description": "主要目的是鍛煉上胸和三角肌，同時提高肩部力量。",
+    "stepInstructions": [
+      "雙手反握滑索桿，手腕與前臂呈一直線。",
+      "肘部緊靠體側，腳步站穩。",
+      "採用站姿，身體保持正直，双脚打开與肩同寬。",
+      "槓鈴位於大腿前方，雙手握槓比肩略宽。",
+      "將槓鈴往上胸方向上舉至胸部。",
+      "緩慢控制下放回復至開始位置。"
+    ],
+    "difficulty": "INTERMEDIATE",
+    "exerciseType": "COMPOUND",
+    "primaryMuscles": [],
+    "secondaryMuscles": [],
+    "equipment": [
+      "Cable Machine / 纜繩機"
+    ],
+    "sourceBook": "strength_training",
+    "sourcePageNumber": 134
+  },
+  {
+    "name_zh": "腕伸展",
+    "name_en": "Wrist Extension",
+    "description": "主要目的是訓練手腕的伸展肌群，增加手腕的力量和柔韧性。",
+    "stepInstructions": [
+      "坐在板凳上並正握啞鈴 ，將前臂靠在大腿上方 。",
+      "前臂不要移動 ，使用手腕將啞鈴緩慢而控制地抬高 。",
+      "只靠手腕的力量慢慢將啞鈴下放到開始位置 。",
+      "一手做完後換另一隻手重複 。"
+    ],
+    "difficulty": "BEGINNER",
+    "exerciseType": "STRETCH",
+    "primaryMuscles": [],
+    "secondaryMuscles": [],
+    "equipment": [
+      "Dumbbells / 啞鈴"
+    ],
+    "sourceBook": "strength_training",
+    "sourcePageNumber": 136
+  },
+  {
+    "name_zh": "腹部捲體",
+    "name_en": "Abdominal Crunch",
+    "description": "這個動作的主要目的是訓練核心肌群，特別是腹直肌。",
+    "stepInstructions": [
+      "仰躺於墊子上，膝蓋彎曲，雙腳平貼地面。",
+      "手置於頭的兩側，保持下巴抬高以及延伸你的頸部。",
+      "用你的核心力量將肩膀與上背部輕輕地抬高並離開地面，稍作停留。",
+      "將你的上背部慢慢放回地面，切勿讓地心引力或是身體運動的慣性驅動你的動作。"
+    ],
+    "difficulty": "BEGINNER",
+    "exerciseType": "STRETCH",
+    "primaryMuscles": [],
+    "secondaryMuscles": [],
+    "equipment": [
+      "Bodyweight / 自體重量"
+    ],
+    "sourceBook": "strength_training",
+    "sourcePageNumber": 137
+  },
+  {
+    "name_zh": "腹部捲牘",
+    "name_en": "Ab Roll-Up",
+    "description": "主要目的是鍛煉腹部肌肉，尤其是腹外斜肌和腹直肌。",
+    "stepInstructions": [
+      "仰臥於地面，雙膝屈曲，腳平貼地板。",
+      "將手肘彎曲，手指放在太陽穴兩側。",
+      "保持背部平坦，用力收縮腹部。",
+      "慢慢抬起上半身，直到只有臀部和雙腳在地面上。"
+    ],
+    "difficulty": "BEGINNER",
+    "exerciseType": "STRETCH",
+    "primaryMuscles": [],
+    "secondaryMuscles": [],
+    "equipment": [
+      "Bodyweight / 自體重量"
+    ],
+    "sourceBook": "strength_training",
+    "sourcePageNumber": 138
+  },
+  {
+    "name_zh": "4字形捲體",
+    "name_en": "Figure-4 Crunch",
+    "description": "訓練腹直肌和腹外斜肌的進階動作，適用於許多體育項目的基本訓練。",
+    "stepInstructions": [
+      "屈膝仰臥於運動軟墊上",
+      "伸展右手於地面 ，以保持身體抬頭看向右膝 ，同時收緊腹肌",
+      "左手肘抬起 ",
+      "將左手肘帶起往對側膝移動。稍停並穩定控制平衡，另外再將右腳穿越左膝並置於其上"
+    ],
+    "difficulty": "INTERMEDIATE",
+    "exerciseType": "ISOLATION",
+    "primaryMuscles": [],
+    "secondaryMuscles": [],
+    "equipment": [
+      "Bodyweight / 自體重量"
+    ],
+    "sourceBook": "strength_training",
+    "sourcePageNumber": 140
+  },
+  {
+    "name_zh": "抗力球伏地挺身",
+    "name_en": "Ball Press-Up",
+    "description": "這個動作主要用來刺激胸部、肩部與上手臂，同時強化核心穩定肌肉群。",
+    "stepInstructions": [
+      "將腳放在抗力球上，推起身體。",
+      "保持核心肌肉用力，在上推回開始位置前，緩慢地儘可能放低身體。",
+      "手掌置於肩關節下方，用雙手支撐身體。",
+      "推起身體時吐氣，下放身體時吸氣。"
+    ],
+    "difficulty": "INTERMEDIATE",
+    "exerciseType": "COMPOUND",
+    "primaryMuscles": [],
+    "secondaryMuscles": [],
+    "equipment": [
+      "Bodyweight / 自體重量"
+    ],
+    "sourceBook": "strength_training",
+    "sourcePageNumber": 144
+  },
+  {
+    "name_zh": "球上屈體",
+    "name_en": "Ball Jack Knife",
+    "description": "這個動作主要訓練核心肌群和腹部肌肉，同時需要良好的平衡感。",
+    "stepInstructions": [
+      "將腳趾維持脊柱和頸部置於球的頂端，頭部與身體成一直線。",
+      "開始時呈現手推起的姿勢，雙手平放地面，雙腳置於球上。",
+      "保持脊柱在中立位置，將雙膝拉向胸口。",
+      "當球向前滾動時，保持脊柱在中立位置。"
+    ],
+    "difficulty": "ADVANCED",
+    "exerciseType": "STRETCH",
+    "primaryMuscles": [],
+    "secondaryMuscles": [],
+    "equipment": [
+      "Bodyweight / 自體重量"
+    ],
+    "sourceBook": "strength_training",
+    "sourcePageNumber": 145
+  },
+  {
+    "name_zh": "羅馬椅側傾",
+    "name_en": "Roman Chair Side Bend",
+    "description": "主要目的是鍛煉腹斜肌，提高核心穩定性和柔軟度。",
+    "stepInstructions": [
+      "採立姿並微屈膝，持啞鈴手置於腿側並保持伸直。",
+      "緩慢側傾身體，遮吸氣邊將啞鈴下滑至膝蓋，切勿讓啞鈴晃動。",
+      "收縮重量對側的腹斜肌讓軀回幹伸直。",
+      "吐氣讓身體回復到直立姿勢。"
+    ],
+    "difficulty": "BEGINNER",
+    "exerciseType": "STRETCH",
+    "primaryMuscles": [],
+    "secondaryMuscles": [],
+    "equipment": [
+      "Bodyweight / 自體重量"
+    ],
+    "sourceBook": "strength_training",
+    "sourcePageNumber": 148
+  },
+  {
+    "name_zh": "前俯棒式",
+    "name_en": "Prone Plank",
+    "description": "使用核心和上下半身的主要肌肉群来维持姿势的稳定，预防下背问题。",
+    "stepInstructions": [
+      "俯身于运动垫上，手肘置于身体两侧，双掌置于头侧，面贴近地板。",
+      "使用核心和腿部肌肉将身体从地面抬起",
+      "用前臂和脚趾支撑身体重量并保持呼吸顺畅",
+      "保持手掌平贴地面"
+    ],
+    "difficulty": "BEGINNER",
+    "exerciseType": "STRETCH",
+    "primaryMuscles": [],
+    "secondaryMuscles": [],
+    "equipment": [
+      "Bodyweight / 自體重量"
+    ],
+    "sourceBook": "strength_training",
+    "sourcePageNumber": 149
+  },
+  {
+    "name_zh": "單手硬舉",
+    "name_en": "Single-Arm Deadlift",
+    "description": "這個動作主要訓練背部和腿部的肌群，提高核心穩定性和整體力量。",
+    "stepInstructions": [
+      "坐在板凳上用手抓握住身後的墊子以固定身體抬起雙腳,並保持趾尖向前。",
+      "保持足部和膝部併攏，屈膝並將膝蓋往胸口靠近，將身體微向前傾以保持平衡。",
+      "儘可能將膝蓋收近身體。回復動作時將髄部和膝部伸展，同時並微微後傾身體保持平衡。",
+      "保持手臂自然下垂確保拿著重物的手臂打直"
+    ],
+    "difficulty": "INTERMEDIATE",
+    "exerciseType": "COMPOUND",
+    "primaryMuscles": [],
+    "secondaryMuscles": [],
+    "equipment": [
+      "Bodyweight / 自體重量"
+    ],
+    "sourceBook": "strength_training",
+    "sourcePageNumber": 152
+  },
+  {
+    "name_zh": "爆發式上搏",
+    "name_en": "Power Clean",
+    "description": "這個動作能極有效地強化全身的肌力。",
+    "stepInstructions": [
+      "採蹲姿，雙腳與髄部同寬，並使鏡部高於膝部。",
+      "雙手正握(掌心向身體)槓鈴，握距略大於肩寬。",
+      "順著梢旋轉手臂，達到完全伸展時，降低你的身體於槓的下方。",
+      "並且下放與轉动手肘。"
+    ],
+    "difficulty": "INTERMEDIATE",
+    "exerciseType": "COMPOUND",
+    "primaryMuscles": [],
+    "secondaryMuscles": [],
+    "equipment": [
+      "Olympic Barbell / 奧林匹克槓鈴"
+    ],
+    "sourceBook": "strength_training",
+    "sourcePageNumber": 155
+  },
+  {
+    "name_zh": "煤數式上搏",
+    "name_en": "Clean and Press (Title Case)",
+    "description": "這個動作的主要目的是鍛煉肩膀和背部，同時提高核心穩定性和協調性。",
+    "stepInstructions": [
+      "將肩部上升到最高點時，開始放下手肘",
+      "將槓鈴抬高過口膝 ，雙腳用力把槓鈴向上驅動",
+      "此時將髓部向前推進 ，讓柄接觸大腿的上端",
+      "强力伸展你的鏡部，膝部和腳踝"
+    ],
+    "difficulty": "INTERMEDIATE",
+    "exerciseType": "COMPOUND",
+    "primaryMuscles": [],
+    "secondaryMuscles": [],
+    "equipment": [
+      "Olympic Barbell / 奧林匹克槓鈴"
+    ],
+    "sourceBook": "strength_training",
+    "sourcePageNumber": 156
+  },
+  {
+    "name_zh": "爆發式抓舉",
+    "name_en": "Power Snatch",
+    "description": "這個動作主要用於提升全身的爆發力。",
+    "stepInstructions": [
+      "採蹲姿，雙腳與籠部同寬",
+      "正握槓鈴，雙手儘可能寬",
+      "鎖住手肘"
+    ],
+    "difficulty": "INTERMEDIATE",
+    "exerciseType": "COMPOUND",
+    "primaryMuscles": [],
+    "secondaryMuscles": [],
+    "equipment": [
+      "Olympic Barbell / 奧林匹克槓鈴"
+    ],
+    "sourceBook": "strength_training",
+    "sourcePageNumber": 157
+  },
+  {
+    "name_zh": "爆發式抓舉",
+    "name_en": "Power Clean (Title Case)",
+    "description": "這個動作的主要目的是強化上半身和核心肌群的力量，同時提高速度和協調性。",
+    "stepInstructions": [
+      "將槓鈴抬高過膝。",
+      "雙腳用力把槓鈴向上驅動。",
+      "此時將競部向前推進。",
+      "强力伸展你的競部、膝部和腳踝，保持槓靠近你的身體。",
+      "用 力向上聳肩。",
+      "當槓上升時，降低你的身體於槓的下方。",
+      "並將手肘向下旋轉。",
+      "保持背部打直。",
+      "將重量高舉過肩站立前,請先確保槓鈴穩定與平衡。",
+      "保持你的背部緊收，略微抬頭。",
+      "保持雙腳與韻部同寬並平貼於地板伸直雙腿。",
+      "將植鈴舉到最高點。",
+      "收緊核心肌肉。",
+      "稳定身牘H下放槓時 ，保持°槓靠近身體並在控制下進行 。屈膝，先將槓置於腿部上緣再放回地面 。"
+    ],
+    "difficulty": "INTERMEDIATE",
+    "exerciseType": "COMPOUND",
+    "primaryMuscles": [],
+    "secondaryMuscles": [],
+    "equipment": [
+      "Olympic Barbell / 奧林匹克槓鈴"
+    ],
+    "sourceBook": "strength_training",
+    "sourcePageNumber": 158
+  },
+  {
+    "name_zh": "懸掛式上搏",
+    "name_en": "Power Clean From Hang",
+    "description": "這個動作可以有效提升舉重和大多數運動所需的爆發力。",
+    "stepInstructions": [
+      "開始旋轉雙手，並讓手肘順著梢旋轉",
+      "持續上提槓鈴，盡可能給予向上動力",
+      "當槓鈴抬起時，開始讓身體下沈低於槓鈴",
+      "採蹲姿，雙腳與競部同寬，双手正握槓鈴，握距與肩同寬"
+    ],
+    "difficulty": "INTERMEDIATE",
+    "exerciseType": "COMPOUND",
+    "primaryMuscles": [],
+    "secondaryMuscles": [],
+    "equipment": [
+      "Bodyweight / 自體重量"
+    ],
+    "sourceBook": "strength_training",
+    "sourcePageNumber": 159
+  },
+  {
+    "name_zh": "三頭肌伸展",
+    "name_en": "Triceps Extension",
+    "description": "主要目的是伸展和放鬆三頭肌。",
+    "stepInstructions": [
+      "握緊啞鈴，手臂垂直於身體。",
+      "慢慢將啞鈴向後彎曲至手肘成135度。",
+      "保持幾秒鐘，然後慢慢回到起始位置。",
+      "重複進行。"
+    ],
+    "difficulty": "BEGINNER",
+    "exerciseType": "STRETCH",
+    "primaryMuscles": [],
+    "secondaryMuscles": [],
+    "equipment": [
+      "Dumbbells / 啞鈴"
+    ],
+    "sourceBook": "strength_training",
+    "sourcePageNumber": 5
+  },
+  {
+    "name_zh": "V字抬腿",
+    "name_en": "V-Leg Raise",
+    "description": "這個動作主要訓練腹肌，可以增加腳踝的負重以提高強度。",
+    "stepInstructions": [
+      "躺平在平板凳上，雙膝彎曲，腳掌踩在地上。",
+      "將腿抬高至與身體呈V形。",
+      "慢慢放下腿回到起始位置。",
+      "反覆進行動作。"
+    ],
+    "difficulty": "BEGINNER",
+    "exerciseType": "ISOLATION",
+    "primaryMuscles": [],
+    "secondaryMuscles": [],
+    "equipment": [
+      "Bodyweight / 自體重量"
+    ],
+    "sourceBook": "strength_training",
+    "sourcePageNumber": 151
+  },
+  {
+    "name_zh": "懸掛式上搏",
+    "name_en": "Hanging Press",
+    "description": "這個動作的主要目的是強化肩膀和背部的肌肉，特別是後三角肌。",
+    "stepInstructions": [
+      "保持槓鈴平衡",
+      "保持背部打直與肌肉緊收",
+      "將糟置於膝蓋上方",
+      "將手肘指向前方",
+      "保持値部高於膝部的半蹲位姿",
+      "保持抬頭並打直背部腳趾用力，讓身體完全伸展動作的精準度",
+      "動作開始時保持手臂伸直 ，將臀部移向槓鈴後強力地伸直腿部",
+      "給予槓鈴向上的動力 ，雙手伸直 ，將槓鈴抬高過膝並輕輕地置於腿上 ，保持背部打直",
+      "當槓到達肩高時，將手肘往前推出並於肩部頂端抓住槓",
+      "屈膝吸收衝擊力後再將腿伸直回到立姿",
+      "下放重量時，膝部和髓部彎曲使用核心肌肉穩定身體",
+      "要將槓鈴放下回到動作2的姿勢時，靠近身體沿著槓把旋轉你的手肘和手腕，在控制下慢慢放下槓把於雙腿",
+      "向上拉高時，伸展你的腿肌提高你的肩部"
+    ],
+    "difficulty": "ADVANCED",
+    "exerciseType": "COMPOUND",
+    "primaryMuscles": [],
+    "secondaryMuscles": [],
+    "equipment": [
+      "Olympic Barbell / 奧林匹克槓鈴"
+    ],
+    "sourceBook": "strength_training",
+    "sourcePageNumber": 160
+  },
+  {
+    "name_zh": "懸掛式抓舉",
+    "name_en": "Power Snatch From Hang",
+    "description": "這個爆發性的動作需要很高的技巧性，但是可以幫助全身爆發力和運動能力的提升。",
+    "stepInstructions": [
+      "採蹲姿，雙腳與競部同寬,双手採抓舉式寬握(見第184頁)，並讓頭部直視斜下方",
+      "伸直雙手 ，打直背部",
+      "將手肘往外上方持績拉起槓把。",
+      "當槓把上升時,開始將身體下沈，屈膝並將手肘和手腕轉到槓把下方"
+    ],
+    "difficulty": "INTERMEDIATE",
+    "exerciseType": "COMPOUND",
+    "primaryMuscles": [],
+    "secondaryMuscles": [],
+    "equipment": [
+      "Olympic Barbell / 奧林匹克槓鈴"
+    ],
+    "sourceBook": "strength_training",
+    "sourcePageNumber": 161
+  },
+  {
+    "name_zh": "懸掛式抓舉",
+    "name_en": "Hang Clean",
+    "description": "這個動作的主要目的是強化全身力量，特別是臀大肌、股四頭肌和背部肌肉。",
+    "stepInstructions": [
+      "將手肘指向肩膀和胸部位置維持在植把的上方",
+      "用你的贖部和雙腳開始動作而非手臂用力拉起槓鈴",
+      "將槓鈴抬起略高於膝，此時微微屈膝，將槓把置於雙腿下緣",
+      "開始爆發動作，將臀部推向槓把，伸展雙腿並將肩膀聳起"
+    ],
+    "difficulty": "INTERMEDIATE",
+    "exerciseType": "COMPOUND",
+    "primaryMuscles": [],
+    "secondaryMuscles": [],
+    "equipment": [
+      "Olympic Barbell / 奧林匹克槓鈴"
+    ],
+    "sourceBook": "strength_training",
+    "sourcePageNumber": 162
+  },
+  {
+    "name_zh": "下蹲式上搏",
+    "name_en": "Squat Clean",
+    "description": "這個動作可以有效發展動態的肌力。",
+    "stepInstructions": [
+      "雙腳與臀部同寬並屈膝。",
+      "打直背部，頭部向前。",
+      "手與肩寬握住槓把。",
+      "將於肩部上綠，持挺胸"
+    ],
+    "difficulty": "INTERMEDIATE",
+    "exerciseType": "COMPOUND",
+    "primaryMuscles": [],
+    "secondaryMuscles": [],
+    "equipment": [
+      "Olympic Barbell / 奧林匹克槓鈴"
+    ],
+    "sourceBook": "strength_training",
+    "sourcePageNumber": 163
+  },
+  {
+    "name_zh": "前槓鈴深蹲",
+    "name_en": "Heavy Front Squat",
+    "description": "這個動作可以發展許多種運動所需的體格，特別是那些需要動態跳躍或推動。",
+    "stepInstructions": [
+      "將槓把置於架上且電低於肩高。",
+      "雙手略比肩寬抓握槓把並且將槓把置於上胸和肩上。",
+      "保持手肘抬高，儘可能慢慢下蹲身體。",
+      "並保持良好的姿勢。"
+    ],
+    "difficulty": "INTERMEDIATE",
+    "exerciseType": "COMPOUND",
+    "primaryMuscles": [],
+    "secondaryMuscles": [],
+    "equipment": [
+      "Olympic Barbell / 奧林匹克槓鈴"
+    ],
+    "sourceBook": "strength_training",
+    "sourcePageNumber": 165
+  },
+  {
+    "name_zh": "過頭蹲舉",
+    "name_en": "Overhead Squat",
+    "description": "這個動作有助於發展腿部、上半身和肩帶的肌力、平衡性與柔軟度。",
+    "stepInstructions": [
+      "站直，腳距略寬於肩膀。",
+      "握緊奧林匹克槓鈴，手肘收縮核心肌群，以穩定身體。",
+      "將槓把從背部上緣推舉過頭。",
+      "保持背部肌肉緊收，慢慢下蹲至大腿平行於地面。"
+    ],
+    "difficulty": "INTERMEDIATE",
+    "exerciseType": "COMPOUND",
+    "primaryMuscles": [],
+    "secondaryMuscles": [],
+    "equipment": [
+      "Olympic Barbell / 奧林匹克槓鈴"
+    ],
+    "sourceBook": "strength_training",
+    "sourcePageNumber": 167
+  },
+  {
+    "name_zh": "挺舉接橫",
+    "name_en": "Clean and Press (Title Case)",
+    "description": "這個動作的主要目的是鍛煉上半身力量，特別是胸大肌、三角肌和背闊肌。",
+    "stepInstructions": [
+      "將置於肩部上緣的槓鈴扛起,與架子取適當距離往後退。",
+      "採立姿且雙腳與髄部同寬。保持手肘抬高，背部打直且肌肉緊收。",
+      "向前跨出一大步，此為挺舉接槓的開始姿勢。",
+      "保持膝部在腳的上方並且在同一直線上，在控制下開始放低槓把再將槓把置回架上。",
+      "保持雙腳固定，伸直心前腿且回復到開始姿勢。緩慢地在控制下將槓把下放至於胸部上緣與肩部。",
+      "重複動作3次。",
+      "保持核心肌肉收緊與身聽的槻定伸直固定手肘。",
+      "前腳向前小步跨出,同時將槓把高舉過頭並伸直固定手肘。",
+      "此時槓把、肩部和髄部應在同一直線上。",
+      "腳跟抬高並與小腿成一直線"
+    ],
+    "difficulty": "INTERMEDIATE",
+    "exerciseType": "COMPOUND",
+    "primaryMuscles": [],
+    "secondaryMuscles": [],
+    "equipment": [
+      "Olympic Barbell / 奧林匹克槓鈴"
+    ],
+    "sourceBook": "strength_training",
+    "sourcePageNumber": 170
+  },
+  {
+    "name_zh": "抓舉接槓",
+    "name_en": "Snatch Balance",
+    "description": "這個多關節的全身性動作可以強化肩帶、上背部以及腿部的力量。",
+    "stepInstructions": [
+      "將槓把置於架上且略低於肩高，置槓把於背部上緣。",
+      "持續下蹲到深蹲的位置。",
+      "保持身體直立、背部打直、核心用力以及頭部在槓把前方且垂直地面。",
+      "手肘伸直固定，保持膝部於腳上方。"
+    ],
+    "difficulty": "INTERMEDIATE",
+    "exerciseType": "COMPOUND",
+    "primaryMuscles": [],
+    "secondaryMuscles": [],
+    "equipment": [
+      "Olympic Barbell / 奧林匹克槓鈴"
+    ],
+    "sourceBook": "strength_training",
+    "sourcePageNumber": 171
+  },
+  {
+    "name_zh": "抓舉",
+    "name_en": "Clean",
+    "description": "這個動作主要訓練背部、臀大肌和股四頭肌，提高全身力量。",
+    "stepInstructions": [
+      "腳尖微徹向外站立",
+      "向後跨步離開架子 ，並使雙腳與履部同寬",
+      "小心地移動雙手到抓舉的寬度",
+      "將槓把向上驅動 ，並在槓把落下前快速下蹲 ，使得手臂能伸直抓握槓把",
+      "維持背部打直，手肘伸直固定",
+      "保持靈幹直立，收緊核心",
+      "控制上背部肌肉，緩緩下放重量 ，並且將雙腳回復與髄部同寬的位置",
+      "重複動作 3-6 次，完成一組後再將槓把置回架上"
+    ],
+    "difficulty": "INTERMEDIATE",
+    "exerciseType": "COMPOUND",
+    "primaryMuscles": [],
+    "secondaryMuscles": [],
+    "equipment": [
+      "Olympic Barbell / 奧林匹克槓鈴"
+    ],
+    "sourceBook": "strength_training",
+    "sourcePageNumber": 172
+  },
+  {
+    "name_zh": "分腿式抓舉",
+    "name_en": "Split Snatch",
+    "description": "這個動作主要訓練大腿前側、臀部和背部的力量。",
+    "stepInstructions": [
+      "將腿分開保持背部打直，且頭看向前方雙腳打開與髄部同寬。",
+      "雙手正握槓鈴且握距大於肩寬，保持饒部高於膝部。",
+      "開始時積把在腳尖上方。",
+      "當槓把向上提起時，快速分开雙腿，一腳向前，一腳向後。"
+    ],
+    "difficulty": "INTERMEDIATE",
+    "exerciseType": "COMPOUND",
+    "primaryMuscles": [],
+    "secondaryMuscles": [],
+    "equipment": [
+      "Olympic Barbell / 奧林匹克槓鈴"
+    ],
+    "sourceBook": "strength_training",
+    "sourcePageNumber": 173
+  },
+  {
+    "name_zh": "急推Push Press",
+    "name_en": "Push Press (Title Case)",
+    "description": "這個動作主要用於增進全身爆發力。",
+    "stepInstructions": [
+      "正握槓把下蹲身體，雙腳與體部同寬且置於槓把下方。",
+      "保持臀部高於膝部，背部打直和肩膀於槓把上方。",
+      "保持槓把置於雙肩。",
+      "保持軀幹直立，切勿弓背。"
+    ],
+    "difficulty": "INTERMEDIATE",
+    "exerciseType": "COMPOUND",
+    "primaryMuscles": [],
+    "secondaryMuscles": [],
+    "equipment": [
+      "Olympic Barbell / 奧林匹克槓鈴"
+    ],
+    "sourceBook": "strength_training",
+    "sourcePageNumber": 175
+  },
+  {
+    "name_zh": "急推",
+    "name_en": "Bench Press",
+    "description": "主要目的是鍛煉胸部、肩部和三頭肌，增強上半身力量。",
+    "stepInstructions": [
+      "將槓鈴置於肩上",
+      "收縮核心肌肉保持穩定",
+      "稍微蹲低並隨即爆發性地伸展腿部與手臂",
+      "迅速將槓鈴高舉過頭"
+    ],
+    "difficulty": "INTERMEDIATE",
+    "exerciseType": "COMPOUND",
+    "primaryMuscles": [],
+    "secondaryMuscles": [],
+    "equipment": [
+      "Olympic Barbell / 奧林匹克槓鈴"
+    ],
+    "sourceBook": "strength_training",
+    "sourcePageNumber": 176
+  },
+  {
+    "name_zh": "壺鈴高拉",
+    "name_en": "Kettlebell High-Pull",
+    "description": "這是一個強化爆發力的全身性運動，適合訓練衝刺、跳躍、拳擊和空手道等運動中的爆發性動作。",
+    "stepInstructions": [
+      "保持背部打直，確保肩部在壺鈴前方。",
+      "保持掐頭並直視前方。",
+      "雙腳用力下推至斜前方驅動髏部，開始將壺鈴拉起。",
+      "保持脊柱於中立位置下蹲，雙肩於壺鈴前方，雙腳與肩同寬，且臀部高於膝部。",
+      "用腿的力量讓身體向上驅動，將壺鈴提至胸前。",
+      "讓動力將你的身體往上驅動直到腳尖，然後蹲下到開始位置。"
+    ],
+    "difficulty": "INTERMEDIATE",
+    "exerciseType": "COMPOUND",
+    "primaryMuscles": [],
+    "secondaryMuscles": [],
+    "equipment": [
+      "Olympic Barbell / 奧林匹克槓鈴"
+    ],
+    "sourceBook": "strength_training",
+    "sourcePageNumber": 177
+  },
+  {
+    "name_zh": "壺鈴高拉",
+    "name_en": "Kettlebell High Pull",
+    "description": "這個動作主要訓練股四頭肌、腿和臀肌，增強腿部肌肉耐力與平衡性。",
+    "stepInstructions": [
+      "站姿雙腳與肩同寬，持壺鈴於體側。",
+      "背部挺直，從蹲姿垂直跳起。",
+      "屈膝並將臀部後移進行四分之一蹲。",
+      "保持挺胸和直視前方。",
+      "使用腿部肌力從蹲姿用力向上跳起。",
+      "藉由微微的屈膝和髄部後移來緩衝落地的衝擊力。"
+    ],
+    "difficulty": "INTERMEDIATE",
+    "exerciseType": "COMPOUND",
+    "primaryMuscles": [],
+    "secondaryMuscles": [],
+    "equipment": [
+      "Olympic Barbell / 奧林匹克槓鈴"
+    ],
+    "sourceBook": "strength_training",
+    "sourcePageNumber": 178
+  }
+]

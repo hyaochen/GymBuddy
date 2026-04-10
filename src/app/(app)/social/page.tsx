@@ -338,11 +338,11 @@ export default function SocialPage() {
                             {/* Header */}
                             <div className="flex items-start justify-between">
                                 <div className="flex items-center gap-2.5">
-                                    <div className="h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center text-xs font-bold text-primary">
+                                    <a href={`/profile/${item.userName}`} className="h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center text-xs font-bold text-primary hover:ring-2 hover:ring-primary/50 transition-all">
                                         {item.userName.charAt(0).toUpperCase()}
-                                    </div>
+                                    </a>
                                     <div>
-                                        <p className="text-sm font-medium">{item.userName}</p>
+                                        <a href={`/profile/${item.userName}`} className="text-sm font-medium hover:text-primary transition-colors">{item.userName}</a>
                                         <p className="text-xs text-muted-foreground">{timeAgo(item.createdAt)}</p>
                                     </div>
                                 </div>
@@ -532,12 +532,12 @@ export default function SocialPage() {
                         )}
                         {friendData.friends.map(f => (
                             <div key={f.friendshipId} className="bg-card rounded-xl border border-border p-3 flex items-center justify-between">
-                                <div className="flex items-center gap-2.5">
+                                <a href={`/profile/${f.name}`} className="flex items-center gap-2.5 flex-1 hover:opacity-80 transition-opacity">
                                     <div className="h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center text-xs font-bold text-primary">
                                         {f.name.charAt(0).toUpperCase()}
                                     </div>
                                     <p className="text-sm font-medium">{f.name}</p>
-                                </div>
+                                </a>
                                 <button
                                     onClick={() => removeFriend(f.friendshipId)}
                                     className="p-1.5 text-muted-foreground hover:text-destructive transition-colors"

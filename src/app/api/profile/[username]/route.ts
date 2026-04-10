@@ -7,7 +7,8 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ use
     const user = await getCurrentUser()
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-    const { username } = await params
+    const { username: rawUsername } = await params
+    const username = decodeURIComponent(rawUsername)
     const target = await prisma.user.findUnique({
         where: { name: username },
         select: { id: true, name: true, createdAt: true },
@@ -17,7 +18,6 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ use
         return NextResponse.json({ error: '找不到該使用者' }, { status: 404 })
     }
 
-    // Check if they're friends
     const friendship = await prisma.friendship.findFirst({
         where: {
             status: 'ACCEPTED',
@@ -39,15 +39,21 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ use
         bio: profile?.bio || null,
         avatarUrl: profile?.avatarUrl || null,
         isFriend,
+        isSelf,
         memberSince: target.createdAt,
+        publicAnalytics: profile?.publicAnalytics ?? false,
     }
 
-    // Only show stats if friend or self, respecting privacy settings
-    if (isFriend || isSelf) {
-        const [streakInfo, totalSessions] = await Promise.all([
+    // Show stats if: self, OR (friend AND publicAnalytics === true)
+    const canViewAnalytics = isSelf || (isFriend && profile?.publicAnalytics === true)
+    if (canViewAnalytics) {
+        const [streakInfo, totalSessions, totalPRs] = await Promise.all([
             getStreakInfo(target.id),
             prisma.workoutSession.count({
                 where: { userId: target.id, completedAt: { not: null } },
+            }),
+            prisma.personalRecord.count({
+                where: { userId: target.id },
             }),
         ])
 
@@ -58,7 +64,43 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ use
         if (profile?.showWorkouts !== false) {
             result.totalSessions = totalSessions
         }
+        if (profile?.showPRs !== false) {
+            result.totalPRs = totalPRs
+        }
     }
+
+    // Recent feed items (if friend or self)
+    if (isFriend || isSelf) {
+        const recentFeed = await prisma.activityFeedItem.findMany({
+            where: {
+                userId: target.id,
+                ...(isSelf ? {} : { isPublic: true }),
+            },
+            orderBy: { createdAt: 'desc' },
+            take: 5,
+        })
+        result.recentFeed = recentFeed.map(f => ({
+            id: f.id,
+            type: f.type,
+            data: JSON.parse(f.data),
+            isPublic: f.isPublic,
+            createdAt: f.createdAt,
+        }))
+    }
+
+    // Badges
+    const badges = await prisma.userBadge.findMany({
+        where: { userId: target.id },
+        include: { badge: true },
+        orderBy: { earnedAt: 'desc' },
+    })
+    result.badges = badges.map(b => ({
+        name: b.badge.name,
+        description: b.badge.description,
+        icon: b.badge.icon,
+        category: b.badge.category,
+        earnedAt: b.earnedAt,
+    }))
 
     return NextResponse.json(result)
 }

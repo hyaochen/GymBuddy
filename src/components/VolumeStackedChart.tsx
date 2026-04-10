@@ -23,13 +23,14 @@ const MUSCLE_LABELS: Record<string, string> = {
     Core: '核心',
 }
 
-export default function VolumeStackedChart() {
+export default function VolumeStackedChart({ userId }: { userId?: string } = {}) {
     const [data, setData] = useState<Record<string, string | number>[]>([])
     const [muscleGroups, setMuscleGroups] = useState<string[]>([])
     const [loading, setLoading] = useState(true)
 
     useEffect(() => {
-        fetch('/api/analytics/volume-weekly')
+        const url = userId ? `/api/analytics/volume-weekly?userId=${userId}` : '/api/analytics/volume-weekly'
+        fetch(url)
             .then(r => r.json())
             .then(res => {
                 setData(res.data || [])

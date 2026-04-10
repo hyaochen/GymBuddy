@@ -31,6 +31,7 @@ export async function GET() {
             showWorkouts: true,
             showPRs: false,
             showWeight: false,
+            publicAnalytics: false,
         },
         stats: {
             totalSessions,
@@ -45,7 +46,7 @@ export async function PATCH(req: NextRequest) {
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     const body = await req.json()
-    const { displayName, bio, avatarUrl, showStreak, showWorkouts, showPRs, showWeight } = body
+    const { displayName, bio, avatarUrl, showStreak, showWorkouts, showPRs, showWeight, publicAnalytics } = body
 
     const profile = await prisma.userProfile.upsert({
         where: { userId: user.id },
@@ -58,6 +59,7 @@ export async function PATCH(req: NextRequest) {
             showWorkouts: showWorkouts ?? true,
             showPRs: showPRs ?? false,
             showWeight: showWeight ?? false,
+            publicAnalytics: publicAnalytics ?? false,
         },
         update: {
             ...(displayName !== undefined && { displayName }),
@@ -67,6 +69,7 @@ export async function PATCH(req: NextRequest) {
             ...(showWorkouts !== undefined && { showWorkouts }),
             ...(showPRs !== undefined && { showPRs }),
             ...(showWeight !== undefined && { showWeight }),
+            ...(publicAnalytics !== undefined && { publicAnalytics }),
         },
     })
 

@@ -22,17 +22,18 @@ const MUSCLE_LABELS: Record<string, string> = {
     Hamstrings: '腿後',
 }
 
-export default function MuscleRadar() {
+export default function MuscleRadar({ userId }: { userId?: string } = {}) {
     const [data, setData] = useState<MuscleData[]>([])
     const [loading, setLoading] = useState(true)
 
     useEffect(() => {
-        fetch('/api/analytics/muscle-balance')
+        const url = userId ? `/api/analytics/muscle-balance?userId=${userId}` : '/api/analytics/muscle-balance'
+        fetch(url)
             .then(r => r.json())
             .then(res => setData(res.data || []))
             .catch(console.error)
             .finally(() => setLoading(false))
-    }, [])
+    }, [userId])
 
     if (loading) {
         return (

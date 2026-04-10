@@ -19,17 +19,18 @@ function getIntensityClass(volume: number, max: number): string {
     return 'bg-primary'
 }
 
-export default function TrainingHeatmap({ compact = false }: { compact?: boolean }) {
+export default function TrainingHeatmap({ compact = false, userId }: { compact?: boolean; userId?: string }) {
     const [data, setData] = useState<HeatmapData | null>(null)
     const [loading, setLoading] = useState(true)
 
     useEffect(() => {
-        fetch('/api/analytics/heatmap')
+        const url = userId ? `/api/analytics/heatmap?userId=${userId}` : '/api/analytics/heatmap'
+        fetch(url)
             .then(r => r.json())
             .then(setData)
             .catch(console.error)
             .finally(() => setLoading(false))
-    }, [])
+    }, [userId])
 
     if (loading) {
         return (

@@ -17,7 +17,7 @@ export async function GET() {
     // If we have a subscription, also test with raw web-push (12-hour JWT)
     // to help diagnose if the issue is key-mismatch vs expiry
     let rawResult: { status: number; body: string } | null = null
-    const sub = getSubscriptionForUser(user.id)
+    const sub = await getSubscriptionForUser(user.id)
     if (sub) {
         try {
             await webpush.sendNotification(sub, JSON.stringify({

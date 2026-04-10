@@ -1,16 +1,16 @@
 import { NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
-import { getCurrentUser } from '@/lib/auth'
+import { resolveAnalyticsUser } from '@/lib/analytics-auth'
 
-export async function GET() {
-    const user = await getCurrentUser()
-    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+export async function GET(request: Request) {
+    const { userId, error } = await resolveAnalyticsUser(request)
+    if (error) return NextResponse.json({ error }, { status: 401 })
 
     const since = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000)
 
     const sessions = await prisma.workoutSession.findMany({
         where: {
-            userId: user.id,
+            userId,
             completedAt: { not: null },
             startedAt: { gte: since },
         },

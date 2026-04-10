@@ -43,3 +43,5 @@ prisma/dev.db-journal
 
 # Exercise review images (source/staging only, not served)
 public/exercise-demos-review/
+photo/肌力訓練.pdf
+photo/*.pdf

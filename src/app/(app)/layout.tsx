@@ -4,6 +4,7 @@ import BottomNav from "@/components/layout/BottomNav"
 import TopBar from "@/components/layout/TopBar"
 import AIFloatingButton from "@/components/layout/AIFloatingButton"
 import DesktopSidebar from "@/components/layout/DesktopSidebar"
+import PushSubscriber from "@/components/layout/PushSubscriber"
 
 export const dynamic = "force-dynamic"
 
@@ -38,6 +39,9 @@ export default async function AppLayout({
 
                 {/* Mobile AI floating button */}
                 <AIFloatingButton />
+
+                {/* Sync push subscription to DB on every app load */}
+                <PushSubscriber />
             </div>
         </div>
     )

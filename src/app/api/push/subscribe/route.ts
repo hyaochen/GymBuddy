@@ -15,6 +15,6 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: 'Invalid subscription' }, { status: 400 })
     }
 
-    savePushSubscription(user.id, subscription)
+    await savePushSubscription(user.id, subscription)
     return NextResponse.json({ ok: true })
 }

@@ -1,6 +1,7 @@
 import Link from "next/link"
 import Image from "next/image"
-import { Settings } from "lucide-react"
+import { Settings, LogOut } from "lucide-react"
+import { logout } from "@/app/actions/auth"
 
 interface TopBarProps {
     userName: string
@@ -32,14 +33,23 @@ export default function TopBar({ userName, avatarUrl, pageTitle }: TopBarProps) 
                     {pageTitle || "GymBuddy"}
                 </span>
 
-                {/* Right: Settings */}
-                <Link
-                    href="/settings"
-                    className="text-muted-foreground hover:text-foreground transition-colors p-1.5"
-                    aria-label="設定"
-                >
-                    <Settings className="h-5 w-5" />
-                </Link>
+                {/* Right: Settings + Logout */}
+                <div className="flex items-center gap-1">
+                    <Link
+                        href="/settings"
+                        className="text-muted-foreground hover:text-foreground transition-colors p-1.5"
+                        aria-label="設定"
+                    >
+                        <Settings className="h-5 w-5" />
+                    </Link>
+                    <form action={logout}>
+                        <button type="submit"
+                            className="text-muted-foreground hover:text-foreground transition-colors p-1.5"
+                            aria-label="登出">
+                            <LogOut className="h-5 w-5" />
+                        </button>
+                    </form>
+                </div>
             </div>
 
             {/* Desktop top bar - simpler, since sidebar handles nav */}

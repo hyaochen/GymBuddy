@@ -22,16 +22,18 @@ function exName(raw: string) {
     return raw.includes(' / ') ? raw.split(' / ')[1] : raw
 }
 
-export default function ProgressChart() {
+export default function ProgressChart({ userId }: { userId?: string } = {}) {
     const [data, setData] = useState<ProgressPoint[]>([])
     const [exercises, setExercises] = useState<ExerciseOption[]>([])
     const [selectedId, setSelectedId] = useState<string>('')
     const [loading, setLoading] = useState(true)
     const [open, setOpen] = useState(false)
 
+    const qs = userId ? `&userId=${userId}` : ''
+
     // Load exercise list first
     useEffect(() => {
-        fetch('/api/analytics/progress?exerciseId=__list__')
+        fetch(`/api/analytics/progress?exerciseId=__list__${qs}`)
             .then(r => r.json())
             .then(res => {
                 const list = (res.exerciseList || []) as ExerciseOption[]
@@ -43,12 +45,12 @@ export default function ProgressChart() {
             .catch(console.error)
             .finally(() => setLoading(false))
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [])
+    }, [userId])
 
     const loadProgress = useCallback(() => {
         if (!selectedId) return
         setLoading(true)
-        fetch(`/api/analytics/progress?exerciseId=${selectedId}`)
+        fetch(`/api/analytics/progress?exerciseId=${selectedId}${qs}`)
             .then(r => r.json())
             .then(res => setData(res.data || []))
             .catch(console.error)

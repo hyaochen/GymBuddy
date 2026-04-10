@@ -1,10 +1,9 @@
 /**
  * push-scheduler.ts  —  Server-side Web Push scheduler
  *
- * Keeps push subscriptions and scheduled timers in memory.
- * When a rest period starts, the session page POSTs to /api/push/schedule.
- * This module fires the push at exactly the right time via Apple APNs,
- * completely bypassing iOS Safari's background JS limitations.
+ * Push subscriptions are persisted in the database (PushSubscription table).
+ * Scheduled timers remain in-memory (rest timers are typically < 5 minutes,
+ * losing them on restart is acceptable).
  *
  * VAPID FIX: web-push 3.x defaults to 12-hour JWT expiry. Apple APNs requires
  * ≤ 1 hour and returns 403 {"reason":"BadJwtToken"} otherwise.
@@ -16,17 +15,10 @@ import { createRequire } from 'module'
 import https from 'https'
 import { URL } from 'url'
 import webpush from 'web-push'
+import prisma from '@/lib/prisma'
 
-// In-memory stores (survive as long as the Docker container is running)
-// LIMITATION: All scheduled pushes and subscriptions are lost on container restart.
-// TODO: Persist PushSubscription records in the database (a PushSubscription table
-// with userId, endpoint, keys_p256dh, keys_auth, createdAt). On startup, reload
-// active subscriptions from DB. Scheduled timers cannot be persisted, but since
-// rest timers are typically < 5 minutes, losing them on restart is acceptable.
-// The subscriptions are the critical piece — without DB persistence, users must
-// re-subscribe after every container restart.
-const subscriptions = new Map<string, webpush.PushSubscription>()
-const timers        = new Map<string, ReturnType<typeof setTimeout>>()
+// In-memory timer store (rest timers only — acceptable to lose on restart)
+const timers = new Map<string, ReturnType<typeof setTimeout>>()
 
 // ─── Push event log (queryable via /api/push/log) ────────────────────────────
 interface PushLogEntry { ts: string; event: string; userId: string; detail?: string }
@@ -50,7 +42,6 @@ function ensureVapid() {
     const pub  = process.env.VAPID_PUBLIC_KEY
     const priv = process.env.VAPID_PRIVATE_KEY
     if (!pub || !priv) throw new Error('VAPID keys not set in environment')
-    // setVapidDetails is needed so generateRequestDetails can encrypt the payload
     webpush.setVapidDetails(
         process.env.VAPID_EMAIL ?? 'mailto:admin@gymbuddy.local',
         pub, priv,
@@ -67,13 +58,9 @@ interface VapidHelperModule {
     ): { Authorization: string }
 }
 
-// Load web-push's vapid-helper.js at runtime (not bundled) so we can call
-// getVapidHeaders() with our own 1-hour expiration parameter.
 let _vapidHelper: VapidHelperModule | null = null
 function getVapidHelper(): VapidHelperModule {
     if (_vapidHelper) return _vapidHelper
-    // createRequire lets us use Node.js's native module resolution regardless
-    // of how Next.js has bundled our code
     const nativeRequire = createRequire(process.cwd() + '/dummy.js')
     _vapidHelper = nativeRequire('web-push/src/vapid-helper') as VapidHelperModule
     return _vapidHelper
@@ -82,7 +69,7 @@ function getVapidHelper(): VapidHelperModule {
 function buildOneHourAuthHeader(
     audience: string, subject: string, publicKey: string, privateKey: string,
 ): string {
-    const expiration = Math.floor(Date.now() / 1000) + 3600  // 1 hour — Apple requires ≤ 3600
+    const expiration = Math.floor(Date.now() / 1000) + 3600
     const { Authorization } = getVapidHelper().getVapidHeaders(
         audience, subject, publicKey, privateKey, 'aes128gcm', expiration,
     )
@@ -101,17 +88,14 @@ async function sendNotificationWithOneHourJwt(
     const priv    = process.env.VAPID_PRIVATE_KEY!
     const subject = process.env.VAPID_EMAIL ?? 'mailto:admin@gymbuddy.local'
 
-    // Use web-push for payload encryption (handles AES-128-GCM, key agreement, etc.)
     const details = webpush.generateRequestDetails(sub, payload, {
         vapidDetails: { subject, publicKey: pub, privateKey: priv },
     }) as { endpoint: string; headers: Record<string, string>; body: Buffer | null }
 
-    // Replace web-push's 12-hour JWT with a 1-hour JWT using vapid-helper directly
     const endpointUrl = new URL(details.endpoint)
     const audience    = `${endpointUrl.protocol}//${endpointUrl.host}`
     const authorization = buildOneHourAuthHeader(audience, subject, pub, priv)
 
-    // Remove any existing Authorization header (both capitalizations)
     delete details.headers['authorization']
     details.headers['Authorization'] = authorization
     console.log(`[push] Sending to ${details.endpoint} — auth: ${authorization.substring(0, 60)}...`)
@@ -133,14 +117,52 @@ async function sendNotificationWithOneHourJwt(
     })
 }
 
-// ─── Public API ───────────────────────────────────────────────────────────────
+// ─── DB helpers ──────────────────────────────────────────────────────────────
 
-export function savePushSubscription(userId: string, sub: webpush.PushSubscription) {
-    subscriptions.set(userId, sub)
+function toWebPushSub(row: { endpoint: string; p256dh: string; auth: string }): webpush.PushSubscription {
+    return { endpoint: row.endpoint, keys: { p256dh: row.p256dh, auth: row.auth } }
 }
 
-export function getSubscriptionForUser(userId: string): webpush.PushSubscription | undefined {
-    return subscriptions.get(userId)
+// ─── Public API ──────────────────────────────────────────────────────────────
+
+export async function savePushSubscription(userId: string, sub: webpush.PushSubscription) {
+    await prisma.pushSubscription.upsert({
+        where: { userId },
+        update: {
+            endpoint: sub.endpoint,
+            p256dh: sub.keys.p256dh,
+            auth: sub.keys.auth,
+            updatedAt: new Date(),
+        },
+        create: {
+            userId,
+            endpoint: sub.endpoint,
+            p256dh: sub.keys.p256dh,
+            auth: sub.keys.auth,
+        },
+    })
+}
+
+export async function getSubscriptionForUser(userId: string): Promise<webpush.PushSubscription | null> {
+    const row = await prisma.pushSubscription.findUnique({ where: { userId } })
+    return row ? toWebPushSub(row) : null
+}
+
+export async function removePushSubscription(userId: string) {
+    await prisma.pushSubscription.deleteMany({ where: { userId } })
+}
+
+/** Get subscriptions for multiple users (for social notifications) */
+export async function getSubscriptionsForUsers(userIds: string[]): Promise<Map<string, webpush.PushSubscription>> {
+    if (userIds.length === 0) return new Map()
+    const rows = await prisma.pushSubscription.findMany({
+        where: { userId: { in: userIds } },
+    })
+    const map = new Map<string, webpush.PushSubscription>()
+    for (const row of rows) {
+        map.set(row.userId, toWebPushSub(row))
+    }
+    return map
 }
 
 export function schedulePush(userId: string, endTime: number, title: string, body: string) {
@@ -156,55 +178,9 @@ export function schedulePush(userId: string, endTime: number, title: string, bod
         addPushLog('TIMER_FIRED', userId, `drift=${drift}ms actual=${actualFireAt}`)
         console.log(`[push] ⏰ Timer fired — user=${userId} actualFireAt=${actualFireAt} drift=${drift}ms (scheduled ${scheduledAt})`)
         timers.delete(userId)
-        const sub = subscriptions.get(userId)
+        const sub = await getSubscriptionForUser(userId)
         if (!sub) { addPushLog('NO_SUBSCRIPTION', userId); console.warn(`[push] ❌ No subscription for user ${userId}`); return }
-        try {
-            console.log(`[push] 📤 Sending push to user ${userId}`)
-            let result = await sendNotificationWithOneHourJwt(
-                sub, JSON.stringify({ title, body, tag: 'rest-end' }),
-            )
-            let ok = result.statusCode >= 200 && result.statusCode < 300
-
-            // Retry once after 5 seconds on transient errors (5xx or network-level)
-            if (!ok && result.statusCode !== 410 && result.statusCode >= 500) {
-                addPushLog('PUSH_RETRY', userId, `status=${result.statusCode}, retrying in 5s`)
-                console.log(`[push] ⏳ Retrying in 5s for user ${userId} (status=${result.statusCode})`)
-                await new Promise(resolve => setTimeout(resolve, 5000))
-                result = await sendNotificationWithOneHourJwt(
-                    sub, JSON.stringify({ title, body, tag: 'rest-end' }),
-                )
-                ok = result.statusCode >= 200 && result.statusCode < 300
-            }
-
-            const status = ok ? '✅' : '❌'
-            addPushLog(ok ? 'PUSH_SENT_OK' : 'PUSH_SENT_FAIL', userId, `status=${result.statusCode} body=${result.body}`)
-            console.log(`[push] ${status} Sent — status=${result.statusCode} body=${result.body} user=${userId}`)
-            // 410 Gone = subscription expired, remove it
-            if (result.statusCode === 410) {
-                subscriptions.delete(userId)
-                addPushLog('SUBSCRIPTION_REMOVED', userId, 'Expired (410 Gone)')
-            }
-        } catch (err) {
-            addPushLog('PUSH_ERROR', userId, String(err))
-            console.error(`[push] ❌ Error for user ${userId}:`, err)
-            // Retry once on network error
-            try {
-                await new Promise(resolve => setTimeout(resolve, 5000))
-                addPushLog('PUSH_RETRY_NETWORK', userId, 'Retrying after network error')
-                const retryResult = await sendNotificationWithOneHourJwt(
-                    sub, JSON.stringify({ title, body, tag: 'rest-end' }),
-                )
-                const retryOk = retryResult.statusCode >= 200 && retryResult.statusCode < 300
-                addPushLog(retryOk ? 'PUSH_RETRY_OK' : 'PUSH_RETRY_FAIL', userId, `status=${retryResult.statusCode}`)
-                if (retryResult.statusCode === 410) {
-                    subscriptions.delete(userId)
-                    addPushLog('SUBSCRIPTION_REMOVED', userId, 'Expired (410 Gone)')
-                }
-            } catch (retryErr) {
-                addPushLog('PUSH_RETRY_ERROR', userId, String(retryErr))
-                console.error(`[push] ❌ Retry also failed for user ${userId}:`, retryErr)
-            }
-        }
+        await sendWithRetry(sub, userId, title, body)
     }, delay)
     timers.set(userId, timer)
 }
@@ -214,24 +190,89 @@ export function cancelPush(userId: string) {
     if (t) { clearTimeout(t); timers.delete(userId) }
 }
 
+async function sendWithRetry(sub: webpush.PushSubscription, userId: string, title: string, body: string) {
+    try {
+        console.log(`[push] 📤 Sending push to user ${userId}`)
+        let result = await sendNotificationWithOneHourJwt(
+            sub, JSON.stringify({ title, body, tag: 'rest-end' }),
+        )
+        let ok = result.statusCode >= 200 && result.statusCode < 300
+
+        if (!ok && result.statusCode !== 410 && result.statusCode >= 500) {
+            addPushLog('PUSH_RETRY', userId, `status=${result.statusCode}, retrying in 5s`)
+            await new Promise(resolve => setTimeout(resolve, 5000))
+            result = await sendNotificationWithOneHourJwt(
+                sub, JSON.stringify({ title, body, tag: 'rest-end' }),
+            )
+            ok = result.statusCode >= 200 && result.statusCode < 300
+        }
+
+        const status = ok ? '✅' : '❌'
+        addPushLog(ok ? 'PUSH_SENT_OK' : 'PUSH_SENT_FAIL', userId, `status=${result.statusCode} body=${result.body}`)
+        console.log(`[push] ${status} Sent — status=${result.statusCode} body=${result.body} user=${userId}`)
+        if (result.statusCode === 410) {
+            await removePushSubscription(userId)
+            addPushLog('SUBSCRIPTION_REMOVED', userId, 'Expired (410 Gone)')
+        }
+    } catch (err) {
+        addPushLog('PUSH_ERROR', userId, String(err))
+        console.error(`[push] ❌ Error for user ${userId}:`, err)
+        try {
+            await new Promise(resolve => setTimeout(resolve, 5000))
+            addPushLog('PUSH_RETRY_NETWORK', userId, 'Retrying after network error')
+            const retryResult = await sendNotificationWithOneHourJwt(
+                sub, JSON.stringify({ title, body, tag: 'rest-end' }),
+            )
+            const retryOk = retryResult.statusCode >= 200 && retryResult.statusCode < 300
+            addPushLog(retryOk ? 'PUSH_RETRY_OK' : 'PUSH_RETRY_FAIL', userId, `status=${retryResult.statusCode}`)
+            if (retryResult.statusCode === 410) {
+                await removePushSubscription(userId)
+                addPushLog('SUBSCRIPTION_REMOVED', userId, 'Expired (410 Gone)')
+            }
+        } catch (retryErr) {
+            addPushLog('PUSH_RETRY_ERROR', userId, String(retryErr))
+            console.error(`[push] ❌ Retry also failed for user ${userId}:`, retryErr)
+        }
+    }
+}
+
 export async function sendPushNow(
-    userId: string, title: string, body: string,
+    userId: string, title: string, body: string, tag = 'rest-end',
 ): Promise<{ ok: boolean; status?: number; error?: string; hasSubscription: boolean }> {
-    const sub = subscriptions.get(userId)
+    const sub = await getSubscriptionForUser(userId)
     if (!sub) {
         return { ok: false, error: 'No subscription stored for this user. Click "訂閱推播通知" first.', hasSubscription: false }
     }
     try {
         const result = await sendNotificationWithOneHourJwt(
-            sub, JSON.stringify({ title, body, tag: 'rest-end' }),
+            sub, JSON.stringify({ title, body, tag }),
         )
         console.log(`[push] sendPushNow — status ${result.statusCode} body: ${result.body}`)
         const ok = result.statusCode >= 200 && result.statusCode < 300
-        if (result.statusCode === 410) subscriptions.delete(userId)
+        if (result.statusCode === 410) await removePushSubscription(userId)
         return { ok, status: result.statusCode, hasSubscription: true, error: ok ? undefined : result.body }
     } catch (err: unknown) {
         const msg = err instanceof Error ? err.message : String(err)
         console.error(`[push] sendPushNow failed for user ${userId}:`, err)
         return { ok: false, error: msg, hasSubscription: true }
     }
+}
+
+/** Send push to multiple users (for social notifications). Fire-and-forget, logs errors. */
+export async function sendPushToMany(
+    userIds: string[], title: string, body: string, tag = 'social',
+) {
+    const subs = await getSubscriptionsForUsers(userIds)
+    const promises = Array.from(subs.entries()).map(async ([uid, sub]) => {
+        try {
+            const result = await sendNotificationWithOneHourJwt(
+                sub, JSON.stringify({ title, body, tag }),
+            )
+            if (result.statusCode === 410) await removePushSubscription(uid)
+            addPushLog(result.statusCode < 300 ? 'SOCIAL_PUSH_OK' : 'SOCIAL_PUSH_FAIL', uid, `status=${result.statusCode}`)
+        } catch (err) {
+            addPushLog('SOCIAL_PUSH_ERROR', uid, String(err))
+        }
+    })
+    await Promise.allSettled(promises)
 }

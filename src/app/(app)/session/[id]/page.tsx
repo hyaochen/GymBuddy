@@ -400,6 +400,13 @@ export default function ActiveSessionPage({ params }: { params: Promise<{ id: st
     useEffect(() => {
         if (typeof navigator === 'undefined' || !('serviceWorker' in navigator)) return
 
+        function urlBase64ToUint8Array(base64String: string) {
+            const padding = '='.repeat((4 - (base64String.length % 4)) % 4)
+            const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/')
+            const rawData = atob(base64)
+            return Uint8Array.from([...rawData].map(c => c.charCodeAt(0)))
+        }
+
         navigator.serviceWorker.register('/sw.js').then(async reg => {
             swRegRef.current = reg
 
@@ -417,7 +424,7 @@ export default function ActiveSessionPage({ params }: { params: Promise<{ id: st
                 const existing = await reg.pushManager.getSubscription()
                 const sub = existing ?? await reg.pushManager.subscribe({
                     userVisibleOnly: true,
-                    applicationServerKey: vapidKey,
+                    applicationServerKey: urlBase64ToUint8Array(vapidKey),
                 })
                 // Send subscription to server so it can send pushes on our behalf
                 await fetch('/api/push/subscribe', {
@@ -425,7 +432,9 @@ export default function ActiveSessionPage({ params }: { params: Promise<{ id: st
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ subscription: sub.toJSON() }),
                 })
-            } catch { /* push not supported on this browser/context */ }
+            } catch (e) {
+                console.error('[Push] subscription failed:', e)
+            }
         }).catch(() => {})
     }, [])
 
@@ -507,19 +516,9 @@ export default function ActiveSessionPage({ params }: { params: Promise<{ id: st
             if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
                 navigator.vibrate([300, 100, 300, 100, 300, 100, 300])
             }
-            // Only show SW notification if app is hidden (backgrounded) —
-            // if visible, the in-app alarm overlay is sufficient
-            if (
-                swRegRef.current && typeof Notification !== 'undefined' &&
-                Notification.permission === 'granted' &&
-                document.visibilityState !== 'visible'
-            ) {
-                swRegRef.current.showNotification('⏱️ 休息結束！', {
-                    body: '準備好下一組了嗎？點擊繼續訓練',
-                    tag: 'rest-end',
-                    requireInteraction: true,
-                }).catch(() => {})
-            }
+            // Background notifications are handled by SW local timer + server push.
+            // Do NOT call showNotification() here — it was a third path that caused
+            // duplicate notifications when the user clicked the first one and returned.
         }
         prevAlarmRef.current = state.alarmRinging
     }, [state.alarmRinging])

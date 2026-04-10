@@ -17,6 +17,7 @@ interface ProfileData {
         showWorkouts: boolean
         showPRs: boolean
         showWeight: boolean
+        publicAnalytics: boolean
     }
     stats: {
         totalSessions: number
@@ -54,6 +55,7 @@ export default function ProfilePage() {
     const [showWorkouts, setShowWorkouts] = useState(true)
     const [showPRs, setShowPRs] = useState(false)
     const [showWeight, setShowWeight] = useState(false)
+    const [publicAnalytics, setPublicAnalytics] = useState(false)
 
     const fetchProfile = useCallback(async () => {
         const [profileRes, badgeRes] = await Promise.all([
@@ -69,6 +71,7 @@ export default function ProfilePage() {
             setShowWorkouts(d.profile.showWorkouts)
             setShowPRs(d.profile.showPRs)
             setShowWeight(d.profile.showWeight)
+            setPublicAnalytics(d.profile.publicAnalytics ?? false)
         }
         if (badgeRes.ok) {
             const b = await badgeRes.json()
@@ -151,6 +154,7 @@ export default function ProfilePage() {
                 showWorkouts,
                 showPRs,
                 showWeight,
+                publicAnalytics,
             }),
         })
         if (res.ok) {
@@ -376,6 +380,9 @@ export default function ProfilePage() {
                     <PrivacyToggle label="顯示訓練紀錄" checked={showWorkouts} onChange={setShowWorkouts} />
                     <PrivacyToggle label="顯示個人最佳紀錄" checked={showPRs} onChange={setShowPRs} description="啟用後好友可與你比較紀錄" />
                     <PrivacyToggle label="顯示重量數據" checked={showWeight} onChange={setShowWeight} />
+                    <div className="border-t border-border pt-3 mt-3">
+                        <PrivacyToggle label="公開訓練分析" checked={publicAnalytics} onChange={setPublicAnalytics} description="啟用後好友可查看你的詳細訓練統計" />
+                    </div>
                 </div>
             </div>
 

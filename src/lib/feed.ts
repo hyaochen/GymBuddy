@@ -1,5 +1,6 @@
 import prisma from '@/lib/prisma'
 import { getStreakInfo, STREAK_MILESTONES } from '@/lib/streak'
+import { sendPushToMany } from '@/lib/push-scheduler'
 
 /**
  * Auto-generate feed items after session completion.
@@ -103,4 +104,44 @@ export async function generateSessionFeedItems(
             })
         }
     }
+
+    // 4. Notify friends via push
+    await notifyFriendsOfActivity(userId, session, durationMin, totalSets, currentStreak)
+}
+
+/** Send push notifications to all accepted friends when a workout is completed */
+async function notifyFriendsOfActivity(
+    userId: string,
+    session: { plan?: { name: string } | null; day?: { dayName: string } | null; exercises: Array<{ exercise: { name: string } }> },
+    durationMin: number,
+    totalSets: number,
+    currentStreak: number,
+) {
+    // Find accepted friends
+    const friendships = await prisma.friendship.findMany({
+        where: {
+            status: 'ACCEPTED',
+            OR: [{ requesterId: userId }, { receiverId: userId }],
+        },
+        select: { requesterId: true, receiverId: true },
+    })
+
+    const friendIds = friendships.map(f =>
+        f.requesterId === userId ? f.receiverId : f.requesterId
+    )
+
+    if (friendIds.length === 0) return
+
+    // Get user display name
+    const user = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { name: true, profile: { select: { displayName: true } } },
+    })
+    const displayName = user?.profile?.displayName || user?.name || '好友'
+
+    const planInfo = session.plan?.name ? ` — ${session.plan.name}` : ''
+    const title = `💪 ${displayName} 完成了訓練！`
+    const body = `${totalSets} 組・${durationMin} 分鐘${planInfo}`
+
+    sendPushToMany(friendIds, title, body, 'social-feed').catch(console.error)
 }

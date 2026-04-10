@@ -6,10 +6,11 @@ import { usePathname } from "next/navigation"
 import {
     Home, History, Play, ClipboardList, BarChart3,
     Dumbbell, Users, Sparkles,
-    User, Settings, PanelLeftClose, PanelLeft
+    User, Settings, PanelLeftClose, PanelLeft, LogOut
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useState, useEffect } from "react"
+import { logout } from "@/app/actions/auth"
 
 const coreItems = [
     { href: "/", label: "首頁", icon: Home },
@@ -139,6 +140,21 @@ export default function DesktopSidebar({ userName, avatarUrl }: DesktopSidebarPr
                 {bottomItems.filter(i => i.href !== "/profile").map(item => (
                     <NavItem key={item.href} {...item} />
                 ))}
+
+                {/* Logout */}
+                <form action={logout}>
+                    <button type="submit"
+                        className={cn(
+                            "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors w-full",
+                            "text-muted-foreground hover:text-foreground hover:bg-secondary/50",
+                            collapsed && "justify-center px-2"
+                        )}
+                        title={collapsed ? "登出" : undefined}
+                    >
+                        <LogOut className="h-5 w-5 flex-shrink-0" />
+                        {!collapsed && <span>登出</span>}
+                    </button>
+                </form>
 
                 {/* Collapse toggle */}
                 <button

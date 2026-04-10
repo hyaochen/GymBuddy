@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
-import { getCurrentUser } from '@/lib/auth'
+import { resolveAnalyticsUser } from '@/lib/analytics-auth'
 
 // Map bodyRegion enum to the 8 radar categories
 const REGION_MAP: Record<string, string> = {
@@ -34,9 +34,9 @@ function mapMuscleToCategory(muscleName: string, bodyRegion: string): string {
     return REGION_MAP[bodyRegion] || 'Core'
 }
 
-export async function GET() {
-    const user = await getCurrentUser()
-    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+export async function GET(request: Request) {
+    const { userId, error } = await resolveAnalyticsUser(request)
+    if (error) return NextResponse.json({ error }, { status: 401 })
 
     const now = new Date()
     const startOfThisWeek = new Date(now)
@@ -49,7 +49,7 @@ export async function GET() {
     // Get all sessions from last 2 weeks
     const sessions = await prisma.workoutSession.findMany({
         where: {
-            userId: user.id,
+            userId,
             completedAt: { not: null },
             startedAt: { gte: startOfLastWeek },
         },

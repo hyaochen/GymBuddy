@@ -15,6 +15,12 @@ ENV NEXT_PUBLIC_VAPID_PUBLIC_KEY=$NEXT_PUBLIC_VAPID_PUBLIC_KEY
 ENV NEXT_PUBLIC_APP_URL=$NEXT_PUBLIC_APP_URL
 
 RUN npx prisma generate
+
+# Provide dummy build-time secrets so Next.js can collect page data.
+# Real values are injected at runtime via docker-compose environment.
+ARG SESSION_SECRET=build-time-placeholder-not-used-at-runtime
+ENV SESSION_SECRET=$SESSION_SECRET
+
 RUN npm run build
 
 FROM mcr.microsoft.com/devcontainers/javascript-node:1-20-bookworm AS runner

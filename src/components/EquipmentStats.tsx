@@ -86,18 +86,19 @@ function EquipmentCard({ item }: { item: EquipmentItem }) {
     )
 }
 
-export default function EquipmentStats() {
+export default function EquipmentStats({ userId }: { userId?: string } = {}) {
     const [data, setData] = useState<EquipmentItem[]>([])
     const [loading, setLoading] = useState(true)
     const [search, setSearch] = useState('')
 
     useEffect(() => {
-        fetch('/api/analytics/equipment')
+        const url = userId ? `/api/analytics/equipment?userId=${userId}` : '/api/analytics/equipment'
+        fetch(url)
             .then(r => r.json())
             .then(res => setData(res.data || []))
             .catch(console.error)
             .finally(() => setLoading(false))
-    }, [])
+    }, [userId])
 
     if (loading) {
         return (

@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
-import { getCurrentUser } from '@/lib/auth'
+import { resolveAnalyticsUser } from '@/lib/analytics-auth'
 import { epley1rm } from '@/lib/utils'
 
 export async function GET(req: NextRequest) {
-    const user = await getCurrentUser()
-    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    const { userId, error } = await resolveAnalyticsUser(req)
+    if (error) return NextResponse.json({ error }, { status: 401 })
 
     const exerciseId = req.nextUrl.searchParams.get('exerciseId')
     if (!exerciseId) {
@@ -19,7 +19,7 @@ export async function GET(req: NextRequest) {
 
     const sessions = await prisma.workoutSession.findMany({
         where: {
-            userId: user.id,
+            userId,
             completedAt: { not: null },
             startedAt: { gte: since },
         },
@@ -74,7 +74,7 @@ export async function GET(req: NextRequest) {
     // Also get the exercise list for the dropdown
     const exercises = await prisma.sessionExercise.findMany({
         where: {
-            session: { userId: user.id, completedAt: { not: null } },
+            session: { userId, completedAt: { not: null } },
         },
         select: {
             exerciseId: true,

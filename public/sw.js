@@ -53,19 +53,27 @@ self.addEventListener('message', event => {
             const totalWait = Date.now() - scheduledAt
             clearScheduled()
 
-            // Only show if no client window is currently visible
+            // Skip if server push already showed a notification with the same tag
+            const existing = await self.registration.getNotifications({ tag: 'rest-end' })
+            if (existing.length > 0) {
+                addLog('LOCAL_NOTIFY_SKIPPED', { reason: 'push_already_shown', drift, totalWait })
+                return
+            }
+
+            // Only skip if user is actively on the session page (in-app alarm handles it)
+            // If user navigated to other pages in the app, still show the push notification
             const clients = await self.clients.matchAll({ type: 'window', includeUncontrolled: true })
-            const hasVisibleClient = clients.some(c => c.visibilityState === 'visible')
-            if (!hasVisibleClient) {
+            const hasVisibleSessionPage = clients.some(c => c.visibilityState === 'visible' && c.url.includes('/session/'))
+            if (!hasVisibleSessionPage) {
                 self.registration.showNotification(t, {
                     body: b,
                     tag: 'rest-end',
                     requireInteraction: true,
-                    icon: '/icon.png',
+                    icon: '/icon-192.png',
                 })
-                addLog('LOCAL_NOTIFY_SENT', { drift, totalWait, visibleClients: 0 })
+                addLog('LOCAL_NOTIFY_SENT', { drift, totalWait, visibleClients: clients.length, sessionVisible: false })
             } else {
-                addLog('LOCAL_NOTIFY_SKIPPED', { reason: 'visible_client', drift, totalWait, visibleClients: clients.length })
+                addLog('LOCAL_NOTIFY_SKIPPED', { reason: 'session_page_visible', drift, totalWait })
             }
         }, 1000)
     }
@@ -82,39 +90,58 @@ self.addEventListener('push', event => {
     let payload
     try { payload = event.data.json() } catch { addLog('PUSH_PARSE_ERROR', {}); return }
 
-    addLog('PUSH_RECEIVED', { title: payload.title, tag: payload.tag })
+    const tag = payload.tag ?? 'rest-end'
+    const isRestNotification = tag === 'rest-end'
+    addLog('PUSH_RECEIVED', { title: payload.title, tag })
 
-    // APNs push is authoritative — cancel any pending local SW timer to prevent double notification
-    clearScheduled()
+    // Only cancel local timer for rest notifications
+    if (isRestNotification) clearScheduled()
 
-    event.waitUntil(
-        self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(clients => {
-            const hasVisibleClient = clients.some(c => c.visibilityState === 'visible')
-            if (hasVisibleClient) {
-                addLog('PUSH_NOTIFY_SKIPPED', { reason: 'visible_client', visibleClients: clients.length })
+    event.waitUntil((async () => {
+        // For rest notifications: skip if local timer already showed one
+        if (isRestNotification) {
+            const existing = await self.registration.getNotifications({ tag: 'rest-end' })
+            if (existing.length > 0) {
+                addLog('PUSH_NOTIFY_SKIPPED', { reason: 'local_already_shown' })
                 return
             }
-            addLog('PUSH_NOTIFY_SENT', { title: payload.title })
-            return self.registration.showNotification(payload.title ?? '⏱️ 休息結束！', {
-                body: payload.body ?? '準備好下一組了嗎？點擊繼續訓練',
-                tag: payload.tag ?? 'rest-end',
-                requireInteraction: true,
-                icon: '/icon.png',
-            })
+            // Only skip if user is on the session page (in-app alarm handles it there)
+            // If user is on other pages, still show the notification
+            const clients = await self.clients.matchAll({ type: 'window', includeUncontrolled: true })
+            if (clients.some(c => c.visibilityState === 'visible' && c.url.includes('/session/'))) {
+                addLog('PUSH_NOTIFY_SKIPPED', { reason: 'session_page_visible', visibleClients: clients.length })
+                return
+            }
+        }
+
+        // Social notifications always show, even if app is open
+        addLog('PUSH_NOTIFY_SENT', { title: payload.title, tag })
+        return self.registration.showNotification(payload.title ?? '通知', {
+            body: payload.body ?? '',
+            tag,
+            requireInteraction: isRestNotification,
+            icon: '/icon-192.png',
         })
-    )
+    })())
 })
 
 // When user taps the notification, focus or open the app
 self.addEventListener('notificationclick', event => {
     event.notification.close()
+    const tag = event.notification.tag
     event.waitUntil(
         self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(clients => {
-            // Find a session page if one is already open
+            // Social / friend notifications → open the social page
+            if (tag === 'social-feed' || tag === 'friend-request' || tag === 'friend-accepted') {
+                const socialClient = clients.find(c => c.url.includes('/social'))
+                if (socialClient) return socialClient.focus()
+                if (clients.length > 0) { clients[0].navigate('/social'); return clients[0].focus() }
+                return self.clients.openWindow('/social')
+            }
+            // Rest-end notifications → open the active session
             const sessionClient = clients.find(c => c.url.includes('/session/'))
             if (sessionClient) return sessionClient.focus()
             if (clients.length > 0) return clients[0].focus()
-            // App was killed — open the session list so user can resume
             return self.clients.openWindow('/session')
         })
     )

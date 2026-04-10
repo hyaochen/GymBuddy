@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
 import { getCurrentUser } from '@/lib/auth'
+import { sendPushNow } from '@/lib/push-scheduler'
 
 export async function POST(req: NextRequest) {
     const user = await getCurrentUser()
@@ -45,6 +46,11 @@ export async function POST(req: NextRequest) {
     const friendship = await prisma.friendship.create({
         data: { requesterId: user.id, receiverId: target.id },
     })
+
+    // Notify the receiver via push
+    const displayName = user.name
+    sendPushNow(target.id, `👋 ${displayName} 想加你為好友`, '點擊查看並回覆', 'friend-request')
+        .catch(console.error)
 
     return NextResponse.json({ success: true, id: friendship.id })
 }

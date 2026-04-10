@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
 import { getCurrentUser } from '@/lib/auth'
 import { checkSocialBadge } from '@/lib/badges'
+import { sendPushNow } from '@/lib/push-scheduler'
 
 export async function POST(req: NextRequest) {
     const user = await getCurrentUser()
@@ -29,6 +30,11 @@ export async function POST(req: NextRequest) {
         // Award badge to both users
         checkSocialBadge(user.id, 'friend_added').catch(console.error)
         checkSocialBadge(friendship.requesterId, 'friend_added').catch(console.error)
+
+        // Notify the requester that their request was accepted
+        sendPushNow(friendship.requesterId, `🎉 ${user.name} 接受了你的好友邀請`, '你們現在是好友了！', 'friend-accepted')
+            .catch(console.error)
+
         return NextResponse.json({ success: true, status: 'ACCEPTED' })
     } else {
         await prisma.friendship.delete({ where: { id: friendshipId } })

@@ -54,12 +54,26 @@ export default async function DashboardPage() {
             },
             orderBy: { updatedAt: 'desc' },
         }),
-        prisma.activityFeedItem.findMany({
-            where: { isPublic: true },
-            include: { user: { select: { name: true } } },
-            orderBy: { createdAt: 'desc' },
-            take: 3,
-        }).catch(() => []),
+        (async () => {
+            // 只顯示好友的公開動態
+            const friendships = await prisma.friendship.findMany({
+                where: { status: 'ACCEPTED', OR: [{ requesterId: user.id }, { receiverId: user.id }] },
+                select: { requesterId: true, receiverId: true },
+            })
+            const friendIds = friendships.map(f => f.requesterId === user.id ? f.receiverId : f.requesterId)
+            return prisma.activityFeedItem.findMany({
+                where: {
+                    isPublic: true,
+                    OR: [
+                        { userId: user.id },
+                        { userId: { in: friendIds } },
+                    ],
+                },
+                include: { user: { select: { name: true } } },
+                orderBy: { createdAt: 'desc' },
+                take: 3,
+            })
+        })().catch(() => []),
     ])
 
     const totalSessions = await prisma.workoutSession.count({

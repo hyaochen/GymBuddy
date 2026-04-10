@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
-import { getCurrentUser } from '@/lib/auth'
+import { resolveAnalyticsUser } from '@/lib/analytics-auth'
 
 const REGION_MAP: Record<string, string> = {
     CHEST: 'Chest',
@@ -13,9 +13,9 @@ const REGION_MAP: Record<string, string> = {
     CARDIO: 'Core',
 }
 
-export async function GET() {
-    const user = await getCurrentUser()
-    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+export async function GET(request: Request) {
+    const { userId, error } = await resolveAnalyticsUser(request)
+    if (error) return NextResponse.json({ error }, { status: 401 })
 
     // Last 8 weeks
     const since = new Date()
@@ -24,7 +24,7 @@ export async function GET() {
 
     const sessions = await prisma.workoutSession.findMany({
         where: {
-            userId: user.id,
+            userId,
             completedAt: { not: null },
             startedAt: { gte: since },
         },
