@@ -290,16 +290,20 @@ export default function PlanEditPage({ params }: { params: Promise<{ id: string 
                                         <div className="space-y-1">
                                             <label className="text-xs text-muted-foreground">重量 (kg)</label>
                                             <div className="flex items-center gap-1">
-                                                <button onClick={() => update(pe.id, 'defaultWeightKg', Math.max(0, weight - 2.5))} className="w-7 h-7 rounded-md bg-muted flex items-center justify-center text-xs hover:bg-muted/80">-2.5</button>
+                                                <button onClick={() => update(pe.id, 'defaultWeightKg', Math.max(0, weight - 5))} className="w-7 h-7 rounded-md bg-muted flex items-center justify-center text-[10px] hover:bg-muted/80">-5</button>
+                                                <button onClick={() => update(pe.id, 'defaultWeightKg', Math.max(0, weight - 2.5))} className="w-7 h-7 rounded-md bg-muted flex items-center justify-center text-[10px] hover:bg-muted/80">-2.5</button>
                                                 <input
                                                     type="number"
+                                                    inputMode="decimal"
                                                     value={weight}
-                                                    step={2.5}
+                                                    step={0.1}
                                                     min={0}
                                                     onChange={e => update(pe.id, 'defaultWeightKg', parseFloat(e.target.value) || 0)}
-                                                    className="w-14 text-center text-sm font-medium bg-muted rounded-md py-1 outline-none focus:ring-1 focus:ring-primary"
+                                                    className="w-16 text-center text-sm font-medium bg-muted rounded-md py-1 outline-none focus:ring-1 focus:ring-primary tabular-nums"
+                                                    title="可直接輸入精確重量（0.1 kg 精度）"
                                                 />
-                                                <button onClick={() => update(pe.id, 'defaultWeightKg', weight + 2.5)} className="w-7 h-7 rounded-md bg-muted flex items-center justify-center text-xs hover:bg-muted/80">+2.5</button>
+                                                <button onClick={() => update(pe.id, 'defaultWeightKg', weight + 2.5)} className="w-7 h-7 rounded-md bg-muted flex items-center justify-center text-[10px] hover:bg-muted/80">+2.5</button>
+                                                <button onClick={() => update(pe.id, 'defaultWeightKg', weight + 5)} className="w-7 h-7 rounded-md bg-muted flex items-center justify-center text-[10px] hover:bg-muted/80">+5</button>
                                             </div>
                                         </div>
 

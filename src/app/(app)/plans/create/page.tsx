@@ -90,6 +90,7 @@ export default function CreatePlanPage() {
                     defaultSets: 3,
                     defaultRepsMin: 8,
                     defaultRepsMax: 12,
+                    defaultWeightKg: 0,
                     restSeconds: 90,
                 }],
             }
@@ -109,7 +110,7 @@ export default function CreatePlanPage() {
             d.id !== dayId ? d : {
                 ...d,
                 exercises: d.exercises.map(e =>
-                    e.exerciseId !== exerciseId ? e : { ...e, [field]: value }
+                    e.exerciseId !== exerciseId ? e : { ...e, [field]: Number.isNaN(value) ? 0 : value }
                 ),
             }
         ))
@@ -221,7 +222,7 @@ export default function CreatePlanPage() {
                                         <Trash2 className="h-3.5 w-3.5" />
                                     </button>
                                 </div>
-                                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
+                                <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 text-xs">
                                     <div>
                                         <label className="text-muted-foreground block mb-1">組數</label>
                                         <input
@@ -251,6 +252,36 @@ export default function CreatePlanPage() {
                                             className="w-full h-11 px-2 rounded-lg bg-background border border-border text-foreground text-sm text-center focus:outline-none focus:ring-2 focus:ring-ring"
                                             min={1} max={50} step={1}
                                         />
+                                    </div>
+                                    <div>
+                                        <label className="text-muted-foreground block mb-1">重量(kg)</label>
+                                        <div className="flex items-center gap-1">
+                                            <button
+                                                type="button"
+                                                onClick={() => updateExercise(day.id, ex.exerciseId, 'defaultWeightKg', Math.max(0, (ex.defaultWeightKg ?? 0) - 2.5))}
+                                                className="w-7 h-11 rounded-l-lg bg-muted text-foreground text-[11px] font-semibold hover:bg-muted/80 active:scale-95 transition-transform flex-shrink-0"
+                                                aria-label="減 2.5 公斤"
+                                            >
+                                                −
+                                            </button>
+                                            <input
+                                                type="number"
+                                                inputMode="decimal"
+                                                value={ex.defaultWeightKg ?? 0}
+                                                onChange={e => updateExercise(day.id, ex.exerciseId, 'defaultWeightKg', parseFloat(e.target.value))}
+                                                className="flex-1 min-w-0 h-11 px-1 bg-background border-y border-border text-foreground text-sm text-center focus:outline-none focus:ring-2 focus:ring-ring tabular-nums"
+                                                min={0} step={0.1}
+                                                title="可直接輸入精確重量（0.1 kg 精度）"
+                                            />
+                                            <button
+                                                type="button"
+                                                onClick={() => updateExercise(day.id, ex.exerciseId, 'defaultWeightKg', (ex.defaultWeightKg ?? 0) + 2.5)}
+                                                className="w-7 h-11 rounded-r-lg bg-muted text-foreground text-[11px] font-semibold hover:bg-muted/80 active:scale-95 transition-transform flex-shrink-0"
+                                                aria-label="加 2.5 公斤"
+                                            >
+                                                +
+                                            </button>
+                                        </div>
                                     </div>
                                     <div>
                                         <label className="text-muted-foreground block mb-1">休息(秒)</label>
