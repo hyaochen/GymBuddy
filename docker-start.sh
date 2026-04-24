@@ -1,8 +1,8 @@
 #!/bin/sh
 set -eu
 
-echo "[gymbuddy] Pushing Prisma schema to database..."
-npx prisma db push --accept-data-loss
+echo "[gymbuddy] Applying Prisma migrations..."
+npx prisma migrate deploy
 
 echo "[gymbuddy] Running database seed..."
 npx prisma db seed || true
