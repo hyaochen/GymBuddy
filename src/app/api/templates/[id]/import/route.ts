@@ -26,45 +26,73 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ id
     const template = await prisma.sharedTemplate.findUnique({ where: { id } })
     if (!template) return NextResponse.json({ error: 'Not found' }, { status: 404 })
 
-    const days: TemplateDay[] = JSON.parse(template.days)
+    if (!template.isPublic && template.creatorId !== user.id) {
+        return NextResponse.json({ error: 'Not found' }, { status: 404 })
+    }
 
-    // Create a new workout plan from the template
-    const plan = await prisma.workoutPlan.create({
-        data: {
-            userId: user.id,
-            name: template.name,
-            description: template.description,
-            daysPerWeek: template.daysPerWeek,
-            days: {
-                create: days.map((day, dayIdx) => ({
-                    dayName: day.dayName,
-                    orderIndex: dayIdx,
-                    exercises: {
-                        create: day.exercises.map((ex, exIdx) => ({
-                            exerciseId: ex.exerciseId,
-                            orderIndex: exIdx,
-                            defaultSets: ex.sets,
-                            defaultRepsMin: ex.repsMin,
-                            defaultRepsMax: ex.repsMax,
-                            defaultWeightKg: ex.weightKg,
-                            restSeconds: ex.restSeconds,
-                        })),
-                    },
-                })),
-            },
-        },
-        include: {
-            days: {
-                include: { exercises: { include: { exercise: true } } },
-                orderBy: { orderIndex: 'asc' },
-            },
-        },
-    })
+    let days: TemplateDay[]
+    try {
+        days = JSON.parse(template.days)
+        if (!Array.isArray(days)) throw new Error('days not array')
+    } catch {
+        return NextResponse.json({ error: 'Template data malformed' }, { status: 422 })
+    }
 
-    // Increment download count
-    await prisma.sharedTemplate.update({
-        where: { id },
-        data: { downloads: { increment: 1 } },
+    const exerciseIds = Array.from(
+        new Set(days.flatMap((d) => (d.exercises ?? []).map((e) => e.exerciseId)))
+    )
+    if (exerciseIds.length > 0) {
+        const found = await prisma.exercise.findMany({
+            where: { id: { in: exerciseIds } },
+            select: { id: true },
+        })
+        if (found.length !== exerciseIds.length) {
+            return NextResponse.json(
+                { error: 'Template references missing exercises' },
+                { status: 422 }
+            )
+        }
+    }
+
+    const plan = await prisma.$transaction(async (tx) => {
+        const created = await tx.workoutPlan.create({
+            data: {
+                userId: user.id,
+                name: template.name,
+                description: template.description,
+                daysPerWeek: template.daysPerWeek,
+                days: {
+                    create: days.map((day, dayIdx) => ({
+                        dayName: day.dayName,
+                        orderIndex: dayIdx,
+                        exercises: {
+                            create: day.exercises.map((ex, exIdx) => ({
+                                exerciseId: ex.exerciseId,
+                                orderIndex: exIdx,
+                                defaultSets: ex.sets,
+                                defaultRepsMin: ex.repsMin,
+                                defaultRepsMax: ex.repsMax,
+                                defaultWeightKg: ex.weightKg,
+                                restSeconds: ex.restSeconds,
+                            })),
+                        },
+                    })),
+                },
+            },
+            include: {
+                days: {
+                    include: { exercises: { include: { exercise: true } } },
+                    orderBy: { orderIndex: 'asc' },
+                },
+            },
+        })
+
+        await tx.sharedTemplate.update({
+            where: { id },
+            data: { downloads: { increment: 1 } },
+        })
+
+        return created
     })
 
     return NextResponse.json({ plan })

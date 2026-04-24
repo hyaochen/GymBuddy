@@ -63,8 +63,15 @@ export async function getStreakInfo(userId: string) {
     return { currentStreak, longestStreak }
 }
 
+// YYYY-MM-DD in the app's timezone (Asia/Taipei). Avoids the UTC off-by-one
+// where a workout finished at 01:00 local time would be bucketed as "yesterday".
 function toDateString(d: Date): string {
-    return d.toISOString().split('T')[0]
+    return new Intl.DateTimeFormat('en-CA', {
+        timeZone: 'Asia/Taipei',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+    }).format(d)
 }
 
 export const STREAK_MILESTONES = [7, 14, 30, 60, 90, 100]

@@ -24,6 +24,10 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
         return NextResponse.json({ error: 'Not found' }, { status: 404 })
     }
 
+    if (!template.isPublic && template.creatorId !== user.id) {
+        return NextResponse.json({ error: 'Not found' }, { status: 404 })
+    }
+
     return NextResponse.json({
         ...template,
         days: JSON.parse(template.days),

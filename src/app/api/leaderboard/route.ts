@@ -1,7 +1,29 @@
 import { NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
 import { getCurrentUser } from '@/lib/auth'
-import { getStreakInfo } from '@/lib/streak'
+
+function tpeDateKey(d: Date): string {
+    return new Intl.DateTimeFormat('en-CA', {
+        timeZone: 'Asia/Taipei',
+        year: 'numeric', month: '2-digit', day: '2-digit',
+    }).format(d)
+}
+
+function computeCurrentStreak(dates: string[]): number {
+    if (dates.length === 0) return 0
+    const sorted = Array.from(new Set(dates)).sort().reverse()
+    const today = tpeDateKey(new Date())
+    const yesterday = tpeDateKey(new Date(Date.now() - 86400000))
+    if (sorted[0] !== today && sorted[0] !== yesterday) return 0
+    let streak = 1
+    for (let i = 1; i < sorted.length; i++) {
+        const prev = new Date(sorted[i - 1] + 'T00:00:00Z').getTime()
+        const curr = new Date(sorted[i] + 'T00:00:00Z').getTime()
+        if (Math.round((prev - curr) / 86400000) === 1) streak++
+        else break
+    }
+    return streak
+}
 
 export async function GET() {
     const user = await getCurrentUser()
@@ -36,17 +58,26 @@ export async function GET() {
     })
     const profileMap = new Map(profiles.map(p => [p.userId, p]))
 
-    // 1. Streak leaderboard
-    const streakData = await Promise.all(
-        allIds.map(async (id) => {
+    // 1. Streak leaderboard — one query for all users, bucket per-user in JS.
+    const streakSessions = await prisma.workoutSession.findMany({
+        where: { userId: { in: allIds }, completedAt: { not: null } },
+        select: { userId: true, startedAt: true },
+    })
+    const datesByUser = new Map<string, string[]>()
+    for (const s of streakSessions) {
+        const arr = datesByUser.get(s.userId) ?? []
+        arr.push(tpeDateKey(s.startedAt))
+        datesByUser.set(s.userId, arr)
+    }
+    const streakBoard = allIds
+        .map((id) => {
             const p = profileMap.get(id)
             if (p && !p.showStreak && id !== user.id) return null
-            const info = await getStreakInfo(id)
-            return { userId: id, name: nameMap.get(id)!, currentStreak: info.currentStreak }
+            const currentStreak = computeCurrentStreak(datesByUser.get(id) ?? [])
+            if (currentStreak === 0) return null
+            return { userId: id, name: nameMap.get(id)!, currentStreak }
         })
-    )
-    const streakBoard = streakData
-        .filter((d): d is NonNullable<typeof d> => d !== null && d.currentStreak > 0)
+        .filter((d): d is NonNullable<typeof d> => d !== null)
         .sort((a, b) => b.currentStreak - a.currentStreak)
 
     // 2. This week's volume

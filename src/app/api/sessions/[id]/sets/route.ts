@@ -15,14 +15,26 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
     }
 
-    // Verify session belongs to user
+    // Verify sessionExercise belongs to the session param, the session belongs
+    // to the user, and the session is still active (not completed).
     const sessionExercise = await prisma.sessionExercise.findUnique({
         where: { id: sessionExerciseId },
-        include: { session: { select: { userId: true } } },
+        include: { session: { select: { id: true, userId: true, completedAt: true } } },
     })
 
-    if (!sessionExercise || sessionExercise.session.userId !== user.id) {
+    if (
+        !sessionExercise ||
+        sessionExercise.session.id !== sessionId ||
+        sessionExercise.session.userId !== user.id
+    ) {
         return NextResponse.json({ error: 'Not found' }, { status: 404 })
+    }
+
+    if (sessionExercise.session.completedAt) {
+        return NextResponse.json(
+            { error: 'Session already completed' },
+            { status: 409 }
+        )
     }
 
     const set = await prisma.sessionSet.create({

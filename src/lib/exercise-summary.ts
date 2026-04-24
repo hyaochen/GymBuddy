@@ -1,5 +1,6 @@
 import prisma from '@/lib/prisma'
 import { epley1rm } from '@/lib/utils'
+import type { Prisma } from '@prisma/client'
 
 /**
  * Recalculates and upserts the UserExerciseSummary for a given user + exercise.
@@ -89,6 +90,55 @@ export async function updateExerciseSummary(userId: string, exerciseId: string) 
             lastUsedAt,
         },
     })
+}
+
+/**
+ * Rebuilds PersonalRecord rows for user+exercise from remaining session sets.
+ * Call after set delete/edit so stale PRs (whose backing set was removed) are
+ * cleared and replaced with the actual progression derived from current data.
+ * Time-based sets (durationSeconds != null) are excluded — no weight PR.
+ */
+export async function recomputePersonalRecords(userId: string, exerciseId: string) {
+    const sets = await prisma.sessionSet.findMany({
+        where: {
+            sessionExerciseId: { not: undefined },
+            sessionExercise: { exerciseId, session: { userId, completedAt: { not: null } } },
+            durationSeconds: null,
+        },
+        select: {
+            weightKg: true,
+            repsPerformed: true,
+            completedAt: true,
+        },
+        orderBy: { completedAt: 'asc' },
+    })
+
+    const newRecords: Prisma.PersonalRecordCreateManyInput[] = []
+    let running1rm = 0
+    for (const s of sets) {
+        if (!s.completedAt) continue
+        const w = Number(s.weightKg)
+        const r = s.repsPerformed
+        const e1rm = epley1rm(w, r)
+        if (e1rm > running1rm) {
+            running1rm = e1rm
+            newRecords.push({
+                userId,
+                exerciseId,
+                weightKg: w,
+                reps: r,
+                estimated1rm: e1rm,
+                achievedAt: s.completedAt,
+            })
+        }
+    }
+
+    await prisma.$transaction([
+        prisma.personalRecord.deleteMany({ where: { userId, exerciseId } }),
+        ...(newRecords.length > 0
+            ? [prisma.personalRecord.createMany({ data: newRecords })]
+            : []),
+    ])
 }
 
 /**

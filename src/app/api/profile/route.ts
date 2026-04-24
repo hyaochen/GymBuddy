@@ -46,7 +46,12 @@ export async function PATCH(req: NextRequest) {
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     const body = await req.json()
-    const { displayName, bio, avatarUrl, showStreak, showWorkouts, showPRs, showWeight, publicAnalytics } = body
+    const { displayName: rawDisplayName, bio: rawBio, avatarUrl, showStreak, showWorkouts, showPRs, showWeight, publicAnalytics } = body
+
+    // Length guards — prevent 10MB bio DoS / payload bloat.
+    const displayName =
+        typeof rawDisplayName === 'string' ? rawDisplayName.trim().slice(0, 50) : rawDisplayName
+    const bio = typeof rawBio === 'string' ? rawBio.trim().slice(0, 500) : rawBio
 
     const profile = await prisma.userProfile.upsert({
         where: { userId: user.id },

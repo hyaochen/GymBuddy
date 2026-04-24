@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
 import { getCurrentUser } from '@/lib/auth'
-import { updateExerciseSummary } from '@/lib/exercise-summary'
+import { updateExerciseSummary, recomputePersonalRecords } from '@/lib/exercise-summary'
 
 async function verifySetOwnership(setId: string, userId: string) {
     return prisma.sessionSet.findFirst({
@@ -39,7 +39,11 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ se
     })
 
     // Recalculate PR/Summary after edit
-    updateExerciseSummary(user.id, existing.sessionExercise.exerciseId).catch(console.error)
+    const exId = existing.sessionExercise.exerciseId
+    Promise.all([
+        updateExerciseSummary(user.id, exId),
+        recomputePersonalRecords(user.id, exId),
+    ]).catch(console.error)
 
     return NextResponse.json({ set: updated })
 }
@@ -55,8 +59,11 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ s
     const exerciseId = existing.sessionExercise.exerciseId
     await prisma.sessionSet.delete({ where: { id: setId } })
 
-    // Recalculate PR/Summary after delete
-    updateExerciseSummary(user.id, exerciseId).catch(console.error)
+    // Recalculate PR/Summary after delete — removes stale PRs whose set was deleted
+    Promise.all([
+        updateExerciseSummary(user.id, exerciseId),
+        recomputePersonalRecords(user.id, exerciseId),
+    ]).catch(console.error)
 
     return NextResponse.json({ success: true })
 }

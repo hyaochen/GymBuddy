@@ -11,6 +11,10 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ id
     const template = await prisma.sharedTemplate.findUnique({ where: { id } })
     if (!template) return NextResponse.json({ error: 'Not found' }, { status: 404 })
 
+    if (!template.isPublic && template.creatorId !== user.id) {
+        return NextResponse.json({ error: 'Not found' }, { status: 404 })
+    }
+
     // Toggle like
     const existing = await prisma.templateLike.findUnique({
         where: { userId_templateId: { userId: user.id, templateId: id } },

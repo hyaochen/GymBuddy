@@ -1,6 +1,6 @@
 "use server"
 
-import { cookies } from "next/headers"
+import { cookies, headers } from "next/headers"
 import { redirect } from "next/navigation"
 import * as argon2 from "argon2"
 import prisma from "@/lib/prisma"
@@ -10,40 +10,58 @@ import { createRateLimiter } from "@/lib/rate-limiter"
 const SESSION_COOKIE = "session"
 const SESSION_MAX_AGE = 60 * 60 * 24 * 30 // 30 days
 
-// Rate limiting: 5 failed attempts per email → block for 15 minutes
+// 5 failed attempts per (IP + normalized identifier) → block for 15 minutes.
+// Keying on IP+identifier prevents one attacker from locking out a real user's
+// account by spamming failures against their email.
 const loginLimiter = createRateLimiter({ maxAttempts: 5, windowMs: 15 * 60 * 1000 })
+// 10 registrations per IP per hour
+const registerLimiter = createRateLimiter({ maxAttempts: 10, windowMs: 60 * 60 * 1000 })
+
+async function clientIp(): Promise<string> {
+    const h = await headers()
+    const xff = h.get("x-forwarded-for")
+    if (xff) return xff.split(",")[0]!.trim()
+    return h.get("x-real-ip") ?? "unknown"
+}
 
 export async function login(formData: FormData) {
-    const email = formData.get("email") as string
+    const rawEmail = formData.get("email") as string
     const password = formData.get("password") as string
 
-    if (!email || !password) {
+    if (!rawEmail || !password) {
         redirect("/login?error=" + encodeURIComponent("請填寫所有欄位"))
     }
 
-    // Rate limit check
-    if (loginLimiter.isBlocked(email)) {
-        const remaining = Math.ceil(loginLimiter.remainingSeconds(email) / 60)
+    const identifier = rawEmail.trim().toLowerCase()
+    const ip = await clientIp()
+    const limitKey = `${ip}|${identifier}`
+
+    if (loginLimiter.isBlocked(limitKey)) {
+        const remaining = Math.ceil(loginLimiter.remainingSeconds(limitKey) / 60)
         redirect("/login?error=" + encodeURIComponent(`登入嘗試過多，請 ${remaining} 分鐘後再試`))
     }
 
-    // Support login by email OR by name (for test accounts)
+    // Support login by email OR by name (for test accounts). Case-insensitive match.
     const user = await prisma.user.findFirst({
-        where: { OR: [{ email }, { name: email }] },
+        where: {
+            OR: [
+                { email: { equals: identifier, mode: "insensitive" } },
+                { name: { equals: identifier, mode: "insensitive" } },
+            ],
+        },
     })
     if (!user || !user.passwordHash) {
-        loginLimiter.record(email)
+        loginLimiter.record(limitKey)
         redirect("/login?error=" + encodeURIComponent("帳號或密碼錯誤"))
     }
 
     const valid = await argon2.verify(user.passwordHash, password)
     if (!valid) {
-        loginLimiter.record(email)
+        loginLimiter.record(limitKey)
         redirect("/login?error=" + encodeURIComponent("帳號或密碼錯誤"))
     }
 
-    // Clear attempts on success
-    loginLimiter.reset(email)
+    loginLimiter.reset(limitKey)
 
     const token = await signSession({ userId: user.id, issuedAt: Date.now() })
     const cookieStore = await cookies()
@@ -59,8 +77,9 @@ export async function login(formData: FormData) {
 }
 
 export async function register(formData: FormData) {
-    const name = formData.get("name") as string
-    const email = formData.get("email") as string
+    const name = (formData.get("name") as string | null)?.trim() ?? ""
+    const rawEmail = (formData.get("email") as string | null) ?? ""
+    const email = rawEmail.trim().toLowerCase()
     const password = formData.get("password") as string
 
     if (!name || !email || !password) {
@@ -71,8 +90,19 @@ export async function register(formData: FormData) {
         redirect("/register?error=" + encodeURIComponent("密碼至少需要 6 個字元"))
     }
 
-    const existingEmail = await prisma.user.findUnique({ where: { email } })
-    const existingName = await prisma.user.findUnique({ where: { name } })
+    const ip = await clientIp()
+    if (registerLimiter.isBlocked(ip)) {
+        const remaining = Math.ceil(registerLimiter.remainingSeconds(ip) / 60)
+        redirect("/register?error=" + encodeURIComponent(`註冊過於頻繁，請 ${remaining} 分鐘後再試`))
+    }
+    registerLimiter.record(ip)
+
+    const existingEmail = await prisma.user.findFirst({
+        where: { email: { equals: email, mode: "insensitive" } },
+    })
+    const existingName = await prisma.user.findFirst({
+        where: { name: { equals: name, mode: "insensitive" } },
+    })
     if (existingEmail || existingName) {
         redirect("/register?error=" + encodeURIComponent("此帳號資訊已被使用，請更換電子郵件或暱稱"))
     }

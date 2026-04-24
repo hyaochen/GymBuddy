@@ -2,10 +2,22 @@ import { NextRequest, NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
 import { getCurrentUser } from '@/lib/auth'
 import { sendPushNow } from '@/lib/push-scheduler'
+import { createRateLimiter } from '@/lib/rate-limiter'
+
+// 20 friend-requests per user per hour — stops push-spam abuse.
+const friendRequestLimiter = createRateLimiter({ maxAttempts: 20, windowMs: 60 * 60 * 1000 })
 
 export async function POST(req: NextRequest) {
     const user = await getCurrentUser()
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+    if (friendRequestLimiter.isBlocked(user.id)) {
+        const mins = Math.ceil(friendRequestLimiter.remainingSeconds(user.id) / 60)
+        return NextResponse.json(
+            { error: `好友邀請過於頻繁，請 ${mins} 分鐘後再試` },
+            { status: 429 }
+        )
+    }
 
     const { username } = await req.json()
     if (!username || typeof username !== 'string') {
@@ -46,6 +58,8 @@ export async function POST(req: NextRequest) {
     const friendship = await prisma.friendship.create({
         data: { requesterId: user.id, receiverId: target.id },
     })
+
+    friendRequestLimiter.record(user.id)
 
     // Notify the receiver via push
     const displayName = user.name
