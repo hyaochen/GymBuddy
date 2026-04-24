@@ -1,8 +1,9 @@
 "use client"
 
 import { useEffect, useState, useCallback } from "react"
+import Link from "next/link"
 import { startRegistration } from "@simplewebauthn/browser"
-import { KeyRound, Plus, Trash2, Smartphone } from "lucide-react"
+import { KeyRound, Plus, Trash2, Smartphone, Bell, ExternalLink } from "lucide-react"
 
 interface PasskeyInfo {
     id: string
@@ -133,6 +134,24 @@ export default function SettingsPage() {
                         ))}
                     </div>
                 )}
+            </div>
+
+            {/* Push notification debug */}
+            <div className="bg-card rounded-xl border border-border p-5 space-y-3">
+                <div className="flex items-center gap-2">
+                    <Bell className="h-5 w-5 text-primary" />
+                    <h2 className="font-semibold">推播通知除錯</h2>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                    測試推播訂閱、立即送出測試通知、檢查當前裝置是否已訂閱。多裝置（iPhone + 電腦）各自獨立訂閱，不會互相覆蓋。
+                </p>
+                <Link
+                    href="/test-push"
+                    className="inline-flex items-center gap-2 text-sm font-medium text-primary hover:text-primary/80"
+                >
+                    開啟 Web Push 測試頁
+                    <ExternalLink className="h-4 w-4" />
+                </Link>
             </div>
         </div>
     )
