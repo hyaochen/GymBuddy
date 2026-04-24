@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
 import { resolveAnalyticsUser } from '@/lib/analytics-auth'
+import { sumSetsVolume } from '@/lib/utils'
 
 const REGION_MAP: Record<string, string> = {
     CHEST: 'Chest',
@@ -70,9 +71,7 @@ export async function GET(request: Request) {
             if (s.startedAt < week.start || s.startedAt >= week.end) continue
 
             for (const se of s.exercises) {
-                const volume = se.sets.reduce((sum, set) =>
-                    sum + (set.durationSeconds ? 0 : Number(set.weightKg) * set.repsPerformed), 0
-                )
+                const volume = sumSetsVolume(se.sets)
 
                 // Distribute volume using 70/30 primary/secondary split (consistent with muscle-balance radar)
                 const primaryMuscles = se.exercise.muscles.filter(m => m.isPrimary)

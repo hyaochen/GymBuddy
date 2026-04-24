@@ -1,19 +1,14 @@
 import { NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
 import { getCurrentUser } from '@/lib/auth'
-
-function tpeDateKey(d: Date): string {
-    return new Intl.DateTimeFormat('en-CA', {
-        timeZone: 'Asia/Taipei',
-        year: 'numeric', month: '2-digit', day: '2-digit',
-    }).format(d)
-}
+import { getFriendIds } from '@/lib/friends'
+import { toDateKey, sumSetsVolume } from '@/lib/utils'
 
 function computeCurrentStreak(dates: string[]): number {
     if (dates.length === 0) return 0
     const sorted = Array.from(new Set(dates)).sort().reverse()
-    const today = tpeDateKey(new Date())
-    const yesterday = tpeDateKey(new Date(Date.now() - 86400000))
+    const today = toDateKey(new Date())
+    const yesterday = toDateKey(new Date(Date.now() - 86400000))
     if (sorted[0] !== today && sorted[0] !== yesterday) return 0
     let streak = 1
     for (let i = 1; i < sorted.length; i++) {
@@ -29,19 +24,7 @@ export async function GET() {
     const user = await getCurrentUser()
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-    // Get friend IDs
-    const friendships = await prisma.friendship.findMany({
-        where: {
-            status: 'ACCEPTED',
-            OR: [{ requesterId: user.id }, { receiverId: user.id }],
-        },
-    })
-
-    const friendIds = friendships.map(f =>
-        f.requesterId === user.id ? f.receiverId : f.requesterId
-    )
-
-    // Include self
+    const friendIds = await getFriendIds(user.id)
     const allIds = [user.id, ...friendIds]
 
     // Get users
@@ -66,7 +49,7 @@ export async function GET() {
     const datesByUser = new Map<string, string[]>()
     for (const s of streakSessions) {
         const arr = datesByUser.get(s.userId) ?? []
-        arr.push(tpeDateKey(s.startedAt))
+        arr.push(toDateKey(s.startedAt))
         datesByUser.set(s.userId, arr)
     }
     const streakBoard = allIds
@@ -97,9 +80,7 @@ export async function GET() {
     for (const s of weekSessions) {
         const p = profileMap.get(s.userId)
         if (p && !p.showWorkouts && s.userId !== user.id) continue
-        const vol = s.exercises.reduce((sum, e) =>
-            sum + e.sets.reduce((s2, set) => s2 + (set.durationSeconds ? 0 : Number(set.weightKg) * set.repsPerformed), 0), 0
-        )
+        const vol = s.exercises.reduce((sum, e) => sum + sumSetsVolume(e.sets), 0)
         volumeMap.set(s.userId, (volumeMap.get(s.userId) || 0) + vol)
     }
     const volumeBoard = Array.from(volumeMap.entries())

@@ -1,6 +1,8 @@
 import Link from 'next/link'
 import prisma from '@/lib/prisma'
 import { requireAuth } from '@/lib/auth'
+import { sumSetsVolume } from '@/lib/utils'
+import { getFriendIds } from '@/lib/friends'
 import { Play, Trophy, TrendingUp, Calendar, Dumbbell, ClipboardList, Users, Search, Activity } from 'lucide-react'
 import PasskeyPrompt from '@/components/PasskeyPrompt'
 import TrainingHeatmap from '@/components/TrainingHeatmap'
@@ -55,12 +57,7 @@ export default async function DashboardPage() {
             orderBy: { updatedAt: 'desc' },
         }),
         (async () => {
-            // 只顯示好友的公開動態
-            const friendships = await prisma.friendship.findMany({
-                where: { status: 'ACCEPTED', OR: [{ requesterId: user.id }, { receiverId: user.id }] },
-                select: { requesterId: true, receiverId: true },
-            })
-            const friendIds = friendships.map(f => f.requesterId === user.id ? f.receiverId : f.requesterId)
+            const friendIds = await getFriendIds(user.id)
             return prisma.activityFeedItem.findMany({
                 where: {
                     isPublic: true,
@@ -303,9 +300,7 @@ export default async function DashboardPage() {
                         {recentSessions.slice(0, 3).map(sess => {
                             const totalSets = sess.exercises.reduce((s, e) => s + e.sets.length, 0)
                             const volume = Math.round(
-                                sess.exercises.reduce((s, e) =>
-                                    s + e.sets.reduce((s2, set) => s2 + (set.durationSeconds ? 0 : Number(set.weightKg) * set.repsPerformed), 0), 0
-                                )
+                                sess.exercises.reduce((s, e) => s + sumSetsVolume(e.sets), 0)
                             )
                             return (
                                 <div key={sess.id} className="bg-card rounded-xl border border-border p-3 flex items-center justify-between">

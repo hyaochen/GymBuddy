@@ -5,6 +5,7 @@ import { generateOverloadSuggestion } from '@/lib/progressive-overload'
 import { updateExerciseSummary } from '@/lib/exercise-summary'
 import { generateSessionFeedItems } from '@/lib/feed'
 import { checkSessionBadges, updateChallengeProgress } from '@/lib/badges'
+import { sumSetsVolume } from '@/lib/utils'
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
     const user = await getCurrentUser()
@@ -95,9 +96,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
     // Calculate session summary (skip time-based sets for volume)
     const totalSets = session.exercises.reduce((sum, se) => sum + se.sets.length, 0)
-    const totalVolume = session.exercises.reduce((sum, se) =>
-        sum + se.sets.reduce((s2, set) => s2 + (set.durationSeconds ? 0 : Number(set.weightKg) * set.repsPerformed), 0), 0
-    )
+    const totalVolume = session.exercises.reduce((sum, se) => sum + sumSetsVolume(se.sets), 0)
 
     // Generate social feed items (fire-and-forget)
     generateSessionFeedItems(user.id, sessionId, durationMin, totalSets, totalVolume)

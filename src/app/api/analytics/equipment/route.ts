@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
 import { resolveAnalyticsUser } from '@/lib/analytics-auth'
+import { toDateKey } from '@/lib/utils'
 
 export async function GET(request: Request) {
     const { userId, error } = await resolveAnalyticsUser(request)
@@ -40,7 +41,7 @@ export async function GET(request: Request) {
         for (const eq of se.exercise.equipment) {
             const existing = equipmentMap.get(eq.equipmentId)
             const maxW = se.sets.reduce((max, set) => Math.max(max, Number(set.weightKg)), 0)
-            const dateKey = se.session.startedAt.toISOString().split('T')[0]
+            const dateKey = toDateKey(se.session.startedAt)
 
             if (existing) {
                 existing.sessionDates.add(dateKey)

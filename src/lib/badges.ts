@@ -1,5 +1,6 @@
 import prisma from '@/lib/prisma'
 import { getStreakInfo } from '@/lib/streak'
+import { sumSetsVolume } from '@/lib/utils'
 
 export interface BadgeDefinition {
     key: string
@@ -218,11 +219,7 @@ export async function updateChallengeProgress(userId: string): Promise<string[]>
                 })
                 currentValue = Math.round(
                     sessions.reduce((total, s) =>
-                        total + s.exercises.reduce((eTotal, e) =>
-                            eTotal + e.sets.reduce((sTotal, set) =>
-                                sTotal + (set.durationSeconds ? 0 : Number(set.weightKg) * set.repsPerformed), 0
-                            ), 0
-                        ), 0
+                        total + s.exercises.reduce((eTotal, e) => eTotal + sumSetsVolume(e.sets), 0), 0
                     )
                 )
                 break

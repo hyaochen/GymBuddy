@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
 import { getCurrentUser } from '@/lib/auth'
+import { getFriendIds } from '@/lib/friends'
 
 export async function GET(req: NextRequest) {
     const user = await getCurrentUser()
@@ -9,17 +10,7 @@ export async function GET(req: NextRequest) {
     const cursor = req.nextUrl.searchParams.get('cursor')
     const limit = 20
 
-    // Get friend IDs
-    const friendships = await prisma.friendship.findMany({
-        where: {
-            status: 'ACCEPTED',
-            OR: [{ requesterId: user.id }, { receiverId: user.id }],
-        },
-    })
-
-    const friendIds = friendships.map(f =>
-        f.requesterId === user.id ? f.receiverId : f.requesterId
-    )
+    const friendIds = await getFriendIds(user.id)
 
     // Get feed: own items (all) + friends' public items
     const items = await prisma.activityFeedItem.findMany({

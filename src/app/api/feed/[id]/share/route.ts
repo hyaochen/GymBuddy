@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
 import { getCurrentUser } from '@/lib/auth'
 import { sendPushToMany } from '@/lib/push-scheduler'
+import { getFriendIds } from '@/lib/friends'
 
 export async function POST(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
     const user = await getCurrentUser()
@@ -28,17 +29,7 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ id
 }
 
 async function notifyFriendsOfShare(userId: string, userName: string, type: string, data: string | null) {
-    const friendships = await prisma.friendship.findMany({
-        where: {
-            status: 'ACCEPTED',
-            OR: [{ requesterId: userId }, { receiverId: userId }],
-        },
-        select: { requesterId: true, receiverId: true },
-    })
-
-    const friendIds = friendships.map(f =>
-        f.requesterId === userId ? f.receiverId : f.requesterId
-    )
+    const friendIds = await getFriendIds(userId)
     if (friendIds.length === 0) return
 
     const profile = await prisma.userProfile.findUnique({

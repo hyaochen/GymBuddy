@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
 import { getCurrentUser } from '@/lib/auth'
-import { epley1rm } from '@/lib/utils'
+import { epley1rm, sumSetsVolume, toDateKey } from '@/lib/utils'
 
 export async function GET(req: NextRequest) {
     const user = await getCurrentUser()
@@ -32,9 +32,9 @@ export async function GET(req: NextRequest) {
                 const maxWeight = Math.max(...sets.map(set => Number(set.weightKg)))
                 const maxRepsAtMax = sets.filter(set => Number(set.weightKg) === maxWeight).reduce((max, set) => Math.max(max, set.repsPerformed), 0)
                 const estimated1rm = epley1rm(maxWeight, maxRepsAtMax)
-                const totalVolume = sets.reduce((sum, set) => sum + (set.durationSeconds ? 0 : Number(set.weightKg) * set.repsPerformed), 0)
+                const totalVolume = sumSetsVolume(sets)
                 return {
-                    date: s.startedAt.toISOString().split('T')[0],
+                    date: toDateKey(s.startedAt),
                     maxWeight,
                     estimated1rm: Math.round(estimated1rm * 4) / 4,
                     totalVolume: Math.round(totalVolume),
@@ -54,12 +54,10 @@ export async function GET(req: NextRequest) {
     })
 
     const chartData = sessions.map(s => {
-        const totalVolume = s.exercises.reduce((sum, se) =>
-            sum + se.sets.reduce((s2, set) => s2 + (set.durationSeconds ? 0 : Number(set.weightKg) * set.repsPerformed), 0), 0
-        )
+        const totalVolume = s.exercises.reduce((sum, se) => sum + sumSetsVolume(se.sets), 0)
         const totalSets = s.exercises.reduce((sum, se) => sum + se.sets.length, 0)
         return {
-            date: s.startedAt.toISOString().split('T')[0],
+            date: toDateKey(s.startedAt),
             totalVolume: Math.round(totalVolume),
             totalSets,
             durationMin: s.durationMin || 0,

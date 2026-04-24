@@ -6,6 +6,7 @@ import {
     AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from 'recharts'
 import { Calendar, Clock, Dumbbell, TrendingUp, ChevronDown, ChevronUp, Trash2, Pencil, Check, X } from 'lucide-react'
+import { sumSetsVolume, exName as extractExName } from '@/lib/utils'
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -49,14 +50,15 @@ function formatDateFull(iso: string) {
     return new Date(iso).toLocaleDateString('zh-TW', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'short' })
 }
 function calcVolume(session: SessionSummary) {
-    return Math.round(session.exercises.reduce((s, e) =>
-        s + e.sets.reduce((s2, set) => s2 + (set.durationSeconds ? 0 : Number(set.weightKg) * set.repsPerformed), 0), 0))
+    return Math.round(
+        session.exercises.reduce((s, e) => s + sumSetsVolume(e.sets), 0)
+    )
 }
 function calcSets(session: SessionSummary) {
     return session.exercises.reduce((s, e) => s + e.sets.length, 0)
 }
 function exName(raw: string) {
-    return raw.includes(' / ') ? raw.split(' / ')[1] : raw
+    return extractExName(raw)
 }
 
 // ─── Inline Set Editor ───────────────────────────────────────────────────────

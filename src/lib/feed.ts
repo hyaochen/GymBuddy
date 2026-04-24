@@ -1,6 +1,8 @@
 import prisma from '@/lib/prisma'
 import { getStreakInfo, STREAK_MILESTONES } from '@/lib/streak'
 import { sendPushToMany } from '@/lib/push-scheduler'
+import { getFriendIds } from '@/lib/friends'
+import { exName } from '@/lib/utils'
 
 /**
  * Auto-generate feed items after session completion.
@@ -29,10 +31,7 @@ export async function generateSessionFeedItems(
     // Skip feed item if session has no real training data (0 sets or no duration)
     if (totalSets === 0 || !durationMin || durationMin <= 0) return
 
-    const exerciseNames = session.exercises.map(e => {
-        const name = e.exercise.name
-        return name.includes(' / ') ? name.split(' / ')[1] : name
-    })
+    const exerciseNames = session.exercises.map(e => exName(e.exercise.name))
 
     await prisma.activityFeedItem.create({
         data: {
@@ -63,9 +62,7 @@ export async function generateSessionFeedItems(
     })
 
     for (const pr of recentPRs) {
-        const exerciseName = pr.exercise.name.includes(' / ')
-            ? pr.exercise.name.split(' / ')[1]
-            : pr.exercise.name
+        const exerciseName = exName(pr.exercise.name)
 
         await prisma.activityFeedItem.create({
             data: {
@@ -117,19 +114,7 @@ async function notifyFriendsOfActivity(
     totalSets: number,
     currentStreak: number,
 ) {
-    // Find accepted friends
-    const friendships = await prisma.friendship.findMany({
-        where: {
-            status: 'ACCEPTED',
-            OR: [{ requesterId: userId }, { receiverId: userId }],
-        },
-        select: { requesterId: true, receiverId: true },
-    })
-
-    const friendIds = friendships.map(f =>
-        f.requesterId === userId ? f.receiverId : f.requesterId
-    )
-
+    const friendIds = await getFriendIds(userId)
     if (friendIds.length === 0) return
 
     // Get user display name

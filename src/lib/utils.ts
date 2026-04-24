@@ -43,3 +43,41 @@ export function formatDateTime(date: Date | string): string {
         minute: '2-digit',
     })
 }
+
+// YYYY-MM-DD in the app's timezone (Asia/Taipei). Single source of truth for
+// date-keying across streak, heatmap, charts, analytics — every previous copy
+// used toISOString().split('T')[0] which is UTC and caused off-by-one for
+// sessions finished past local midnight.
+export function toDateKey(d: Date): string {
+    return new Intl.DateTimeFormat('en-CA', {
+        timeZone: 'Asia/Taipei',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+    }).format(d)
+}
+
+// Volume for a single set. Time-based sets (durationSeconds != null) don't
+// contribute to weight-volume — returns 0.
+interface VolumeSet {
+    durationSeconds: number | null
+    weightKg: number | string | { toNumber: () => number }
+    repsPerformed: number
+}
+export function calcSetVolume(set: VolumeSet): number {
+    if (set.durationSeconds) return 0
+    return Number(set.weightKg) * set.repsPerformed
+}
+
+// Volume for an array of sets (or an array of sessionExercises each with .sets).
+export function sumSetsVolume(sets: VolumeSet[]): number {
+    return sets.reduce((acc, s) => acc + calcSetVolume(s), 0)
+}
+
+// Exercise name splits on " / " to grab the Chinese half when available.
+// Shared convention across EquipmentStats, ProgressChart, history, session pages.
+export function exName(name: string | null | undefined): string {
+    if (!name) return ''
+    const idx = name.indexOf(' / ')
+    return idx >= 0 ? name.slice(idx + 3) : name
+}

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
 import { resolveAnalyticsUser } from '@/lib/analytics-auth'
+import { sumSetsVolume } from '@/lib/utils'
 
 // Map bodyRegion enum to the 8 radar categories
 const REGION_MAP: Record<string, string> = {
@@ -78,9 +79,7 @@ export async function GET(request: Request) {
         const target = isThisWeek ? thisWeek : lastWeek
 
         for (const se of s.exercises) {
-            const setVolume = se.sets.reduce((sum, set) =>
-                sum + (set.durationSeconds ? 0 : Number(set.weightKg) * set.repsPerformed), 0
-            )
+            const setVolume = sumSetsVolume(se.sets)
 
             // Distribute volume to muscle groups
             const primaryMuscles = se.exercise.muscles.filter(m => m.isPrimary)

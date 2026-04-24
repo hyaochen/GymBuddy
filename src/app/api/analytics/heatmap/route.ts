@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
 import { resolveAnalyticsUser } from '@/lib/analytics-auth'
+import { toDateKey } from '@/lib/utils'
 
 export async function GET(request: Request) {
     const { userId, error } = await resolveAnalyticsUser(request)
@@ -27,7 +28,7 @@ export async function GET(request: Request) {
     const dailySetCountMap = new Map<string, number>()
 
     for (const s of sessions) {
-        const dateKey = s.startedAt.toISOString().split('T')[0]
+        const dateKey = toDateKey(s.startedAt)
         let volume = 0
         let setCount = 0
         for (const se of s.exercises) {
@@ -45,7 +46,7 @@ export async function GET(request: Request) {
     const days: { date: string; volume: number; trained: boolean }[] = []
     for (let i = 89; i >= 0; i--) {
         const d = new Date(Date.now() - i * 24 * 60 * 60 * 1000)
-        const key = d.toISOString().split('T')[0]
+        const key = toDateKey(d)
         const volume = dailyVolumeMap.get(key) || 0
         const setCount = dailySetCountMap.get(key) || 0
         // A day counts as trained if it has ANY completed sets (including duration-only)
