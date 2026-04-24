@@ -2,7 +2,7 @@
 set -eu
 
 echo "[gymbuddy] Pushing Prisma schema to database..."
-npx prisma db push
+npx prisma db push --accept-data-loss
 
 echo "[gymbuddy] Running database seed..."
 npx prisma db seed || true

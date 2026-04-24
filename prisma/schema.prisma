@@ -85,7 +85,7 @@ model User {
   sharedTemplates        SharedTemplate[]
   templateLikes          TemplateLike[]
   badges                 UserBadge[]
-  pushSubscription       PushSubscription?
+  pushSubscriptions      PushSubscription[]
 
   @@index([email])
   @@map("users")
@@ -502,8 +502,8 @@ model TemplateLike {
 
 model PushSubscription {
   id        String   @id @default(cuid())
-  userId    String   @unique
-  endpoint  String
+  userId    String
+  endpoint  String   @unique
   p256dh    String
   auth      String
   createdAt DateTime @default(now())

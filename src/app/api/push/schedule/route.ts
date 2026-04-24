@@ -4,18 +4,29 @@ import { schedulePush, cancelPush } from '@/lib/push-scheduler'
 
 export const runtime = 'nodejs'
 
-// POST /api/push/schedule  — schedule a notification at endTime
-// Body: { endTime: number (ms timestamp) }
+// POST /api/push/schedule  — schedule a notification
+// Body: {
+//   endTime?: number,       // ms timestamp (legacy, client clock)
+//   durationMs?: number,    // preferred: server computes endTime locally to dodge clock drift
+//   tag?: string,           // optional unique tag per set (e.g. rest-end-${sessionId}-${setNum})
+// }
 export async function POST(req: NextRequest) {
     const user = await getCurrentUser()
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-    const { endTime } = await req.json()
-    if (!endTime || typeof endTime !== 'number') {
-        return NextResponse.json({ error: 'Invalid endTime' }, { status: 400 })
+    const { endTime, durationMs, tag } = await req.json()
+    if ((!endTime || typeof endTime !== 'number') && (!durationMs || typeof durationMs !== 'number')) {
+        return NextResponse.json({ error: 'Invalid endTime or durationMs' }, { status: 400 })
     }
 
-    schedulePush(user.id, endTime, '⏱️ 休息結束！', '準備好下一組了嗎？點擊繼續訓練')
+    const resolvedEndTime = typeof endTime === 'number' ? endTime : Date.now() + (durationMs as number)
+    schedulePush(
+        user.id,
+        resolvedEndTime,
+        '⏱️ 休息結束！',
+        '準備好下一組了嗎？點擊繼續訓練',
+        { durationMs: typeof durationMs === 'number' ? durationMs : undefined, tag: typeof tag === 'string' ? tag : undefined },
+    )
     return NextResponse.json({ ok: true })
 }
 

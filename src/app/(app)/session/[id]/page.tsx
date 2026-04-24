@@ -79,6 +79,7 @@ type State = {
 type Action =
     | { type: 'LOADED'; session: Session; defaults: Record<string, PlanDefaults> }
     | { type: 'ADJ_WEIGHT'; delta: number }
+    | { type: 'SET_WEIGHT_EXACT'; value: number }
     | { type: 'ADJ_REPS'; delta: number }
     | { type: 'ADJ_DURATION'; delta: number }
     | { type: 'TIMING_START' }
@@ -223,6 +224,8 @@ function reducer(state: State, action: Action): State {
         }
         case 'ADJ_WEIGHT':
             return { ...state, weight: Math.max(0, Math.round((state.weight + action.delta) * 4) / 4) }
+        case 'SET_WEIGHT_EXACT':
+            return { ...state, weight: Math.max(0, Math.round(action.value * 100) / 100) }
         case 'ADJ_REPS':
             return { ...state, reps: Math.max(1, state.reps + action.delta) }
         case 'ADJ_DURATION':
@@ -558,22 +561,30 @@ export default function ActiveSessionPage({ params }: { params: Promise<{ id: st
                 }),
             })
             const data = await res.json()
+            // Unique tag per set — avoids iOS Safari's silent-push throttling on repeated same-tag notifications
+            const notifTag = `rest-end-${sessionId}-${state.setNum}`
             // Pre-schedule 60 s of repeating alarm (Web Audio, fires even in background)
             scheduleAlarm(restSeconds)
-            // Send absolute endTime to SW (local fallback for when app is briefly in background)
+            // Send absolute endTime + unique tag to SW (local fallback for when app is briefly in background)
             if (swRegRef.current?.active) {
                 swRegRef.current.active.postMessage({
                     type: 'SCHEDULE_NOTIFICATION',
                     endTime: restEndTime,
                     title: '⏱️ 休息結束！',
                     body: '準備好下一組了嗎？點擊繼續訓練',
+                    tag: notifTag,
                 })
             }
-            // Server-side Web Push via APNs — reliable even after iOS kills the SW
+            // Server-side Web Push via APNs — reliable even after iOS kills the SW.
+            // Send durationMs (server computes its own endTime) to dodge client/server clock drift.
             fetch('/api/push/schedule', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ endTime: restEndTime }),
+                body: JSON.stringify({
+                    durationMs: restSeconds * 1000,
+                    endTime: restEndTime, // legacy fallback
+                    tag: notifTag,
+                }),
             }).catch(() => {})
             dispatch({
                 type: 'SET_DONE',
@@ -1088,6 +1099,20 @@ export default function ActiveSessionPage({ params }: { params: Promise<{ id: st
                                         +{delta}
                                     </button>
                                 ))}
+                            </div>
+                            {/* Custom weight input — allows precise values (0.1 kg granularity) */}
+                            <div className="mt-2 flex items-center justify-center gap-2">
+                                <label className="text-[11px] text-muted-foreground">🎯 精確重量</label>
+                                <input
+                                    type="number"
+                                    inputMode="decimal"
+                                    step={0.1}
+                                    min={0}
+                                    value={weight}
+                                    onChange={e => dispatch({ type: 'SET_WEIGHT_EXACT', value: parseFloat(e.target.value) || 0 })}
+                                    className="w-20 h-9 text-center text-sm font-semibold bg-muted rounded-lg outline-none focus:ring-2 focus:ring-primary tabular-nums"
+                                />
+                                <span className="text-[11px] text-muted-foreground">kg</span>
                             </div>
                         </div>
 
