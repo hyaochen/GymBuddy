@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
 import { resolveAnalyticsUser } from '@/lib/analytics-auth'
 import { epley1rm } from '@/lib/utils'
+import { addTaipeiDays, formatTaipeiMonthDay, startOfTaipeiWeekUtc } from '@/lib/timezone'
 
 export async function GET(req: NextRequest) {
     const { userId, error } = await resolveAnalyticsUser(req)
@@ -13,9 +14,7 @@ export async function GET(req: NextRequest) {
     }
 
     // Last 12 weeks
-    const since = new Date()
-    since.setDate(since.getDate() - 12 * 7)
-    since.setHours(0, 0, 0, 0)
+    const since = addTaipeiDays(startOfTaipeiWeekUtc(new Date()), -11 * 7)
 
     const sessions = await prisma.workoutSession.findMany({
         where: {
@@ -35,12 +34,9 @@ export async function GET(req: NextRequest) {
     // Build weekly buckets
     const weeks: { label: string; start: Date; end: Date }[] = []
     for (let i = 11; i >= 0; i--) {
-        const weekStart = new Date()
-        weekStart.setDate(weekStart.getDate() - i * 7 - weekStart.getDay())
-        weekStart.setHours(0, 0, 0, 0)
-        const weekEnd = new Date(weekStart)
-        weekEnd.setDate(weekEnd.getDate() + 7)
-        const label = `${weekStart.getMonth() + 1}/${weekStart.getDate()}`
+        const weekStart = addTaipeiDays(startOfTaipeiWeekUtc(new Date()), -i * 7)
+        const weekEnd = addTaipeiDays(weekStart, 7)
+        const label = formatTaipeiMonthDay(weekStart)
         weeks.push({ label, start: weekStart, end: weekEnd })
     }
 

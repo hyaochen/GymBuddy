@@ -1,5 +1,6 @@
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
+import { taipeiDateKey } from "@/lib/timezone"
 
 export function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs))
@@ -31,12 +32,13 @@ export function formatRestSeconds(seconds: number): string {
 
 export function formatDate(date: Date | string): string {
     const d = typeof date === 'string' ? new Date(date) : date
-    return d.toLocaleDateString('zh-TW', { month: 'short', day: 'numeric', weekday: 'short' })
+    return d.toLocaleDateString('zh-TW', { timeZone: 'Asia/Taipei', month: 'short', day: 'numeric', weekday: 'short' })
 }
 
 export function formatDateTime(date: Date | string): string {
     const d = typeof date === 'string' ? new Date(date) : date
     return d.toLocaleString('zh-TW', {
+        timeZone: 'Asia/Taipei',
         month: 'short',
         day: 'numeric',
         hour: '2-digit',
@@ -49,12 +51,7 @@ export function formatDateTime(date: Date | string): string {
 // used toISOString().split('T')[0] which is UTC and caused off-by-one for
 // sessions finished past local midnight.
 export function toDateKey(d: Date): string {
-    return new Intl.DateTimeFormat('en-CA', {
-        timeZone: 'Asia/Taipei',
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-    }).format(d)
+    return taipeiDateKey(d)
 }
 
 // Volume for a single set. Time-based sets (durationSeconds != null) don't

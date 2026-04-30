@@ -105,10 +105,11 @@ export default function MuscleRadar({ userId }: { userId?: string } = {}) {
                                 fontSize: '12px',
                             }}
                             labelStyle={{ color: 'hsl(var(--foreground))' }}
-                            formatter={(value: number, name: string, props: { payload: { rawThisWeek: number; rawLastWeek: number } }) => {
-                                const raw = name === '本週' ? props.payload.rawThisWeek : props.payload.rawLastWeek
-                                return [`${raw.toLocaleString()} kg`, name]
-                            }}
+                            formatter={((_value: unknown, name: string | undefined, props: { payload: { rawThisWeek: number; rawLastWeek: number } }) => {
+                                const safeName = name ?? ''
+                                const raw = safeName === '本週' ? props.payload.rawThisWeek : props.payload.rawLastWeek
+                                return [`${raw.toLocaleString()} kg`, safeName]
+                            }) as never}
                         />
                     </RadarChart>
                 </ResponsiveContainer>

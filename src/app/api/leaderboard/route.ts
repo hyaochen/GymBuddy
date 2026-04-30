@@ -3,18 +3,17 @@ import prisma from '@/lib/prisma'
 import { getCurrentUser } from '@/lib/auth'
 import { getFriendIds } from '@/lib/friends'
 import { toDateKey, sumSetsVolume } from '@/lib/utils'
+import { addTaipeiDays, diffTaipeiDateKeys, startOfTaipeiDayUtc, startOfTaipeiWeekUtc } from '@/lib/timezone'
 
 function computeCurrentStreak(dates: string[]): number {
     if (dates.length === 0) return 0
     const sorted = Array.from(new Set(dates)).sort().reverse()
     const today = toDateKey(new Date())
-    const yesterday = toDateKey(new Date(Date.now() - 86400000))
+    const yesterday = toDateKey(addTaipeiDays(new Date(), -1))
     if (sorted[0] !== today && sorted[0] !== yesterday) return 0
     let streak = 1
     for (let i = 1; i < sorted.length; i++) {
-        const prev = new Date(sorted[i - 1] + 'T00:00:00Z').getTime()
-        const curr = new Date(sorted[i] + 'T00:00:00Z').getTime()
-        if (Math.round((prev - curr) / 86400000) === 1) streak++
+        if (diffTaipeiDateKeys(sorted[i - 1], sorted[i]) === 1) streak++
         else break
     }
     return streak
@@ -64,7 +63,7 @@ export async function GET() {
         .sort((a, b) => b.currentStreak - a.currentStreak)
 
     // 2. This week's volume
-    const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
+    const weekAgo = startOfTaipeiWeekUtc(new Date())
     const weekSessions = await prisma.workoutSession.findMany({
         where: {
             userId: { in: allIds },
@@ -88,8 +87,7 @@ export async function GET() {
         .sort((a, b) => b.volume - a.volume)
 
     // 3. Most sessions this month
-    const monthAgo = new Date()
-    monthAgo.setDate(monthAgo.getDate() - 30)
+    const monthAgo = addTaipeiDays(startOfTaipeiDayUtc(new Date()), -29)
     const monthSessions = await prisma.workoutSession.groupBy({
         by: ['userId'],
         where: {

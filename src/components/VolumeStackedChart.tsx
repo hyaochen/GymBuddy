@@ -88,10 +88,11 @@ export default function VolumeStackedChart({ userId }: { userId?: string } = {})
                                 fontSize: '12px',
                             }}
                             labelStyle={{ color: 'hsl(var(--foreground))' }}
-                            formatter={(value: number, name: string) => [
-                                `${value.toLocaleString()} kg`,
-                                MUSCLE_LABELS[name] || name,
-                            ]}
+                            formatter={((value: number | undefined, name: string | undefined) => {
+                                const v = value ?? 0
+                                const n = name ?? ''
+                                return [`${v.toLocaleString()} kg`, MUSCLE_LABELS[n] || n]
+                            }) as never}
                         />
                         <Legend
                             formatter={(value: string) => MUSCLE_LABELS[value] || value}

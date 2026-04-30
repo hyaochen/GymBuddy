@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
 import { resolveAnalyticsUser } from '@/lib/analytics-auth'
 import { sumSetsVolume } from '@/lib/utils'
+import { addTaipeiDays, startOfTaipeiWeekUtc } from '@/lib/timezone'
 
 // Map bodyRegion enum to the 8 radar categories
 const REGION_MAP: Record<string, string> = {
@@ -39,13 +40,8 @@ export async function GET(request: Request) {
     const { userId, error } = await resolveAnalyticsUser(request)
     if (error) return NextResponse.json({ error }, { status: 401 })
 
-    const now = new Date()
-    const startOfThisWeek = new Date(now)
-    startOfThisWeek.setDate(now.getDate() - now.getDay())
-    startOfThisWeek.setHours(0, 0, 0, 0)
-
-    const startOfLastWeek = new Date(startOfThisWeek)
-    startOfLastWeek.setDate(startOfLastWeek.getDate() - 7)
+    const startOfThisWeek = startOfTaipeiWeekUtc(new Date())
+    const startOfLastWeek = addTaipeiDays(startOfThisWeek, -7)
 
     // Get all sessions from last 2 weeks
     const sessions = await prisma.workoutSession.findMany({

@@ -4,6 +4,7 @@ import { cookies } from "next/headers"
 import prisma from "@/lib/prisma"
 import { signSession } from "@/lib/session"
 import { rpID, origin } from "@/lib/webauthn"
+import { sessionCookieSecure } from "@/lib/cookie-security"
 
 export const runtime = "nodejs"
 
@@ -39,7 +40,7 @@ export async function POST(req: NextRequest) {
             expectedRPID: rpID,
             credential: {
                 id: passkey.credentialId,
-                publicKey: passkey.publicKey,
+                publicKey: new Uint8Array(passkey.publicKey),
                 counter: Number(passkey.counter),
                 transports: passkey.transports as AuthenticatorTransport[],
             },
@@ -59,7 +60,7 @@ export async function POST(req: NextRequest) {
         const token = await signSession({ userId: passkey.userId, issuedAt: Date.now() })
         cookieStore.set(SESSION_COOKIE, token, {
             httpOnly: true,
-            secure: process.env.COOKIE_SECURE === "true",
+            secure: sessionCookieSecure(),
             sameSite: "lax",
             maxAge: SESSION_MAX_AGE,
             path: "/",

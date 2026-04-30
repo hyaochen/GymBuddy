@@ -1,15 +1,25 @@
 import { NextRequest, NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
 import { getCurrentUser } from '@/lib/auth'
+import { parseRouteId } from '@/lib/validation'
 
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
     const user = await getCurrentUser()
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     const { id } = await params
+    const challengeId = parseRouteId(id)
+    if (!challengeId) return NextResponse.json({ error: 'Not found' }, { status: 404 })
 
-    const challenge = await prisma.challenge.findUnique({
-        where: { id },
+    const challenge = await prisma.challenge.findFirst({
+        where: {
+            id: challengeId,
+            OR: [
+                { isPublic: true },
+                { creatorId: user.id },
+                { participants: { some: { userId: user.id } } },
+            ],
+        },
         include: {
             creator: { select: { id: true, name: true } },
             exercise: { select: { id: true, name: true } },

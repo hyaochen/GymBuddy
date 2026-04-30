@@ -142,7 +142,7 @@ export default function LoginPage({
 
                     {supportsPasskey && (
                         <button
-                            onClick={handlePasskeyLogin}
+                            onClick={() => handlePasskeyLogin(false)}
                             disabled={passkeyLoading}
                             className="w-full h-12 rounded-lg border border-border bg-card text-foreground font-medium text-sm flex items-center justify-center gap-3 hover:bg-secondary transition-colors disabled:opacity-50"
                         >

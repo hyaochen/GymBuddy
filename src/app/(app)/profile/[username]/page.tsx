@@ -176,7 +176,7 @@ export default async function UserProfilePage({ params }: { params: Promise<{ us
                     </div>
                     <div className="space-y-2">
                         {recentFeed.map((item) => {
-                            const data = JSON.parse(item.data);
+                            const data = JSON.parse(item.data ?? "{}");
                             return (
                                 <div key={item.id} className="bg-muted/30 rounded-lg p-3 text-sm">
                                     <span className="font-medium">

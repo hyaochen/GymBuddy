@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
 import { getCurrentUser } from '@/lib/auth'
+import { addTaipeiDays, startOfTaipeiDayUtc } from '@/lib/timezone'
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ username: string }> }) {
     const user = await getCurrentUser()
@@ -53,8 +54,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ user
     }
 
     // Get 12 weeks of PR data for both users
-    const twelveWeeksAgo = new Date()
-    twelveWeeksAgo.setDate(twelveWeeksAgo.getDate() - 84)
+    const twelveWeeksAgo = addTaipeiDays(startOfTaipeiDayUtc(new Date()), -84)
 
     const [myPRs, friendPRs, exercise] = await Promise.all([
         prisma.personalRecord.findMany({

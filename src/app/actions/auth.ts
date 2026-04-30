@@ -6,6 +6,7 @@ import * as argon2 from "argon2"
 import prisma from "@/lib/prisma"
 import { signSession } from "@/lib/session"
 import { createRateLimiter } from "@/lib/rate-limiter"
+import { sessionCookieSecure } from "@/lib/cookie-security"
 
 const SESSION_COOKIE = "session"
 const SESSION_MAX_AGE = 60 * 60 * 24 * 30 // 30 days
@@ -13,9 +14,9 @@ const SESSION_MAX_AGE = 60 * 60 * 24 * 30 // 30 days
 // 5 failed attempts per (IP + normalized identifier) → block for 15 minutes.
 // Keying on IP+identifier prevents one attacker from locking out a real user's
 // account by spamming failures against their email.
-const loginLimiter = createRateLimiter({ maxAttempts: 5, windowMs: 15 * 60 * 1000 })
+const loginLimiter = createRateLimiter({ namespace: "auth:login", maxAttempts: 5, windowMs: 15 * 60 * 1000 })
 // 10 registrations per IP per hour
-const registerLimiter = createRateLimiter({ maxAttempts: 10, windowMs: 60 * 60 * 1000 })
+const registerLimiter = createRateLimiter({ namespace: "auth:register", maxAttempts: 10, windowMs: 60 * 60 * 1000 })
 
 async function clientIp(): Promise<string> {
     const h = await headers()
@@ -36,8 +37,8 @@ export async function login(formData: FormData) {
     const ip = await clientIp()
     const limitKey = `${ip}|${identifier}`
 
-    if (loginLimiter.isBlocked(limitKey)) {
-        const remaining = Math.ceil(loginLimiter.remainingSeconds(limitKey) / 60)
+    if (await loginLimiter.isBlocked(limitKey)) {
+        const remaining = Math.ceil(await loginLimiter.remainingSeconds(limitKey) / 60)
         redirect("/login?error=" + encodeURIComponent(`登入嘗試過多，請 ${remaining} 分鐘後再試`))
     }
 
@@ -51,23 +52,23 @@ export async function login(formData: FormData) {
         },
     })
     if (!user || !user.passwordHash) {
-        loginLimiter.record(limitKey)
+        await loginLimiter.record(limitKey)
         redirect("/login?error=" + encodeURIComponent("帳號或密碼錯誤"))
     }
 
     const valid = await argon2.verify(user.passwordHash, password)
     if (!valid) {
-        loginLimiter.record(limitKey)
+        await loginLimiter.record(limitKey)
         redirect("/login?error=" + encodeURIComponent("帳號或密碼錯誤"))
     }
 
-    loginLimiter.reset(limitKey)
+    await loginLimiter.reset(limitKey)
 
     const token = await signSession({ userId: user.id, issuedAt: Date.now() })
     const cookieStore = await cookies()
     cookieStore.set(SESSION_COOKIE, token, {
         httpOnly: true,
-        secure: process.env.COOKIE_SECURE === "true",
+        secure: sessionCookieSecure(),
         sameSite: "lax",
         maxAge: SESSION_MAX_AGE,
         path: "/",
@@ -91,11 +92,11 @@ export async function register(formData: FormData) {
     }
 
     const ip = await clientIp()
-    if (registerLimiter.isBlocked(ip)) {
-        const remaining = Math.ceil(registerLimiter.remainingSeconds(ip) / 60)
+    if (await registerLimiter.isBlocked(ip)) {
+        const remaining = Math.ceil(await registerLimiter.remainingSeconds(ip) / 60)
         redirect("/register?error=" + encodeURIComponent(`註冊過於頻繁，請 ${remaining} 分鐘後再試`))
     }
-    registerLimiter.record(ip)
+    await registerLimiter.record(ip)
 
     const existingEmail = await prisma.user.findFirst({
         where: { email: { equals: email, mode: "insensitive" } },
@@ -119,7 +120,7 @@ export async function register(formData: FormData) {
     const cookieStore = await cookies()
     cookieStore.set(SESSION_COOKIE, token, {
         httpOnly: true,
-        secure: process.env.COOKIE_SECURE === "true",
+        secure: sessionCookieSecure(),
         sameSite: "lax",
         maxAge: SESSION_MAX_AGE,
         path: "/",

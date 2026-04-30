@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from "react"
 import { Users, Activity, Trophy, UserPlus, Check, X, Search, Trash2, Eye, EyeOff, Flame, Dumbbell, Calendar, Swords, BookTemplate, Plus, Clock, Target, TrendingUp, ArrowRight, Heart, Download, ChevronDown } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { addTaipeiDays, parseTaipeiDateInput, taipeiDateKey } from "@/lib/timezone"
 import PRShareCard from "@/components/PRShareCard"
 
 type Tab = "feed" | "friends" | "leaderboard"
@@ -117,7 +118,7 @@ function getActivityDescription(type: string, data: Record<string, unknown> | nu
     if (!data) return "完成了活動"
     switch (type) {
         case "WORKOUT_COMPLETED": {
-            const parts = []
+            const parts: string[] = []
             if (data.dayName) parts.push(String(data.dayName))
             else if (data.planName) parts.push(String(data.planName))
             else parts.push("訓練")
@@ -130,9 +131,9 @@ function getActivityDescription(type: string, data: Record<string, unknown> | nu
             return `完成了 ${parts.join(" · ")}`
         }
         case "PR_ACHIEVED":
-            return `🏆 新 PR！${data.exerciseName} ${data.weightKg} kg × ${data.reps} 下 (1RM ≈ ${Number(data.estimated1rm).toFixed(1)} kg)`
+            return `🏆 新 PR！${String(data.exerciseName)} ${String(data.weightKg)} kg × ${String(data.reps)} 下 (1RM ≈ ${Number(data.estimated1rm).toFixed(1)} kg)`
         case "STREAK_MILESTONE":
-            return `🔥 連續訓練 ${data.streakDays} 天！`
+            return `🔥 連續訓練 ${String(data.streakDays)} 天！`
         default:
             return "完成了活動"
     }
@@ -351,11 +352,10 @@ export default function SocialPage() {
                                 </div>
                             </div>
 
-                            {/* Content */}
-                            <p className="text-sm">{getActivityDescription(item.type, item.data)}</p>
+                            <p className="text-sm">{String(getActivityDescription(item.type, item.data))}</p>
 
                             {/* Exercise list for workouts */}
-                            {item.type === "WORKOUT_COMPLETED" && item.data?.exercises && (
+                            {item.type === "WORKOUT_COMPLETED" && Array.isArray(item.data?.exercises) && (
                                 <div className="flex flex-wrap gap-1.5">
                                     {(item.data.exercises as string[]).map((name, i) => (
                                         <span key={i} className="text-xs bg-secondary text-secondary-foreground rounded-lg px-2 py-0.5">
@@ -809,7 +809,7 @@ function CreateChallengeForm({ onCreated, onCancel }: { onCreated: () => void; o
     const [description, setDescription] = useState("")
     const [type, setType] = useState("TOTAL_SESSIONS")
     const [targetValue, setTargetValue] = useState("")
-    const [startDate, setStartDate] = useState(new Date().toISOString().split("T")[0])
+    const [startDate, setStartDate] = useState(taipeiDateKey(new Date()))
     const [endDate, setEndDate] = useState("")
     const [submitting, setSubmitting] = useState(false)
     const [exerciseId, setExerciseId] = useState("")
@@ -817,11 +817,9 @@ function CreateChallengeForm({ onCreated, onCancel }: { onCreated: () => void; o
     const [error, setError] = useState("")
 
     // Default end date: 30 days from now
-    useState(() => {
-        const d = new Date()
-        d.setDate(d.getDate() + 30)
-        setEndDate(d.toISOString().split("T")[0])
-    })
+    useEffect(() => {
+        setEndDate(taipeiDateKey(addTaipeiDays(new Date(), 30)))
+    }, [])
 
     // Fetch exercises when WEIGHT_PR is selected
     useEffect(() => {
@@ -860,8 +858,8 @@ function CreateChallengeForm({ onCreated, onCancel }: { onCreated: () => void; o
                 type,
                 targetValue: Number(targetValue),
                 exerciseId: type === "WEIGHT_PR" ? exerciseId : undefined,
-                startDate: new Date(startDate).toISOString(),
-                endDate: new Date(endDate).toISOString(),
+                startDate: parseTaipeiDateInput(startDate).toISOString(),
+                endDate: parseTaipeiDateInput(endDate).toISOString(),
             }),
         })
 

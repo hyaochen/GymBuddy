@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
 import { resolveAnalyticsUser } from '@/lib/analytics-auth'
 import { sumSetsVolume } from '@/lib/utils'
+import { addTaipeiDays, formatTaipeiMonthDay, startOfTaipeiWeekUtc } from '@/lib/timezone'
 
 const REGION_MAP: Record<string, string> = {
     CHEST: 'Chest',
@@ -19,9 +20,7 @@ export async function GET(request: Request) {
     if (error) return NextResponse.json({ error }, { status: 401 })
 
     // Last 8 weeks
-    const since = new Date()
-    since.setDate(since.getDate() - 8 * 7)
-    since.setHours(0, 0, 0, 0)
+    const since = addTaipeiDays(startOfTaipeiWeekUtc(new Date()), -7 * 7)
 
     const sessions = await prisma.workoutSession.findMany({
         where: {
@@ -51,12 +50,9 @@ export async function GET(request: Request) {
     // Build week labels
     const weeks: { label: string; start: Date; end: Date }[] = []
     for (let i = 7; i >= 0; i--) {
-        const weekStart = new Date()
-        weekStart.setDate(weekStart.getDate() - i * 7 - weekStart.getDay())
-        weekStart.setHours(0, 0, 0, 0)
-        const weekEnd = new Date(weekStart)
-        weekEnd.setDate(weekEnd.getDate() + 7)
-        const label = `${weekStart.getMonth() + 1}/${weekStart.getDate()}`
+        const weekStart = addTaipeiDays(startOfTaipeiWeekUtc(new Date()), -i * 7)
+        const weekEnd = addTaipeiDays(weekStart, 7)
+        const label = formatTaipeiMonthDay(weekStart)
         weeks.push({ label, start: weekStart, end: weekEnd })
     }
 

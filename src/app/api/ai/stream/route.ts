@@ -20,10 +20,10 @@ export async function POST(req: NextRequest) {
         return new Response('Unauthorized', { status: 401 })
     }
 
-    if (aiLimiter.isBlocked(user.id)) {
+    if (await aiLimiter.isBlocked(user.id)) {
         return new Response('AI 使用次數已達上限，請稍後再試（每小時 30 次）', { status: 429 })
     }
-    aiLimiter.record(user.id)
+    await aiLimiter.record(user.id)
 
     let body: { question?: string; bookFilter?: string; top_k?: number }
     try {

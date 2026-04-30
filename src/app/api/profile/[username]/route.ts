@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
 import { getCurrentUser } from '@/lib/auth'
 import { getStreakInfo } from '@/lib/streak'
+import { BADGE_MAP } from '@/lib/badges'
 
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ username: string }> }) {
     const user = await getCurrentUser()
@@ -82,7 +83,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ use
         result.recentFeed = recentFeed.map(f => ({
             id: f.id,
             type: f.type,
-            data: JSON.parse(f.data),
+            data: JSON.parse(f.data ?? '{}'),
             isPublic: f.isPublic,
             createdAt: f.createdAt,
         }))
@@ -91,14 +92,13 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ use
     // Badges
     const badges = await prisma.userBadge.findMany({
         where: { userId: target.id },
-        include: { badge: true },
         orderBy: { earnedAt: 'desc' },
     })
     result.badges = badges.map(b => ({
-        name: b.badge.name,
-        description: b.badge.description,
-        icon: b.badge.icon,
-        category: b.badge.category,
+        name: BADGE_MAP.get(b.badgeKey)?.name ?? b.badgeKey,
+        description: BADGE_MAP.get(b.badgeKey)?.description ?? '',
+        icon: BADGE_MAP.get(b.badgeKey)?.icon ?? '',
+        category: BADGE_MAP.get(b.badgeKey)?.category ?? 'milestone',
         earnedAt: b.earnedAt,
     }))
 

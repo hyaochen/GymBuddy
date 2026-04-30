@@ -4,6 +4,7 @@ import { cookies } from "next/headers"
 import prisma from "@/lib/prisma"
 import { getCurrentUser } from "@/lib/auth"
 import { rpName, rpID } from "@/lib/webauthn"
+import { sessionCookieSecure } from "@/lib/cookie-security"
 
 export const runtime = "nodejs"
 
@@ -34,7 +35,7 @@ export async function GET() {
     const cookieStore = await cookies()
     cookieStore.set("webauthn-challenge", options.challenge, {
         httpOnly: true,
-        secure: process.env.COOKIE_SECURE === "true",
+        secure: sessionCookieSecure(),
         sameSite: "lax",
         maxAge: 300, // 5 minutes
         path: "/",

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { cookies } from "next/headers"
 import prisma from "@/lib/prisma"
 import { signSession } from "@/lib/session"
+import { sessionCookieSecure } from "@/lib/cookie-security"
 
 export const runtime = "nodejs"
 
@@ -17,6 +18,7 @@ interface GoogleTokenResponse {
 interface GoogleUserInfo {
     sub: string       // Google user ID
     email: string
+    email_verified?: boolean
     name: string
     picture?: string
 }
@@ -77,13 +79,23 @@ export async function GET(req: NextRequest) {
         }
 
         const googleUser: GoogleUserInfo = await userInfoRes.json()
+        if (googleUser.email_verified !== true) {
+            console.warn("[google-auth] Rejected unverified email", { googleId: googleUser.sub })
+            return NextResponse.redirect(new URL("/login?error=" + encodeURIComponent("Google email is not verified"), baseUrl))
+        }
+        const verifiedEmail = googleUser.email.trim().toLowerCase()
 
         // Find or create user
-        let user = await prisma.user.findFirst({
-            where: { OR: [{ googleId: googleUser.sub }, { email: googleUser.email }] },
-        })
+        let user = await prisma.user.findUnique({ where: { googleId: googleUser.sub } })
+        if (!user) {
+            user = await prisma.user.findUnique({ where: { email: verifiedEmail } })
+        }
 
         if (user) {
+            if (user.googleId && user.googleId !== googleUser.sub) {
+                console.warn("[google-auth] Rejected mismatched Google account link", { userId: user.id })
+                return NextResponse.redirect(new URL("/login?error=" + encodeURIComponent("Google account mismatch"), baseUrl))
+            }
             // Link Google ID if not yet linked
             if (!user.googleId) {
                 user = await prisma.user.update({
@@ -94,7 +106,7 @@ export async function GET(req: NextRequest) {
         } else {
             // Create new user with Google account
             // Generate a unique name if needed
-            let name = googleUser.name || googleUser.email.split("@")[0]
+            let name = googleUser.name || verifiedEmail.split("@")[0]
             const existingName = await prisma.user.findUnique({ where: { name } })
             if (existingName) {
                 name = `${name}_${googleUser.sub.slice(-4)}`
@@ -102,7 +114,7 @@ export async function GET(req: NextRequest) {
 
             user = await prisma.user.create({
                 data: {
-                    email: googleUser.email,
+                    email: verifiedEmail,
                     name,
                     googleId: googleUser.sub,
                     passwordHash: null,
@@ -118,7 +130,7 @@ export async function GET(req: NextRequest) {
         const token = await signSession({ userId: user.id, issuedAt: Date.now() })
         cookieStore.set(SESSION_COOKIE, token, {
             httpOnly: true,
-            secure: process.env.COOKIE_SECURE === "true",
+            secure: sessionCookieSecure(),
             sameSite: "lax",
             maxAge: SESSION_MAX_AGE,
             path: "/",

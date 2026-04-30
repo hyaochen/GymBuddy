@@ -2,44 +2,34 @@ import { NextRequest, NextResponse } from "next/server"
 import { generateAuthenticationOptions } from "@simplewebauthn/server"
 import { cookies } from "next/headers"
 import { rpID } from "@/lib/webauthn"
-import prisma from "@/lib/prisma"
+import { createRateLimiter } from "@/lib/rate-limiter"
+import { sessionCookieSecure } from "@/lib/cookie-security"
+import { forwardedClientIp } from "@/lib/request-ip"
 
 export const runtime = "nodejs"
 
-export async function GET(req: NextRequest) {
-    // Optional: narrow to a specific user's credentials when username known.
-    // Omitted (discoverable credential flow) for the silent Face-ID login.
-    const username = req.nextUrl.searchParams.get("username")?.trim()
+const passkeyOptionsLimiter = createRateLimiter({
+    namespace: "webauthn:auth-options",
+    maxAttempts: 20,
+    windowMs: 15 * 60 * 1000,
+})
 
-    let allowCredentials: { id: string; transports?: AuthenticatorTransport[] }[] | undefined
-    if (username) {
-        const passkeys = await prisma.passkey.findMany({
-            where: {
-                user: {
-                    OR: [
-                        { name: { equals: username, mode: "insensitive" } },
-                        { email: { equals: username, mode: "insensitive" } },
-                    ],
-                },
-            },
-            select: { credentialId: true, transports: true },
-        })
-        allowCredentials = passkeys.map((pk) => ({
-            id: pk.credentialId,
-            transports: pk.transports as AuthenticatorTransport[],
-        }))
+export async function GET(req: NextRequest) {
+    const ip = forwardedClientIp(req.headers)
+    if (await passkeyOptionsLimiter.isBlocked(ip)) {
+        return NextResponse.json({ error: "Too many passkey attempts" }, { status: 429 })
     }
+    await passkeyOptionsLimiter.record(ip)
 
     const options = await generateAuthenticationOptions({
         rpID,
         userVerification: "preferred",
-        ...(allowCredentials ? { allowCredentials } : {}),
     })
 
     const cookieStore = await cookies()
     cookieStore.set("webauthn-challenge", options.challenge, {
         httpOnly: true,
-        secure: process.env.COOKIE_SECURE === "true",
+        secure: sessionCookieSecure(),
         sameSite: "lax",
         maxAge: 300,
         path: "/",

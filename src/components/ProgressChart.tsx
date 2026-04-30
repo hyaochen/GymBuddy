@@ -134,11 +134,12 @@ export default function ProgressChart({ userId }: { userId?: string } = {}) {
                                     fontSize: '12px',
                                 }}
                                 labelStyle={{ color: 'hsl(var(--foreground))' }}
-                                formatter={(value: number | null, name: string) => {
-                                    if (value == null) return ['--', name]
-                                    if (name === '總訓練量') return [`${value.toLocaleString()} kg`, name]
-                                    return [`${value} kg`, name]
-                                }}
+                                formatter={((value: any, name: string | undefined) => {
+                                    const safeName = name ?? ''
+                                    if (value == null) return ['--', safeName]
+                                    if (safeName === '總訓練量') return [`${value.toLocaleString()} kg`, safeName]
+                                    return [`${value} kg`, safeName]
+                                }) as never}
                             />
                             <Legend wrapperStyle={{ fontSize: '11px' }} />
                             <Bar

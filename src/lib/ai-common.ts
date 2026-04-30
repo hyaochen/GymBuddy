@@ -17,7 +17,7 @@ export const SYSTEM_PROMPT = `你是 GymBuddy 的 AI 健身助理。請遵守以
 // Shared limiter instance so /api/ai and /api/ai/stream count against the
 // same budget (previously each route had its own limiter, so a user could
 // effectively get 60/hr by alternating endpoints).
-export const aiLimiter = createRateLimiter({ maxAttempts: 30, windowMs: 60 * 60 * 1000 })
+export const aiLimiter = createRateLimiter({ namespace: 'ai', maxAttempts: 30, windowMs: 60 * 60 * 1000 })
 
 const INJECTION_PATTERNS: RegExp[] = [
     /ignore\s+(all\s+)?previous\s+(instructions?|prompts?)/gi,

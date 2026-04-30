@@ -1,86 +1,74 @@
-/**
- * In-memory rate limiter.
- *
- * Usage:
- *   const limiter = createRateLimiter({ maxAttempts: 5, windowMs: 15 * 60 * 1000 })
- *   if (limiter.isBlocked(key)) { ... }
- *   limiter.record(key)
- *   limiter.reset(key)
- */
-
-interface RateLimitEntry {
-    count: number
-    firstAttempt: number
-}
+import prisma from '@/lib/prisma'
 
 interface RateLimiterOptions {
-    /** Maximum attempts within the window before blocking */
+    namespace?: string
     maxAttempts: number
-    /** Time window in milliseconds */
     windowMs: number
 }
 
 export interface RateLimiter {
-    /** Check if the key is currently blocked */
-    isBlocked(key: string): boolean
-    /** Record an attempt for the key */
-    record(key: string): void
-    /** Reset (clear) attempts for the key (e.g. on successful login) */
-    reset(key: string): void
-    /** Get remaining seconds until unblocked (0 if not blocked) */
-    remainingSeconds(key: string): number
+    isBlocked(key: string): Promise<boolean>
+    record(key: string): Promise<void>
+    reset(key: string): Promise<void>
+    remainingSeconds(key: string): Promise<number>
+}
+
+function scopedKey(options: RateLimiterOptions, key: string): string {
+    const namespace = options.namespace ?? `${options.maxAttempts}:${options.windowMs}`
+    return `${namespace}:${key}`
 }
 
 export function createRateLimiter(options: RateLimiterOptions): RateLimiter {
-    const { maxAttempts, windowMs } = options
-    const store = new Map<string, RateLimitEntry>()
-
-    // Periodically clean up expired entries to prevent memory leak
-    const CLEANUP_INTERVAL = 10 * 60 * 1000 // 10 minutes
-    setInterval(() => {
-        const now = Date.now()
-        for (const [key, entry] of store) {
-            if (now - entry.firstAttempt > windowMs) {
-                store.delete(key)
-            }
-        }
-    }, CLEANUP_INTERVAL).unref()
-
-    function getEntry(key: string): RateLimitEntry | null {
-        const entry = store.get(key)
+    async function activeEntry(key: string) {
+        const now = new Date()
+        const entry = await prisma.rateLimitBucket.findUnique({ where: { key } })
         if (!entry) return null
-        // Window expired — clear it
-        if (Date.now() - entry.firstAttempt > windowMs) {
-            store.delete(key)
+        if (entry.expiresAt <= now) {
+            await prisma.rateLimitBucket.delete({ where: { key } }).catch(() => undefined)
             return null
         }
         return entry
     }
 
     return {
-        isBlocked(key: string): boolean {
-            const entry = getEntry(key)
-            return !!entry && entry.count >= maxAttempts
+        async isBlocked(key: string): Promise<boolean> {
+            const entry = await activeEntry(scopedKey(options, key))
+            return !!entry && entry.count >= options.maxAttempts
         },
 
-        record(key: string): void {
-            const entry = getEntry(key)
-            if (entry) {
-                entry.count++
-            } else {
-                store.set(key, { count: 1, firstAttempt: Date.now() })
-            }
+        async record(key: string): Promise<void> {
+            const scoped = scopedKey(options, key)
+            const now = new Date()
+            const expiresAt = new Date(now.getTime() + options.windowMs)
+
+            await prisma.$executeRaw`
+                INSERT INTO rate_limit_buckets ("key", "count", "windowStartedAt", "expiresAt", "updatedAt")
+                VALUES (${scoped}, 1, ${now}, ${expiresAt}, ${now})
+                ON CONFLICT ("key") DO UPDATE SET
+                    "count" = CASE
+                        WHEN rate_limit_buckets."expiresAt" <= ${now} THEN 1
+                        ELSE rate_limit_buckets."count" + 1
+                    END,
+                    "windowStartedAt" = CASE
+                        WHEN rate_limit_buckets."expiresAt" <= ${now} THEN ${now}
+                        ELSE rate_limit_buckets."windowStartedAt"
+                    END,
+                    "expiresAt" = CASE
+                        WHEN rate_limit_buckets."expiresAt" <= ${now} THEN ${expiresAt}
+                        ELSE rate_limit_buckets."expiresAt"
+                    END,
+                    "updatedAt" = ${now}
+            `
         },
 
-        reset(key: string): void {
-            store.delete(key)
+        async reset(key: string): Promise<void> {
+            await prisma.rateLimitBucket.delete({ where: { key: scopedKey(options, key) } }).catch(() => undefined)
         },
 
-        remainingSeconds(key: string): number {
-            const entry = getEntry(key)
-            if (!entry || entry.count < maxAttempts) return 0
-            const elapsed = Date.now() - entry.firstAttempt
-            return Math.max(0, Math.ceil((windowMs - elapsed) / 1000))
+        async remainingSeconds(key: string): Promise<number> {
+            const entry = await activeEntry(scopedKey(options, key))
+            if (!entry || entry.count < options.maxAttempts) return 0
+            return Math.max(0, Math.ceil((entry.expiresAt.getTime() - Date.now()) / 1000))
         },
     }
 }

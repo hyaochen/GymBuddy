@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
 import { getCurrentUser } from '@/lib/auth'
 import { generateOverloadSuggestion } from '@/lib/progressive-overload'
-import { updateExerciseSummary } from '@/lib/exercise-summary'
+import { updateExerciseSummary, recomputePersonalRecords } from '@/lib/exercise-summary'
 import { generateSessionFeedItems } from '@/lib/feed'
 import { checkSessionBadges, updateChallengeProgress } from '@/lib/badges'
 import { sumSetsVolume } from '@/lib/utils'
@@ -44,6 +44,28 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         data: { completedAt: now, durationMin, notes },
     })
 
+    const planDefaultsByExercise = new Map<string, {
+        defaultSets: number
+        defaultRepsMin: number
+        defaultRepsMax: number
+        defaultWeightKg: number | null
+    }>()
+
+    if (session.dayId) {
+        const exerciseIds = [...new Set(session.exercises.map(se => se.exerciseId))]
+        const planExercises = await prisma.workoutPlanExercise.findMany({
+            where: { dayId: session.dayId, exerciseId: { in: exerciseIds } },
+        })
+        for (const planEx of planExercises) {
+            planDefaultsByExercise.set(planEx.exerciseId, {
+                defaultSets: planEx.defaultSets,
+                defaultRepsMin: planEx.defaultRepsMin,
+                defaultRepsMax: planEx.defaultRepsMax,
+                defaultWeightKg: planEx.defaultWeightKg ? Number(planEx.defaultWeightKg) : null,
+            })
+        }
+    }
+
     // Generate overload suggestions for each exercise (skip time-based)
     const suggestions = []
     for (const se of session.exercises) {
@@ -58,18 +80,9 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
             defaultWeightKg: null as number | null,
         }
 
-        if (session.dayId) {
-            const planEx = await prisma.workoutPlanExercise.findFirst({
-                where: { dayId: session.dayId, exerciseId: se.exerciseId },
-            })
-            if (planEx) {
-                planDefaults = {
-                    defaultSets: planEx.defaultSets,
-                    defaultRepsMin: planEx.defaultRepsMin,
-                    defaultRepsMax: planEx.defaultRepsMax,
-                    defaultWeightKg: planEx.defaultWeightKg ? Number(planEx.defaultWeightKg) : null,
-                }
-            }
+        const planEx = planDefaultsByExercise.get(se.exerciseId)
+        if (planEx) {
+            planDefaults = planEx
         }
 
         const suggestion = generateOverloadSuggestion(
@@ -86,13 +99,14 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         suggestions.push(suggestion)
     }
 
-    // Update exercise summaries (fire-and-forget, non-blocking)
+    // Rebuild PRs and summaries only after the session is committed complete.
     const exerciseIds = session.exercises
         .filter(se => se.sets.length > 0)
         .map(se => se.exerciseId)
-    Promise.all(
-        exerciseIds.map(eid => updateExerciseSummary(user.id, eid))
-    ).catch(console.error)
+    await Promise.all(exerciseIds.flatMap(eid => [
+        recomputePersonalRecords(user.id, eid),
+        updateExerciseSummary(user.id, eid),
+    ]))
 
     // Calculate session summary (skip time-based sets for volume)
     const totalSets = session.exercises.reduce((sum, se) => sum + se.sets.length, 0)

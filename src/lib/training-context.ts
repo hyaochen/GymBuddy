@@ -5,11 +5,12 @@
 
 import prisma from '@/lib/prisma'
 import { Prisma } from '@prisma/client'
+import { addTaipeiDays, startOfTaipeiDayUtc, startOfTaipeiWeekUtc, taipeiDateKey } from '@/lib/timezone'
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
 function fmt(d: Date): string {
-    return d.toISOString().slice(0, 10)
+    return taipeiDateKey(d)
 }
 
 function decNum(v: Prisma.Decimal | number): number {
@@ -82,8 +83,7 @@ export async function getDirectAnswer(userId: string, question: string): Promise
 
     // ── Training frequency ──────────────────────────────────────────────────
     if (/頻率|幾次|多久/.test(q)) {
-        const fourWeeksAgo = new Date()
-        fourWeeksAgo.setDate(fourWeeksAgo.getDate() - 28)
+        const fourWeeksAgo = addTaipeiDays(startOfTaipeiDayUtc(new Date()), -28)
 
         const sessions = await prisma.workoutSession.findMany({
             where: {
@@ -153,8 +153,7 @@ export async function getDirectAnswer(userId: string, question: string): Promise
 // ── Analysis Context ─────────────────────────────────────────────────────────
 
 export async function getAnalysisContext(userId: string, question: string): Promise<string> {
-    const eightWeeksAgo = new Date()
-    eightWeeksAgo.setDate(eightWeeksAgo.getDate() - 56)
+    const eightWeeksAgo = addTaipeiDays(startOfTaipeiDayUtc(new Date()), -56)
 
     const parts: string[] = []
 
@@ -219,10 +218,8 @@ export async function getAnalysisContext(userId: string, question: string): Prom
 // ── Recommendation Context ───────────────────────────────────────────────────
 
 export async function getRecommendationContext(userId: string): Promise<string> {
-    const twoWeeksAgo = new Date()
-    twoWeeksAgo.setDate(twoWeeksAgo.getDate() - 14)
-    const eightWeeksAgo = new Date()
-    eightWeeksAgo.setDate(eightWeeksAgo.getDate() - 56)
+    const twoWeeksAgo = addTaipeiDays(startOfTaipeiDayUtc(new Date()), -14)
+    const eightWeeksAgo = addTaipeiDays(startOfTaipeiDayUtc(new Date()), -56)
 
     const parts: string[] = []
 
@@ -310,10 +307,5 @@ export async function getRecommendationContext(userId: string): Promise<string> 
 // ── Utility ──────────────────────────────────────────────────────────────────
 
 function getISOWeek(date: Date): string {
-    const d = new Date(date)
-    d.setHours(0, 0, 0, 0)
-    d.setDate(d.getDate() + 3 - ((d.getDay() + 6) % 7))
-    const yearStart = new Date(d.getFullYear(), 0, 4)
-    const weekNo = Math.ceil(((d.getTime() - yearStart.getTime()) / 86400000 + yearStart.getDay() + 1) / 7)
-    return `${d.getFullYear()}-W${String(weekNo).padStart(2, '0')}`
+    return taipeiDateKey(startOfTaipeiWeekUtc(date))
 }

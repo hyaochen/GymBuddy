@@ -2,12 +2,13 @@ import { NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
 import { resolveAnalyticsUser } from '@/lib/analytics-auth'
 import { toDateKey } from '@/lib/utils'
+import { addTaipeiDays, startOfTaipeiDayUtc } from '@/lib/timezone'
 
 export async function GET(request: Request) {
     const { userId, error } = await resolveAnalyticsUser(request)
     if (error) return NextResponse.json({ error }, { status: 401 })
 
-    const since = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000)
+    const since = addTaipeiDays(startOfTaipeiDayUtc(new Date()), -89)
 
     const sessions = await prisma.workoutSession.findMany({
         where: {
@@ -45,7 +46,7 @@ export async function GET(request: Request) {
 
     const days: { date: string; volume: number; trained: boolean }[] = []
     for (let i = 89; i >= 0; i--) {
-        const d = new Date(Date.now() - i * 24 * 60 * 60 * 1000)
+        const d = addTaipeiDays(new Date(), -i)
         const key = toDateKey(d)
         const volume = dailyVolumeMap.get(key) || 0
         const setCount = dailySetCountMap.get(key) || 0

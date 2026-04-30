@@ -1,20 +1,32 @@
 import { NextRequest, NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
 import { getCurrentUser } from '@/lib/auth'
+import { z } from 'zod'
+import { parseJsonBody } from '@/lib/validation'
+
+const createSessionSchema = z.object({
+    planId: z.string().min(8).max(64).nullable().optional(),
+    dayId: z.string().min(8).max(64).nullable().optional(),
+})
 
 export async function POST(req: NextRequest) {
     const user = await getCurrentUser()
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-    const body = await req.json()
-    const { planId, dayId } = body
+    const parsed = await parseJsonBody(req, createSessionSchema)
+    if ('response' in parsed) return parsed.response
+    const { planId, dayId } = parsed.data
 
     // Load the plan day with its exercises to create session exercises
     let sessionExercisesData: Array<{ exerciseId: string; orderIndex: number }> = []
 
+    if ((planId && !dayId) || (!planId && dayId)) {
+        return NextResponse.json({ error: 'planId and dayId must be provided together' }, { status: 400 })
+    }
+
     if (planId && dayId) {
-        const planDay = await prisma.workoutPlanDay.findUnique({
-            where: { id: dayId },
+        const planDay = await prisma.workoutPlanDay.findFirst({
+            where: { id: dayId, planId },
             include: {
                 exercises: {
                     include: { exercise: true },

@@ -1,30 +1,40 @@
 import { NextRequest, NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
 import { getCurrentUser } from '@/lib/auth'
-import { epley1rm } from '@/lib/utils'
+import { z } from 'zod'
+import { parseJsonBody, parseRouteId } from '@/lib/validation'
+
+const createSetSchema = z.object({
+    sessionExerciseId: z.string().min(8).max(64),
+    setNumber: z.coerce.number().int().positive().max(100),
+    repsPerformed: z.coerce.number().int().positive().max(1000),
+    weightKg: z.coerce.number().finite().min(0).max(9999.99),
+    durationSeconds: z.coerce.number().int().positive().max(24 * 60 * 60).nullable().optional(),
+    restAfterSeconds: z.coerce.number().int().min(0).max(24 * 60 * 60).nullable().optional(),
+})
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
     const user = await getCurrentUser()
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     const { id: sessionId } = await params
-    const body = await req.json()
-    const { sessionExerciseId, setNumber, repsPerformed, weightKg, durationSeconds, restAfterSeconds } = body
+    const validSessionId = parseRouteId(sessionId)
+    if (!validSessionId) return NextResponse.json({ error: 'Not found' }, { status: 404 })
 
-    if (!sessionExerciseId || !setNumber || repsPerformed === undefined || weightKg === undefined) {
-        return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
-    }
+    const parsed = await parseJsonBody(req, createSetSchema)
+    if ('response' in parsed) return parsed.response
+    const { sessionExerciseId, setNumber, repsPerformed, weightKg, durationSeconds, restAfterSeconds } = parsed.data
 
     // Verify sessionExercise belongs to the session param, the session belongs
     // to the user, and the session is still active (not completed).
-    const sessionExercise = await prisma.sessionExercise.findUnique({
-        where: { id: sessionExerciseId },
+    const sessionExercise = await prisma.sessionExercise.findFirst({
+        where: { id: sessionExerciseId, sessionId: validSessionId },
         include: { session: { select: { id: true, userId: true, completedAt: true } } },
     })
 
     if (
         !sessionExercise ||
-        sessionExercise.session.id !== sessionId ||
+        sessionExercise.session.id !== validSessionId ||
         sessionExercise.session.userId !== user.id
     ) {
         return NextResponse.json({ error: 'Not found' }, { status: 404 })
@@ -50,28 +60,5 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     })
 
     // Check for personal record (skip for time-based exercises — no weight-based PR)
-    let isNewPR = false
-    if (!durationSeconds) {
-        const estimated1rm = epley1rm(Number(weightKg), repsPerformed)
-        const existingPR = await prisma.personalRecord.findFirst({
-            where: { userId: user.id, exerciseId: sessionExercise.exerciseId },
-            orderBy: { estimated1rm: 'desc' },
-        })
-
-        if (!existingPR || estimated1rm > Number(existingPR.estimated1rm)) {
-            await prisma.personalRecord.create({
-                data: {
-                    userId: user.id,
-                    exerciseId: sessionExercise.exerciseId,
-                    weightKg,
-                    reps: repsPerformed,
-                    estimated1rm,
-                    achievedAt: new Date(),
-                },
-            })
-            isNewPR = true
-        }
-    }
-
-    return NextResponse.json({ set, isNewPR }, { status: 201 })
+    return NextResponse.json({ set, isNewPR: false }, { status: 201 })
 }

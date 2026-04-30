@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 import { cookies } from "next/headers"
+import { sessionCookieSecure } from "@/lib/cookie-security"
 
 export const runtime = "nodejs"
 
@@ -20,7 +21,7 @@ export async function GET() {
     const cookieStore = await cookies()
     cookieStore.set("oauth-state", state, {
         httpOnly: true,
-        secure: process.env.COOKIE_SECURE === "true",
+        secure: sessionCookieSecure(),
         sameSite: "lax",
         maxAge: 600, // 10 minutes
         path: "/",

@@ -86,6 +86,7 @@ model User {
   templateLikes          TemplateLike[]
   badges                 UserBadge[]
   pushSubscriptions      PushSubscription[]
+  pushJobs               PushJob[]
 
   @@index([email])
   @@map("users")
@@ -272,6 +273,9 @@ model WorkoutSession {
 
   @@index([userId])
   @@index([userId, startedAt])
+  @@index([dayId, completedAt])
+  @@index([userId, completedAt, startedAt])
+  @@index([userId, dayId, completedAt])
   @@index([planId])
   @@map("workout_sessions")
 }
@@ -288,6 +292,7 @@ model SessionExercise {
   sets SessionSet[]
 
   @@index([sessionId])
+  @@index([sessionId, id])
   @@index([exerciseId])
   @@map("session_exercises")
 }
@@ -441,6 +446,7 @@ model Challenge {
   participants ChallengeParticipant[]
 
   @@index([endDate])
+  @@index([isPublic, endDate])
   @@map("challenges")
 }
 
@@ -458,6 +464,7 @@ model ChallengeParticipant {
 
   @@unique([challengeId, userId])
   @@index([userId])
+  @@index([challengeId])
   @@map("challenge_participants")
 }
 
@@ -513,6 +520,38 @@ model PushSubscription {
 
   @@index([userId])
   @@map("push_subscriptions")
+}
+
+model PushJob {
+  id        String    @id @default(cuid())
+  userId    String
+  tag       String
+  title     String
+  body      String
+  fireAt    DateTime
+  status    String    @default("PENDING")
+  attempts  Int       @default(0)
+  sentAt    DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, tag])
+  @@index([status, fireAt])
+  @@index([userId, status])
+  @@map("push_jobs")
+}
+
+model RateLimitBucket {
+  key             String   @id
+  count           Int      @default(0)
+  windowStartedAt DateTime
+  expiresAt       DateTime
+  updatedAt       DateTime @updatedAt
+
+  @@index([expiresAt])
+  @@map("rate_limit_buckets")
 }
 
 // ─── Badges ─────────────────────────────────────────────────────────────────
