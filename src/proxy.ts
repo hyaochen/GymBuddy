@@ -5,7 +5,7 @@ import type { NextRequest } from 'next/server'
 // The Edge runtime cannot reliably access process.env.SESSION_SECRET from compiled modules,
 // so we skip session verification here and rely on server-side requireAuth() instead.
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
     return NextResponse.next()
 }
 

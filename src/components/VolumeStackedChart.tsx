@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import {
     BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
 } from 'recharts'
+import type { Formatter, NameType, ValueType } from 'recharts/types/component/DefaultTooltipContent'
 
 const MUSCLE_COLORS: Record<string, string> = {
     Chest: 'hsl(16 100% 55%)',      // primary orange
@@ -21,6 +22,12 @@ const MUSCLE_LABELS: Record<string, string> = {
     Arms: '手臂',
     Legs: '腿',
     Core: '核心',
+}
+
+const volumeTooltipFormatter: Formatter<ValueType, NameType> = (value, name) => {
+    const numericValue = Array.isArray(value) ? Number(value[0] ?? 0) : Number(value ?? 0)
+    const safeName = String(name ?? '')
+    return [`${numericValue.toLocaleString()} kg`, MUSCLE_LABELS[safeName] || safeName]
 }
 
 export default function VolumeStackedChart({ userId }: { userId?: string } = {}) {
@@ -88,11 +95,7 @@ export default function VolumeStackedChart({ userId }: { userId?: string } = {})
                                 fontSize: '12px',
                             }}
                             labelStyle={{ color: 'hsl(var(--foreground))' }}
-                            formatter={((value: number | undefined, name: string | undefined) => {
-                                const v = value ?? 0
-                                const n = name ?? ''
-                                return [`${v.toLocaleString()} kg`, MUSCLE_LABELS[n] || n]
-                            }) as never}
+                            formatter={volumeTooltipFormatter}
                         />
                         <Legend
                             formatter={(value: string) => MUSCLE_LABELS[value] || value}

@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { register } from "@/app/actions/auth"
-import { use, useState } from "react"
+import { use, useActionState } from "react"
 
 export default function RegisterPage({
     searchParams,
@@ -10,7 +10,7 @@ export default function RegisterPage({
     searchParams: Promise<{ error?: string }>
 }) {
     const { error } = use(searchParams)
-    const [submitting, setSubmitting] = useState(false)
+    const [registerState, registerAction, registerPending] = useActionState(register, { error })
 
     return (
         <div className="min-h-screen flex items-center justify-center p-4">
@@ -24,13 +24,13 @@ export default function RegisterPage({
                 <div className="bg-card rounded-xl border border-border p-6">
                     <h2 className="text-lg font-semibold mb-4">註冊</h2>
 
-                    {error && (
+                    {registerState.error && (
                         <div className="bg-destructive/15 border border-destructive/30 rounded-lg px-3 py-2 mb-4">
-                            <p className="text-destructive text-sm">{error}</p>
+                            <p className="text-destructive text-sm">{registerState.error}</p>
                         </div>
                     )}
 
-                    <form action={register} onSubmit={() => setSubmitting(true)} className="space-y-4">
+                    <form action={registerAction} className="space-y-4">
                         <div>
                             <label htmlFor="name" className="block text-sm font-medium text-foreground mb-1.5">
                                 暱稱
@@ -79,10 +79,10 @@ export default function RegisterPage({
 
                         <button
                             type="submit"
-                            disabled={submitting}
+                            disabled={registerPending}
                             className="w-full h-12 rounded-lg bg-primary text-primary-foreground font-semibold text-base hover:bg-primary/90 transition-colors disabled:opacity-60"
                         >
-                            {submitting ? "建立中..." : "建立帳號"}
+                            {registerPending ? "建立中..." : "建立帳號"}
                         </button>
                     </form>
 

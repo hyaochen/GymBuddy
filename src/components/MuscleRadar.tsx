@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import {
     RadarChart, Radar, PolarGrid, PolarAngleAxis, ResponsiveContainer, Tooltip, Legend,
 } from 'recharts'
+import type { Formatter, NameType, ValueType } from 'recharts/types/component/DefaultTooltipContent'
 
 type MuscleData = {
     muscle: string
@@ -20,6 +21,21 @@ const MUSCLE_LABELS: Record<string, string> = {
     Core: '核心',
     Quads: '股四頭',
     Hamstrings: '腿後',
+}
+
+type MuscleRadarTooltipPayload = {
+    rawThisWeek: number
+    rawLastWeek: number
+}
+
+const muscleRadarTooltipFormatter: Formatter<ValueType, NameType> = (_value, name, item) => {
+    const safeName = String(name ?? '')
+    const payload = item.payload as MuscleRadarTooltipPayload | undefined
+    const raw = safeName === '本週'
+        ? payload?.rawThisWeek ?? 0
+        : payload?.rawLastWeek ?? 0
+
+    return [`${raw.toLocaleString()} kg`, safeName]
 }
 
 export default function MuscleRadar({ userId }: { userId?: string } = {}) {
@@ -105,11 +121,7 @@ export default function MuscleRadar({ userId }: { userId?: string } = {}) {
                                 fontSize: '12px',
                             }}
                             labelStyle={{ color: 'hsl(var(--foreground))' }}
-                            formatter={((_value: unknown, name: string | undefined, props: { payload: { rawThisWeek: number; rawLastWeek: number } }) => {
-                                const safeName = name ?? ''
-                                const raw = safeName === '本週' ? props.payload.rawThisWeek : props.payload.rawLastWeek
-                                return [`${raw.toLocaleString()} kg`, safeName]
-                            }) as never}
+                            formatter={muscleRadarTooltipFormatter}
                         />
                     </RadarChart>
                 </ResponsiveContainer>

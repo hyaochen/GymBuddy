@@ -1,34 +1,27 @@
 "use client"
 
-import { useState } from "react"
+import { useActionState, useEffect, useState } from "react"
 import { Share2, X } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { shareTemplate, type ShareTemplateActionState } from "@/app/actions/templates"
+
+const initialShareTemplateState: ShareTemplateActionState = {
+    status: "idle",
+    message: "",
+}
 
 export default function ShareTemplateButton({ planId, planName }: { planId: string; planName: string }) {
     const [showForm, setShowForm] = useState(false)
     const [name, setName] = useState(planName)
     const [description, setDescription] = useState("")
     const [difficulty, setDifficulty] = useState("INTERMEDIATE")
-    const [submitting, setSubmitting] = useState(false)
-    const [result, setResult] = useState<{ type: "success" | "error"; text: string } | null>(null)
+    const [shareState, shareAction, sharePending] = useActionState(shareTemplate, initialShareTemplateState)
 
-    async function handleShare() {
-        setSubmitting(true)
-        setResult(null)
-        const res = await fetch("/api/templates/share", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ planId, name, description: description || null, difficulty }),
-        })
-        if (res.ok) {
-            setResult({ type: "success", text: "已成功分享為社群模板！" })
+    useEffect(() => {
+        if (shareState.status === "success") {
             setShowForm(false)
-        } else {
-            const data = await res.json()
-            setResult({ type: "error", text: data.error || "分享失敗" })
         }
-        setSubmitting(false)
-    }
+    }, [shareState.status])
 
     return (
         <>
@@ -40,14 +33,14 @@ export default function ShareTemplateButton({ planId, planName }: { planId: stri
                 <Share2 className="h-4 w-4" />
             </button>
 
-            {result && (
+            {shareState.status !== "idle" && (
                 <div className={cn(
                     "rounded-lg px-3 py-2 text-xs",
-                    result.type === "success"
+                    shareState.status === "success"
                         ? "bg-green-500/15 text-green-400 border border-green-500/30"
                         : "bg-destructive/15 text-destructive border border-destructive/30"
                 )}>
-                    {result.text}
+                    {shareState.message}
                 </div>
             )}
 
@@ -64,10 +57,12 @@ export default function ShareTemplateButton({ planId, planName }: { planId: stri
                             </button>
                         </div>
 
-                        <div className="space-y-3">
+                        <form action={shareAction} className="space-y-3">
+                            <input type="hidden" name="planId" value={planId} />
                             <div>
                                 <label className="text-xs text-muted-foreground block mb-1">模板名稱</label>
                                 <input
+                                    name="name"
                                     type="text"
                                     value={name}
                                     onChange={e => setName(e.target.value)}
@@ -77,6 +72,7 @@ export default function ShareTemplateButton({ planId, planName }: { planId: stri
                             <div>
                                 <label className="text-xs text-muted-foreground block mb-1">說明（選填）</label>
                                 <textarea
+                                    name="description"
                                     value={description}
                                     onChange={e => setDescription(e.target.value)}
                                     placeholder="描述一下這個訓練計畫..."
@@ -87,6 +83,7 @@ export default function ShareTemplateButton({ planId, planName }: { planId: stri
                             <div>
                                 <label className="text-xs text-muted-foreground block mb-1">難度</label>
                                 <select
+                                    name="difficulty"
                                     value={difficulty}
                                     onChange={e => setDifficulty(e.target.value)}
                                     className="w-full bg-secondary/50 border border-border rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
@@ -96,15 +93,15 @@ export default function ShareTemplateButton({ planId, planName }: { planId: stri
                                     <option value="ADVANCED">進階</option>
                                 </select>
                             </div>
-                        </div>
 
-                        <button
-                            onClick={handleShare}
-                            disabled={submitting || !name}
-                            className="w-full bg-primary text-primary-foreground rounded-xl py-2.5 text-sm font-medium hover:bg-primary/90 disabled:opacity-50 transition-colors"
-                        >
-                            {submitting ? "分享中..." : "分享為社群模板"}
-                        </button>
+                            <button
+                                type="submit"
+                                disabled={sharePending || !name}
+                                className="w-full bg-primary text-primary-foreground rounded-xl py-2.5 text-sm font-medium hover:bg-primary/90 disabled:opacity-50 transition-colors"
+                            >
+                                {sharePending ? "分享中..." : "分享為社群模板"}
+                            </button>
+                        </form>
                     </div>
                 </div>
             )}

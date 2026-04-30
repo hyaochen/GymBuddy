@@ -20,7 +20,7 @@ export async function POST(req: NextRequest) {
     }
 
     const resolvedEndTime = typeof endTime === 'number' ? endTime : Date.now() + (durationMs as number)
-    schedulePush(
+    await schedulePush(
         user.id,
         resolvedEndTime,
         '⏱️ 休息結束！',
@@ -35,6 +35,7 @@ export async function DELETE(req: NextRequest) {
     const user = await getCurrentUser()
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-    cancelPush(user.id)
+    const tag = new URL(req.url).searchParams.get('tag') ?? undefined
+    await cancelPush(user.id, tag)
     return NextResponse.json({ ok: true })
 }

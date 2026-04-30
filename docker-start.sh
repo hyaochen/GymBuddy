@@ -2,7 +2,7 @@
 set -eu
 
 echo "[gymbuddy] Applying Prisma migrations..."
-npx prisma migrate deploy
+./node_modules/.bin/prisma migrate deploy
 
 if [ "${NODE_ENV:-}" = "production" ] && [ "${COOKIE_SECURE:-}" != "true" ] && [ "${ALLOW_INSECURE_COOKIES:-}" != "true" ]; then
   echo "[gymbuddy] Refusing to start: COOKIE_SECURE=true is required in production."
@@ -10,11 +10,15 @@ if [ "${NODE_ENV:-}" = "production" ] && [ "${COOKIE_SECURE:-}" != "true" ] && [
 fi
 
 if [ "${RUN_DB_SEED:-false}" = "true" ]; then
-  echo "[gymbuddy] Running database seed..."
-  npx prisma db seed
+  if [ "${NODE_ENV:-}" = "production" ]; then
+    echo "[gymbuddy] Ignoring RUN_DB_SEED=true in production."
+  else
+    echo "[gymbuddy] Running database seed..."
+    ./node_modules/.bin/prisma db seed
+  fi
 else
   echo "[gymbuddy] Skipping database seed."
 fi
 
 echo "[gymbuddy] Starting Next.js on port 3000..."
-npx next start -H 0.0.0.0 -p 3000
+./node_modules/.bin/next start -H 0.0.0.0 -p 3000

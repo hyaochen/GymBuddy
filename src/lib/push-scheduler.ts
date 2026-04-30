@@ -2,8 +2,8 @@
  * push-scheduler.ts  —  Server-side Web Push scheduler
  *
  * Push subscriptions are persisted in the database (PushSubscription table).
- * Scheduled timers remain in-memory (rest timers are typically < 5 minutes,
- * losing them on restart is acceptable).
+ * Scheduled timers are persisted in PushJob and mirrored in-memory for short
+ * rest timers. PushJob's (userId, tag) unique key provides idempotency.
  *
  * VAPID FIX: web-push 3.x defaults to 12-hour JWT expiry. Apple APNs requires
  * ≤ 1 hour and returns 403 {"reason":"BadJwtToken"} otherwise.
@@ -17,8 +17,37 @@ import { URL } from 'url'
 import webpush from 'web-push'
 import prisma from '@/lib/prisma'
 
-// In-memory timer store (rest timers only — acceptable to lose on restart)
+// In-memory timer store for active rest timers. The DB is the source of truth.
 const timers = new Map<string, ReturnType<typeof setTimeout>>()
+
+const PUSH_JOB_STATUS = {
+    PENDING: 'PENDING',
+    SENDING: 'SENDING',
+    SENT: 'SENT',
+    FAILED: 'FAILED',
+    CANCELLED: 'CANCELLED',
+} as const
+
+function pushTimerKey(userId: string, tag: string) {
+    return `${userId}:${tag}`
+}
+
+function clearLocalTimers(userId: string, tag?: string) {
+    if (tag) {
+        const key = pushTimerKey(userId, tag)
+        const timer = timers.get(key)
+        if (timer) clearTimeout(timer)
+        timers.delete(key)
+        return
+    }
+
+    for (const [key, timer] of timers.entries()) {
+        if (key.startsWith(`${userId}:`)) {
+            clearTimeout(timer)
+            timers.delete(key)
+        }
+    }
+}
 
 // ─── Push event log (queryable via /api/push/log) ────────────────────────────
 interface PushLogEntry { ts: string; event: string; userId: string; detail?: string }
@@ -180,21 +209,43 @@ export async function getSubscriptionsForUsers(userIds: string[]): Promise<Map<s
     return map
 }
 
-export function schedulePush(
+export async function schedulePush(
     userId: string,
     endTime: number,
     title: string,
     body: string,
     opts: { durationMs?: number; tag?: string } = {},
 ) {
-    cancelPush(userId)
     // Prefer server-local duration to avoid client/server clock drift.
     // Fall back to (endTime - Date.now()) if caller didn't supply duration.
     const delay = Math.max(0, opts.durationMs ?? (endTime - Date.now()))
     const serverEndTime = Date.now() + delay
     const tag = opts.tag ?? 'rest-end'
+    const fireAt = new Date(serverEndTime)
     const scheduledAt = new Date().toISOString()
-    const expectedFireAt = new Date(serverEndTime).toISOString()
+    const expectedFireAt = fireAt.toISOString()
+
+    await cancelPush(userId)
+    await prisma.pushJob.upsert({
+        where: { userId_tag: { userId, tag } },
+        update: {
+            title,
+            body,
+            fireAt,
+            status: PUSH_JOB_STATUS.PENDING,
+            attempts: 0,
+            sentAt: null,
+        },
+        create: {
+            userId,
+            tag,
+            title,
+            body,
+            fireAt,
+            status: PUSH_JOB_STATUS.PENDING,
+        },
+    })
+
     addPushLog('SCHEDULED', userId, `delay=${Math.round(delay/1000)}s fire=${expectedFireAt} tag=${tag}`)
     console.log(`[push] 📋 Scheduled — user=${userId} delay=${Math.round(delay/1000)}s scheduledAt=${scheduledAt} expectedFireAt=${expectedFireAt} tag=${tag}`)
     const timer = setTimeout(async () => {
@@ -202,25 +253,76 @@ export function schedulePush(
         const drift = Date.now() - serverEndTime
         addPushLog('TIMER_FIRED', userId, `drift=${drift}ms actual=${actualFireAt} tag=${tag}`)
         console.log(`[push] ⏰ Timer fired — user=${userId} actualFireAt=${actualFireAt} drift=${drift}ms (scheduled ${scheduledAt}) tag=${tag}`)
-        timers.delete(userId)
-        const subs = await getAllSubscriptionsForUser(userId)
-        if (subs.length === 0) {
-            addPushLog('NO_SUBSCRIPTION', userId)
-            console.warn(`[push] ❌ No subscriptions for user ${userId}`)
-            return
-        }
-        addPushLog('FAN_OUT', userId, `count=${subs.length}`)
-        await Promise.allSettled(subs.map(sub => sendWithRetry(sub, userId, title, body, tag)))
+        timers.delete(pushTimerKey(userId, tag))
+        await firePushJob(userId, tag)
     }, delay)
-    timers.set(userId, timer)
+    timers.set(pushTimerKey(userId, tag), timer)
 }
 
-export function cancelPush(userId: string) {
-    const t = timers.get(userId)
-    if (t) { clearTimeout(t); timers.delete(userId) }
+export async function cancelPush(userId: string, tag?: string) {
+    clearLocalTimers(userId, tag)
+    const result = await prisma.pushJob.updateMany({
+        where: {
+            userId,
+            ...(tag ? { tag } : {}),
+            status: PUSH_JOB_STATUS.PENDING,
+        },
+        data: { status: PUSH_JOB_STATUS.CANCELLED },
+    })
+    if (result.count > 0) {
+        addPushLog('CANCELLED', userId, tag ? `tag=${tag}` : `count=${result.count}`)
+    }
 }
 
-async function sendWithRetry(sub: webpush.PushSubscription, userId: string, title: string, body: string, tag: string = 'rest-end') {
+async function firePushJob(userId: string, tag: string) {
+    const claim = await prisma.pushJob.updateMany({
+        where: {
+            userId,
+            tag,
+            status: PUSH_JOB_STATUS.PENDING,
+            fireAt: { lte: new Date(Date.now() + 1000) },
+        },
+        data: {
+            status: PUSH_JOB_STATUS.SENDING,
+            attempts: { increment: 1 },
+        },
+    })
+
+    if (claim.count === 0) {
+        addPushLog('JOB_SKIPPED', userId, `not pending tag=${tag}`)
+        return
+    }
+
+    const job = await prisma.pushJob.findUnique({ where: { userId_tag: { userId, tag } } })
+    if (!job) return
+
+    const subs = await getAllSubscriptionsForUser(userId)
+    if (subs.length === 0) {
+        addPushLog('NO_SUBSCRIPTION', userId, `tag=${tag}`)
+        console.warn(`[push] ❌ No subscriptions for user ${userId}`)
+        await prisma.pushJob.update({
+            where: { id: job.id },
+            data: { status: PUSH_JOB_STATUS.FAILED },
+        })
+        return
+    }
+
+    addPushLog('FAN_OUT', userId, `count=${subs.length} tag=${tag}`)
+    const results = await Promise.allSettled(
+        subs.map(sub => sendWithRetry(sub, userId, job.title, job.body, tag)),
+    )
+    const delivered = results.filter(r => r.status === 'fulfilled' && r.value).length
+
+    await prisma.pushJob.update({
+        where: { id: job.id },
+        data: {
+            status: delivered > 0 ? PUSH_JOB_STATUS.SENT : PUSH_JOB_STATUS.FAILED,
+            sentAt: delivered > 0 ? new Date() : null,
+        },
+    })
+}
+
+async function sendWithRetry(sub: webpush.PushSubscription, userId: string, title: string, body: string, tag: string = 'rest-end'): Promise<boolean> {
     const payload = JSON.stringify({ title, body, tag })
     const endpointTail = sub.endpoint.slice(-24)
     try {
@@ -242,6 +344,7 @@ async function sendWithRetry(sub: webpush.PushSubscription, userId: string, titl
             await removePushSubscription(userId, sub.endpoint)
             addPushLog('SUBSCRIPTION_REMOVED', userId, `Expired (410 Gone) endpoint=...${endpointTail}`)
         }
+        if (ok) return true
     } catch (err) {
         addPushLog('PUSH_ERROR', userId, `${String(err)} endpoint=...${endpointTail}`)
         console.error(`[push] ❌ Error for user ${userId} endpoint=...${endpointTail}:`, err)
@@ -255,11 +358,14 @@ async function sendWithRetry(sub: webpush.PushSubscription, userId: string, titl
                 await removePushSubscription(userId, sub.endpoint)
                 addPushLog('SUBSCRIPTION_REMOVED', userId, `Expired (410 Gone) endpoint=...${endpointTail}`)
             }
+            return retryOk
         } catch (retryErr) {
             addPushLog('PUSH_RETRY_ERROR', userId, `${String(retryErr)} endpoint=...${endpointTail}`)
             console.error(`[push] ❌ Retry also failed for user ${userId} endpoint=...${endpointTail}:`, retryErr)
         }
     }
+
+    return false
 }
 
 export async function sendPushNow(

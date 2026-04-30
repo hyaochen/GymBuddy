@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from 'react'
 import {
     ComposedChart, Line, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
 } from 'recharts'
+import type { Formatter, NameType, ValueType } from 'recharts/types/component/DefaultTooltipContent'
 import { ChevronDown } from 'lucide-react'
 
 type ProgressPoint = {
@@ -20,6 +21,15 @@ type ExerciseOption = {
 
 function exName(raw: string) {
     return raw.includes(' / ') ? raw.split(' / ')[1] : raw
+}
+
+const progressTooltipFormatter: Formatter<ValueType, NameType> = (value, name) => {
+    const safeName = String(name ?? '')
+    if (value == null) return ['--', safeName]
+
+    const numericValue = Array.isArray(value) ? Number(value[0] ?? 0) : Number(value)
+    if (safeName === '總訓練量') return [`${numericValue.toLocaleString()} kg`, safeName]
+    return [`${numericValue} kg`, safeName]
 }
 
 export default function ProgressChart({ userId }: { userId?: string } = {}) {
@@ -134,12 +144,7 @@ export default function ProgressChart({ userId }: { userId?: string } = {}) {
                                     fontSize: '12px',
                                 }}
                                 labelStyle={{ color: 'hsl(var(--foreground))' }}
-                                formatter={((value: any, name: string | undefined) => {
-                                    const safeName = name ?? ''
-                                    if (value == null) return ['--', safeName]
-                                    if (safeName === '總訓練量') return [`${value.toLocaleString()} kg`, safeName]
-                                    return [`${value} kg`, safeName]
-                                }) as never}
+                                formatter={progressTooltipFormatter}
                             />
                             <Legend wrapperStyle={{ fontSize: '11px' }} />
                             <Bar

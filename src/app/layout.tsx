@@ -1,9 +1,14 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import localFont from "next/font/local";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
 
-const inter = Inter({ subsets: ["latin"] });
+const inter = localFont({
+    src: [
+        { path: "./fonts/Inter-Regular.woff2", weight: "400", style: "normal" },
+        { path: "./fonts/Inter-SemiBold.woff2", weight: "600", style: "normal" },
+    ],
+});
 
 export const metadata: Metadata = {
     title: "GymBuddy - 健身追蹤器",
@@ -26,8 +31,6 @@ export const metadata: Metadata = {
 export const viewport = {
     width: "device-width",
     initialScale: 1,
-    maximumScale: 1,
-    userScalable: false,
 };
 
 export default function RootLayout({

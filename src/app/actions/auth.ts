@@ -18,6 +18,10 @@ const loginLimiter = createRateLimiter({ namespace: "auth:login", maxAttempts: 5
 // 10 registrations per IP per hour
 const registerLimiter = createRateLimiter({ namespace: "auth:register", maxAttempts: 10, windowMs: 60 * 60 * 1000 })
 
+export type AuthActionState = {
+    error?: string
+}
+
 async function clientIp(): Promise<string> {
     const h = await headers()
     const xff = h.get("x-forwarded-for")
@@ -25,12 +29,12 @@ async function clientIp(): Promise<string> {
     return h.get("x-real-ip") ?? "unknown"
 }
 
-export async function login(formData: FormData) {
+export async function login(_prevState: AuthActionState, formData: FormData): Promise<AuthActionState> {
     const rawEmail = formData.get("email") as string
     const password = formData.get("password") as string
 
     if (!rawEmail || !password) {
-        redirect("/login?error=" + encodeURIComponent("請填寫所有欄位"))
+        return { error: "請填寫所有欄位" }
     }
 
     const identifier = rawEmail.trim().toLowerCase()
@@ -39,7 +43,7 @@ export async function login(formData: FormData) {
 
     if (await loginLimiter.isBlocked(limitKey)) {
         const remaining = Math.ceil(await loginLimiter.remainingSeconds(limitKey) / 60)
-        redirect("/login?error=" + encodeURIComponent(`登入嘗試過多，請 ${remaining} 分鐘後再試`))
+        return { error: `登入嘗試過多，請 ${remaining} 分鐘後再試` }
     }
 
     // Support login by email OR by name (for test accounts). Case-insensitive match.
@@ -53,13 +57,13 @@ export async function login(formData: FormData) {
     })
     if (!user || !user.passwordHash) {
         await loginLimiter.record(limitKey)
-        redirect("/login?error=" + encodeURIComponent("帳號或密碼錯誤"))
+        return { error: "帳號或密碼錯誤" }
     }
 
     const valid = await argon2.verify(user.passwordHash, password)
     if (!valid) {
         await loginLimiter.record(limitKey)
-        redirect("/login?error=" + encodeURIComponent("帳號或密碼錯誤"))
+        return { error: "帳號或密碼錯誤" }
     }
 
     await loginLimiter.reset(limitKey)
@@ -77,24 +81,24 @@ export async function login(formData: FormData) {
     redirect("/")
 }
 
-export async function register(formData: FormData) {
+export async function register(_prevState: AuthActionState, formData: FormData): Promise<AuthActionState> {
     const name = (formData.get("name") as string | null)?.trim() ?? ""
     const rawEmail = (formData.get("email") as string | null) ?? ""
     const email = rawEmail.trim().toLowerCase()
     const password = formData.get("password") as string
 
     if (!name || !email || !password) {
-        redirect("/register?error=" + encodeURIComponent("請填寫所有欄位"))
+        return { error: "請填寫所有欄位" }
     }
 
     if (password.length < 6) {
-        redirect("/register?error=" + encodeURIComponent("密碼至少需要 6 個字元"))
+        return { error: "密碼至少需要 6 個字元" }
     }
 
     const ip = await clientIp()
     if (await registerLimiter.isBlocked(ip)) {
         const remaining = Math.ceil(await registerLimiter.remainingSeconds(ip) / 60)
-        redirect("/register?error=" + encodeURIComponent(`註冊過於頻繁，請 ${remaining} 分鐘後再試`))
+        return { error: `註冊過於頻繁，請 ${remaining} 分鐘後再試` }
     }
     await registerLimiter.record(ip)
 
@@ -105,7 +109,7 @@ export async function register(formData: FormData) {
         where: { name: { equals: name, mode: "insensitive" } },
     })
     if (existingEmail || existingName) {
-        redirect("/register?error=" + encodeURIComponent("此帳號資訊已被使用，請更換電子郵件或暱稱"))
+        return { error: "此帳號資訊已被使用，請更換電子郵件或暱稱" }
     }
 
     const passwordHash = await argon2.hash(password)

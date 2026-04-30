@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { login } from "@/app/actions/auth"
-import { use, useState, useEffect } from "react"
+import { use, useActionState, useState, useEffect } from "react"
 import { browserSupportsWebAuthn, startAuthentication } from "@simplewebauthn/browser"
 import { useRouter } from "next/navigation"
 
@@ -12,7 +12,7 @@ export default function LoginPage({
     searchParams: Promise<{ error?: string }>
 }) {
     const { error } = use(searchParams)
-    const [submitting, setSubmitting] = useState(false)
+    const [loginState, loginAction, loginPending] = useActionState(login, { error })
     const [supportsPasskey, setSupportsPasskey] = useState(false)
     const [passkeyLoading, setPasskeyLoading] = useState(false)
     const [passkeyError, setPasskeyError] = useState("")
@@ -72,13 +72,13 @@ export default function LoginPage({
                 <div className="bg-card rounded-xl border border-border p-6">
                     <h2 className="text-lg font-semibold mb-4">登入</h2>
 
-                    {error && (
+                    {loginState.error && (
                         <div className="bg-destructive/15 border border-destructive/30 rounded-lg px-3 py-2 mb-4">
-                            <p className="text-destructive text-sm">{error}</p>
+                            <p className="text-destructive text-sm">{loginState.error}</p>
                         </div>
                     )}
 
-                    <form action={login} onSubmit={() => setSubmitting(true)} className="space-y-4">
+                    <form action={loginAction} className="space-y-4">
                         <div>
                             <label htmlFor="email" className="block text-sm font-medium text-foreground mb-1.5">
                                 帳號 / 電子郵件
@@ -111,10 +111,10 @@ export default function LoginPage({
 
                         <button
                             type="submit"
-                            disabled={submitting}
+                            disabled={loginPending}
                             className="w-full h-12 rounded-lg bg-primary text-primary-foreground font-semibold text-base hover:bg-primary/90 transition-colors disabled:opacity-60"
                         >
-                            {submitting ? "登入中..." : "登入"}
+                            {loginPending ? "登入中..." : "登入"}
                         </button>
                     </form>
 
