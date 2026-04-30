@@ -1,0 +1,1 @@
+process.env.SESSION_SECRET ||= '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef'
