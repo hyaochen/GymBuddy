@@ -149,6 +149,47 @@ self.addEventListener('push', event => {
     })())
 })
 
+// Browser/APNs may rotate the push subscription endpoint silently.
+// Without this handler the server keeps trying the dead endpoint, gets 410 Gone,
+// removes the row, and the user's notifications go dark until they relaunch the PWA.
+// (See vault/projects/gymbuddy/audit-2026-05-11-buttons-and-notifications.md ISSUE 2.)
+self.addEventListener('pushsubscriptionchange', event => {
+    const oldEndpoint = event.oldSubscription?.endpoint
+    addLog('PUSH_SUBSCRIPTION_CHANGED', {
+        oldEndpoint: oldEndpoint ? oldEndpoint.slice(-24) : 'none',
+    })
+    event.waitUntil((async () => {
+        try {
+            const applicationServerKey = event.oldSubscription?.options?.applicationServerKey
+            if (!applicationServerKey) {
+                // No key to resubscribe with — server cannot recover here; wait for the
+                // next visibilitychange resync from the client to send a fresh subscription.
+                addLog('PUSH_RESUBSCRIBE_SKIPPED', { reason: 'no_application_server_key' })
+                return
+            }
+            const newSub = await self.registration.pushManager.subscribe({
+                userVisibleOnly: true,
+                applicationServerKey,
+            })
+            const res = await fetch('/api/push/subscribe', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify({
+                    subscription: newSub.toJSON(),
+                    oldEndpoint,
+                }),
+            })
+            addLog('PUSH_RESUBSCRIBED_OK', {
+                newEndpoint: newSub.endpoint.slice(-24),
+                status: res.status,
+            })
+        } catch (err) {
+            addLog('PUSH_RESUBSCRIBE_FAILED', { error: String(err) })
+        }
+    })())
+})
+
 // When user taps the notification, focus or open the app
 self.addEventListener('notificationclick', event => {
     event.notification.close()

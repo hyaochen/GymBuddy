@@ -37,7 +37,40 @@ export default function PushSubscriber() {
             } catch (e) {
                 console.error('[PushSubscriber] subscription failed:', e)
             }
-        }).catch(() => {})
+        }).catch(err => {
+            console.warn('[PushSubscriber] serviceWorker.register failed:', err)
+        })
+    }, [])
+
+    // Resync the push subscription whenever the app comes back into the foreground.
+    // The browser may have rotated the endpoint silently while the tab was hidden;
+    // pairing this with the sw.js `pushsubscriptionchange` handler ensures the server
+    // ends up with a working subscription even if the SW-side resubscribe failed
+    // (e.g. fetch swallowed because the SW had no session cookies).
+    useEffect(() => {
+        if (typeof document === 'undefined') return
+        if (typeof navigator === 'undefined' || !('serviceWorker' in navigator)) return
+
+        const onVisible = async () => {
+            if (document.visibilityState !== 'visible') return
+            if (typeof Notification === 'undefined' || Notification.permission !== 'granted') return
+            try {
+                const reg = await navigator.serviceWorker.getRegistration()
+                if (!reg) return
+                const sub = await reg.pushManager.getSubscription()
+                if (!sub) return
+                await fetch('/api/push/subscribe', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ subscription: sub.toJSON() }),
+                })
+            } catch (err) {
+                console.warn('[PushSubscriber] visibility resync failed:', err)
+            }
+        }
+
+        document.addEventListener('visibilitychange', onVisible)
+        return () => document.removeEventListener('visibilitychange', onVisible)
     }, [])
 
     return null
