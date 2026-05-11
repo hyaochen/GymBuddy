@@ -17,19 +17,21 @@ export default function DayCard({ dayId, planId, dayName, exerciseCount, childre
 
     return (
         <div className="bg-card rounded-xl border border-border">
-            <button
-                onClick={() => setOpen(!open)}
-                className="w-full flex items-center justify-between p-4"
-            >
-                <div className="flex items-center gap-3">
+            <div className="flex items-center justify-between p-4">
+                <button
+                    type="button"
+                    onClick={() => setOpen(!open)}
+                    aria-expanded={open}
+                    className="flex items-center gap-3 flex-1 min-w-0 text-left"
+                >
                     <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform ${open ? "rotate-0" : "-rotate-90"}`} />
-                    <h2 className="font-semibold">{dayName}</h2>
+                    <h2 className="font-semibold truncate">{dayName}</h2>
                     <span className="text-xs text-muted-foreground">{exerciseCount} 個動作</span>
-                </div>
-                <div onClick={e => e.stopPropagation()}>
+                </button>
+                <div className="flex-shrink-0 ml-3">
                     <StartSessionButton planId={planId} dayId={dayId} dayName={dayName} />
                 </div>
-            </button>
+            </div>
             {open && (
                 <div className="px-4 pb-4 space-y-2">
                     {children}
