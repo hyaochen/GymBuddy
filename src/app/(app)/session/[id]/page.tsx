@@ -352,6 +352,14 @@ export default function ActiveSessionPage({ params }: { params: Promise<{ id: st
             if (!audioCtxRef.current) {
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 audioCtxRef.current = new (window.AudioContext || (window as any).webkitAudioContext)()
+                // iOS 17+ Safari AudioSession API: 'ambient' lets our alarm beeps mix with
+                // other audio (Spotify / Apple Music) instead of ducking/pausing them.
+                // No-op on browsers without the API (Chrome desktop, older iOS, etc.).
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                const navAny = navigator as any
+                if (navAny?.audioSession && 'type' in navAny.audioSession) {
+                    try { navAny.audioSession.type = 'ambient' } catch { /* ignore */ }
+                }
             }
             if (audioCtxRef.current.state === 'suspended') audioCtxRef.current.resume().catch(() => {})
             return audioCtxRef.current
@@ -463,10 +471,20 @@ export default function ActiveSessionPage({ params }: { params: Promise<{ id: st
         return () => document.removeEventListener('visibilitychange', handleVisible)
     }, [cancelBeep])
 
-    // ── Cancel beeps when navigating away (component unmount) ─────────────────
+    // ── Cancel beeps + release AudioContext when navigating away ──────────────
     // Prevents ghost alarm sounds after client-side navigation away from this page.
+    // Closing the AudioContext also releases the iOS audio session so external
+    // music apps (Spotify / Apple Music) recover their volume after the workout.
     useEffect(() => {
-        return () => { cancelBeep() }
+        const ctxRef = audioCtxRef
+        return () => {
+            cancelBeep()
+            const ctx = ctxRef.current
+            ctxRef.current = null
+            if (ctx && ctx.state !== 'closed') {
+                ctx.close().catch(() => { /* ignore */ })
+            }
+        }
     }, [cancelBeep])
 
     // ── Load session ──────────────────────────────────────────────────────────
