@@ -41,6 +41,10 @@ docker-data/
 prisma/dev.db
 prisma/dev.db-journal
 
+# Audit DB snapshots (regenerable via docker exec psql)
+prisma/audit/exercises-full.json
+prisma/audit/exercises-current-state.json
+
 # Exercise review images (source/staging only, not served)
 public/exercise-demos-review/
 photo/肌力訓練.pdf

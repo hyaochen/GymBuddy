@@ -1,0 +1,3676 @@
+{
+  "summary": {
+    "totalExercises": 257,
+    "exercisesNeedingMuscles": 193,
+    "exercisesNeedingAlternatives": 215,
+    "backfillEntries": 240,
+    "stillUnmatchedMuscles": 0
+  },
+  "unmatchedMuscleExamples": [],
+  "backfill": [
+    {
+      "id": "book_52be9156d4d8",
+      "name": "45度腿推舉 45-Degree Leg Press",
+      "addPrimaryMuscles": [
+        "臀大肌 Glutes"
+      ],
+      "addSecondaryMuscles": [
+        "股四頭肌 Quadriceps"
+      ],
+      "addEquipment": [],
+      "addAlternatives": [
+        "腿推機 Leg Press",
+        "Back Squat Back Squat"
+      ],
+      "reasoning": "keyword/equipment-match → 臀大肌 Glutes / 2nd: 股四頭肌 Quadriceps | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "book_2f0dd1ff4785",
+      "name": "45度角睫推舉 45 Degree Incline Chest Press",
+      "addPrimaryMuscles": [
+        "上胸 Upper Chest",
+        "胸大肌 Pectorals"
+      ],
+      "addSecondaryMuscles": [
+        "三頭肌 Triceps Brachii",
+        "豎脊肌 Erector Spinae",
+        "臀大肌 Glutes"
+      ],
+      "addEquipment": [],
+      "addAlternatives": [
+        "上斜槓鈴臥推 Incline Barbell Bench Press",
+        "下斜槓鈴臥推 Decline Barbell Bench Press"
+      ],
+      "reasoning": "keyword/equipment-match → 上胸 Upper Chest, 胸大肌 Pectorals / 2nd: 三頭肌 Triceps Brachii, 豎脊肌 Erector Spinae, 臀大肌 Glutes | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "book_176b3eac7b90",
+      "name": "4字形捲體 Figure-4 Crunch",
+      "addPrimaryMuscles": [
+        "腹直肌 Rectus Abdominis"
+      ],
+      "addSecondaryMuscles": [],
+      "addEquipment": [],
+      "addAlternatives": [
+        "仰臥起坐 Crunches",
+        "側腹捲屈 Oblique Crunch"
+      ],
+      "reasoning": "keyword/equipment-match → 腹直肌 Rectus Abdominis | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "book_ea597555d237",
+      "name": "Back Squat Back Squat",
+      "addPrimaryMuscles": [
+        "臀大肌 Glutes"
+      ],
+      "addSecondaryMuscles": [],
+      "addEquipment": [],
+      "addAlternatives": [
+        "FRONT BARBELL SQUAT  Front Barbell Squat",
+        "下蹲式上搏 Squat Clean"
+      ],
+      "reasoning": "keyword/equipment-match → 臀大肌 Glutes | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "book_78f23a60fe04",
+      "name": "FRONT BARBELL SQUAT  Front Barbell Squat",
+      "addPrimaryMuscles": [
+        "臀大肌 Glutes"
+      ],
+      "addSecondaryMuscles": [
+        "股四頭肌 Quadriceps",
+        "腹直肌 Rectus Abdominis"
+      ],
+      "addEquipment": [],
+      "addAlternatives": [
+        "Back Squat Back Squat",
+        "下蹲式上搏 Squat Clean"
+      ],
+      "reasoning": "keyword/equipment-match → 臀大肌 Glutes / 2nd: 股四頭肌 Quadriceps, 腹直肌 Rectus Abdominis | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "book_d82279414f6d",
+      "name": "GHD仰臥起坐 GHD Sit-Up",
+      "addPrimaryMuscles": [
+        "腹直肌 Rectus Abdominis"
+      ],
+      "addSecondaryMuscles": [],
+      "addEquipment": [],
+      "addAlternatives": [
+        "仰臥超慢速單車 Super-Slow Bicycle",
+        "仰臥雙手向上捲腹 Reverse Crunch with Hands Up"
+      ],
+      "reasoning": "keyword/equipment-match → 腹直肌 Rectus Abdominis | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "book_5dd16cd04cf2",
+      "name": "GHD臀腿下背伸展 GHD Back Extension",
+      "addPrimaryMuscles": [
+        "豎脊肌 Erector Spinae"
+      ],
+      "addSecondaryMuscles": [
+        "腹直肌 Rectus Abdominis"
+      ],
+      "addEquipment": [],
+      "addAlternatives": [
+        "下背伸展 Lower Back Stretch",
+        "仰臥腳跟後移 Heel Slide"
+      ],
+      "reasoning": "keyword/equipment-match → 豎脊肌 Erector Spinae / 2nd: 腹直肌 Rectus Abdominis | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "book_4d09ca377c63",
+      "name": "Medicine Ball Slam Medicine Ball Slam",
+      "addPrimaryMuscles": [
+        "腹直肌 Rectus Abdominis"
+      ],
+      "addSecondaryMuscles": [],
+      "addEquipment": [],
+      "addAlternatives": [
+        "V字仰臥起坐 V Sit-Up",
+        "仰臥下壓抬腿 Double-Leg Lower and Lift"
+      ],
+      "reasoning": "keyword/equipment-match → 腹直肌 Rectus Abdominis | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "cmm023vqc0006oquti1h3355g",
+      "name": "T槓划船 T-bar Row",
+      "addPrimaryMuscles": [
+        "背闊肌 Latissimus Dorsi"
+      ],
+      "addSecondaryMuscles": [],
+      "addEquipment": [],
+      "addAlternatives": [
+        "反向拋藥球 Medicine Ball Reverse Throw"
+      ],
+      "reasoning": "keyword/equipment-match → 背闊肌 Latissimus Dorsi | alt: 1 (same-primary cohort)"
+    },
+    {
+      "id": "book_2f2cf012564e",
+      "name": "V字仰臥起坐 V Sit-Up",
+      "addPrimaryMuscles": [
+        "腹直肌 Rectus Abdominis"
+      ],
+      "addSecondaryMuscles": [],
+      "addEquipment": [],
+      "addAlternatives": [
+        "Medicine Ball Slam Medicine Ball Slam",
+        "仰臥下壓抬腿 Double-Leg Lower and Lift"
+      ],
+      "reasoning": "keyword/equipment-match → 腹直肌 Rectus Abdominis | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "book_b1809d0ce820",
+      "name": "V字抬腿 V-Leg Raise",
+      "addPrimaryMuscles": [
+        "髖屈肌 Hip Flexors"
+      ],
+      "addSecondaryMuscles": [
+        "腹直肌 Rectus Abdominis"
+      ],
+      "addEquipment": [],
+      "addAlternatives": [
+        "側臥抬腿 Side-Lying Leg Lift",
+        "懸吊屈髓抬腿 Hanging Toe Tuck"
+      ],
+      "reasoning": "keyword/equipment-match → 髖屈肌 Hip Flexors / 2nd: 腹直肌 Rectus Abdominis | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "book_e4b5f5d4e3bc",
+      "name": "三頭肌伸展 Triceps Extension",
+      "addPrimaryMuscles": [
+        "三頭肌 Triceps Brachii"
+      ],
+      "addSecondaryMuscles": [],
+      "addEquipment": [],
+      "addAlternatives": [
+        "三頭肌頭頂伸展 Overhead Tricep Stretch",
+        "頭頂三頭伸展 Overhead Tricep Extension"
+      ],
+      "reasoning": "keyword/equipment-match → 三頭肌 Triceps Brachii | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "stretch_tricep_overhead",
+      "name": "三頭肌頭頂伸展 Overhead Tricep Stretch",
+      "addPrimaryMuscles": [
+        "三頭肌 Triceps Brachii"
+      ],
+      "addSecondaryMuscles": [],
+      "addEquipment": [
+        "Bodyweight / 自體重量"
+      ],
+      "addAlternatives": [
+        "三頭肌伸展 Triceps Extension",
+        "啞鈴肱三頭肌伸展 Dumbbell Triceps Extension"
+      ],
+      "reasoning": "keyword/equipment-match → 三頭肌 Triceps Brachii / eq: Bodyweight / 自體重量 | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "cmm023vpu0001oqut0t7ijffw",
+      "name": "上斜啞鈴臥推 Incline Dumbbell Press",
+      "addPrimaryMuscles": [
+        "胸大肌 Pectorals"
+      ],
+      "addSecondaryMuscles": [],
+      "addEquipment": [],
+      "addAlternatives": [
+        "俯身啞鈴飛鳥 Bent-over Rear Delt Fly"
+      ],
+      "reasoning": "keyword/equipment-match → 胸大肌 Pectorals | alt: 1 (same-primary cohort)"
+    },
+    {
+      "id": "cmlzdcaa2001b11jljh08hwvo",
+      "name": "上斜槓鈴臥推 Incline Barbell Bench Press",
+      "addPrimaryMuscles": [
+        "胸大肌 Pectorals"
+      ],
+      "addSecondaryMuscles": [
+        "前臂 Forearms"
+      ],
+      "addEquipment": [],
+      "addAlternatives": [],
+      "reasoning": "keyword/equipment-match → 胸大肌 Pectorals / 2nd: 前臂 Forearms"
+    },
+    {
+      "id": "cmlzzvv960004pddrrmm37ftu",
+      "name": "上斜繩索飛鳥 Incline Cable Fly",
+      "addPrimaryMuscles": [
+        "胸大肌 Pectorals"
+      ],
+      "addSecondaryMuscles": [
+        "前臂 Forearms"
+      ],
+      "addEquipment": [
+        "Cable Machine / 纜繩機"
+      ],
+      "addAlternatives": [
+        "上斜飛鳥 Incline Flye",
+        "啞鈴飛鳥 Dumbbell Fly"
+      ],
+      "reasoning": "keyword/equipment-match → 胸大肌 Pectorals / 2nd: 前臂 Forearms / eq: Cable Machine / 纜繩機 | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "book_379e32ca0302",
+      "name": "上斜飛鳥 Incline Flye",
+      "addPrimaryMuscles": [
+        "上胸 Upper Chest"
+      ],
+      "addSecondaryMuscles": [
+        "胸大肌 Pectorals"
+      ],
+      "addEquipment": [],
+      "addAlternatives": [
+        "上斜繩索飛鳥 Incline Cable Fly",
+        "上斜啞鈴臥推 Incline Dumbbell Press"
+      ],
+      "reasoning": "keyword/equipment-match → 上胸 Upper Chest / 2nd: 胸大肌 Pectorals | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "cmm023vpn0000oqut4jzpz9uk",
+      "name": "下斜槓鈴臥推 Decline Barbell Bench Press",
+      "addPrimaryMuscles": [
+        "腹直肌 Rectus Abdominis"
+      ],
+      "addSecondaryMuscles": [],
+      "addEquipment": [],
+      "addAlternatives": [
+        "45度角睫推舉 45 Degree Incline Chest Press"
+      ],
+      "reasoning": "keyword/equipment-match → 腹直肌 Rectus Abdominis | alt: 1 (same-primary cohort)"
+    },
+    {
+      "id": "book_d23677b66d8c",
+      "name": "下背伸展 Lower Back Stretch",
+      "addPrimaryMuscles": [
+        "斜方肌 Trapezius",
+        "豎脊肌 Erector Spinae"
+      ],
+      "addSecondaryMuscles": [
+        "腘繩肌 Hamstrings",
+        "臀大肌 Glutes"
+      ],
+      "addEquipment": [],
+      "addAlternatives": [
+        "GHD臀腿下背伸展 GHD Back Extension",
+        "仰臥腳跟後移 Heel Slide"
+      ],
+      "reasoning": "keyword/equipment-match → 斜方肌 Trapezius, 豎脊肌 Erector Spinae / 2nd: 腘繩肌 Hamstrings, 臀大肌 Glutes | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "book_476e6ed48582",
+      "name": "下蹲式上搏 Squat Clean",
+      "addPrimaryMuscles": [
+        "臀大肌 Glutes",
+        "前三角肌 Anterior Deltoid"
+      ],
+      "addSecondaryMuscles": [
+        "側三角肌 Lateral Deltoid"
+      ],
+      "addEquipment": [],
+      "addAlternatives": [
+        "Back Squat Back Squat",
+        "FRONT BARBELL SQUAT  Front Barbell Squat"
+      ],
+      "reasoning": "keyword/equipment-match → 臀大肌 Glutes, 前三角肌 Anterior Deltoid / 2nd: 側三角肌 Lateral Deltoid | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "stretch_bicep_wall",
+      "name": "二頭肌牆壁伸展 Bicep Wall Stretch",
+      "addPrimaryMuscles": [
+        "二頭肌 Biceps Brachii"
+      ],
+      "addSecondaryMuscles": [
+        "前臂 Forearms"
+      ],
+      "addEquipment": [
+        "Bodyweight / 自體重量"
+      ],
+      "addAlternatives": [
+        "反握槓鈴彎舉 Reverse Barbell Curl",
+        "反握槓鈴槌式彎舉 Reverse Grip Barbell Curl (Hammer Curl)"
+      ],
+      "reasoning": "keyword/equipment-match → 二頭肌 Biceps Brachii / 2nd: 前臂 Forearms / eq: Bodyweight / 自體重量 | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "book_684e5d50e054",
+      "name": "仰臥下壓抬腿 Double-Leg Lower and Lift",
+      "addPrimaryMuscles": [
+        "髖屈肌 Hip Flexors",
+        "腹直肌 Rectus Abdominis"
+      ],
+      "addSecondaryMuscles": [],
+      "addEquipment": [],
+      "addAlternatives": [
+        "Medicine Ball Slam Medicine Ball Slam",
+        "V字仰臥起坐 V Sit-Up"
+      ],
+      "reasoning": "keyword/equipment-match → 髖屈肌 Hip Flexors, 腹直肌 Rectus Abdominis | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "book_546cdba0bf62",
+      "name": "仰臥單腳抱腿前踢 Single-Leg Extension and Stretch",
+      "addPrimaryMuscles": [
+        "股四頭肌 Quadriceps"
+      ],
+      "addSecondaryMuscles": [
+        "腹直肌 Rectus Abdominis",
+        "豎脊肌 Erector Spinae",
+        "腹斜肌 Obliques"
+      ],
+      "addEquipment": [],
+      "addAlternatives": [
+        "杠铃哈克蹲举 Barbell Hack Squat",
+        "跨步蹲 Lunges"
+      ],
+      "reasoning": "keyword/equipment-match → 股四頭肌 Quadriceps / 2nd: 腹直肌 Rectus Abdominis, 豎脊肌 Erector Spinae, 腹斜肌 Obliques | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "book_91495d6b4b31",
+      "name": "仰臥屈膝抬腿 Knee Fold",
+      "addPrimaryMuscles": [
+        "髖屈肌 Hip Flexors"
+      ],
+      "addSecondaryMuscles": [
+        "腹直肌 Rectus Abdominis",
+        "豎脊肌 Erector Spinae"
+      ],
+      "addEquipment": [],
+      "addAlternatives": [
+        "仰臥下壓抬腿 Double-Leg Lower and Lift",
+        "俯臥抬腿 Prone Leg Lift"
+      ],
+      "reasoning": "keyword/equipment-match → 髖屈肌 Hip Flexors / 2nd: 腹直肌 Rectus Abdominis, 豎脊肌 Erector Spinae | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "book_78e984e1dc09",
+      "name": "仰臥拱橋直臂下壓 Long-Arm Bridge Pull-Over",
+      "addPrimaryMuscles": [
+        "豎脊肌 Erector Spinae",
+        "腹直肌 Rectus Abdominis"
+      ],
+      "addSecondaryMuscles": [],
+      "addEquipment": [],
+      "addAlternatives": [
+        "下斜槓鈴臥推 Decline Barbell Bench Press",
+        "反向拋藥球 Medicine Ball Reverse Throw"
+      ],
+      "reasoning": "keyword/equipment-match → 豎脊肌 Erector Spinae, 腹直肌 Rectus Abdominis | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "book_4699fb47d37e",
+      "name": "仰臥捲腹移棍 Incline Dumbbell Rollout",
+      "addPrimaryMuscles": [
+        "腹直肌 Rectus Abdominis"
+      ],
+      "addSecondaryMuscles": [],
+      "addEquipment": [],
+      "addAlternatives": [
+        "俯臥啞鈴雙手走路 Raised Pike Dumbbell Hand-Walk",
+        "啞鈴行走 Dumbbell Walkout"
+      ],
+      "reasoning": "keyword/equipment-match → 腹直肌 Rectus Abdominis | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "stretch_spinal_twist",
+      "name": "仰臥脊椎旋轉 Supine Spinal Twist",
+      "addPrimaryMuscles": [
+        "腹斜肌 Obliques"
+      ],
+      "addSecondaryMuscles": [],
+      "addEquipment": [
+        "Bodyweight / 自體重量"
+      ],
+      "addAlternatives": [
+        "仰臥腰部扭轉 Lying Waist Twist",
+        "側臥軀幹旋轉 Lying Trunk Rotation"
+      ],
+      "reasoning": "keyword/equipment-match → 腹斜肌 Obliques / eq: Bodyweight / 自體重量 | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "book_1cdc4feca635",
+      "name": "仰臥腰部扭轉 Lying Waist Twist",
+      "addPrimaryMuscles": [
+        "腹斜肌 Obliques"
+      ],
+      "addSecondaryMuscles": [
+        "豎脊肌 Erector Spinae"
+      ],
+      "addEquipment": [],
+      "addAlternatives": [
+        "側臥軀幹旋轉 Lying Trunk Rotation",
+        "懸吊式側向單臂轉身 Suspended Single-Arm Core Rotation"
+      ],
+      "reasoning": "keyword/equipment-match → 腹斜肌 Obliques / 2nd: 豎脊肌 Erector Spinae | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "book_b58622ea863d",
+      "name": "仰臥腳趾微踢 Toe Tap",
+      "addPrimaryMuscles": [
+        "腹直肌 Rectus Abdominis"
+      ],
+      "addSecondaryMuscles": [],
+      "addEquipment": [],
+      "addAlternatives": [
+        "Medicine Ball Slam Medicine Ball Slam",
+        "V字仰臥起坐 V Sit-Up"
+      ],
+      "reasoning": "keyword/equipment-match → 腹直肌 Rectus Abdominis | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "book_2c1f18b5483f",
+      "name": "仰臥腳跟後移 Heel Slide",
+      "addPrimaryMuscles": [
+        "腹直肌 Rectus Abdominis",
+        "豎脊肌 Erector Spinae"
+      ],
+      "addSecondaryMuscles": [],
+      "addEquipment": [],
+      "addAlternatives": [
+        "GHD臀腿下背伸展 GHD Back Extension",
+        "Medicine Ball Slam Medicine Ball Slam"
+      ],
+      "reasoning": "keyword/equipment-match → 腹直肌 Rectus Abdominis, 豎脊肌 Erector Spinae | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "book_41738aebe633",
+      "name": "仰臥腿部畫 Leg Circle",
+      "addPrimaryMuscles": [
+        "腹直肌 Rectus Abdominis"
+      ],
+      "addSecondaryMuscles": [],
+      "addEquipment": [],
+      "addAlternatives": [
+        "Medicine Ball Slam Medicine Ball Slam",
+        "V字仰臥起坐 V Sit-Up"
+      ],
+      "reasoning": "keyword/equipment-match → 腹直肌 Rectus Abdominis | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "book_7111bf3cd6b8",
+      "name": "仰臥觸踝 Heel Reach",
+      "addPrimaryMuscles": [
+        "腹直肌 Rectus Abdominis"
+      ],
+      "addSecondaryMuscles": [
+        "斜方肌 Trapezius"
+      ],
+      "addEquipment": [],
+      "addAlternatives": [
+        "Medicine Ball Slam Medicine Ball Slam",
+        "V字仰臥起坐 V Sit-Up"
+      ],
+      "reasoning": "keyword/equipment-match → 腹直肌 Rectus Abdominis / 2nd: 斜方肌 Trapezius | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "book_d10df0cb389c",
+      "name": "仰臥起坐 Sit-Up",
+      "addPrimaryMuscles": [
+        "腹直肌 Rectus Abdominis"
+      ],
+      "addSecondaryMuscles": [],
+      "addEquipment": [],
+      "addAlternatives": [
+        "Medicine Ball Slam Medicine Ball Slam",
+        "V字仰臥起坐 V Sit-Up"
+      ],
+      "reasoning": "keyword/equipment-match → 腹直肌 Rectus Abdominis | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "book_b469510a1558",
+      "name": "仰臥超慢速單車 Super-Slow Bicycle",
+      "addPrimaryMuscles": [
+        "腹直肌 Rectus Abdominis"
+      ],
+      "addSecondaryMuscles": [
+        "腹斜肌 Obliques"
+      ],
+      "addEquipment": [],
+      "addAlternatives": [
+        "GHD仰臥起坐 GHD Sit-Up",
+        "仰臥雙手向上捲腹 Reverse Crunch with Hands Up"
+      ],
+      "reasoning": "keyword/equipment-match → 腹直肌 Rectus Abdominis / 2nd: 腹斜肌 Obliques | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "book_25ad65c69774",
+      "name": "仰臥雙手向上捲腹 Reverse Crunch with Hands Up",
+      "addPrimaryMuscles": [
+        "腹直肌 Rectus Abdominis"
+      ],
+      "addSecondaryMuscles": [],
+      "addEquipment": [],
+      "addAlternatives": [
+        "GHD仰臥起坐 GHD Sit-Up",
+        "仰臥超慢速單車 Super-Slow Bicycle"
+      ],
+      "reasoning": "keyword/equipment-match → 腹直肌 Rectus Abdominis | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "book_106a5109bea7",
+      "name": "仰臥雙手向上捲腹 Roll-Up",
+      "addPrimaryMuscles": [
+        "腹直肌 Rectus Abdominis"
+      ],
+      "addSecondaryMuscles": [],
+      "addEquipment": [],
+      "addAlternatives": [
+        "Medicine Ball Slam Medicine Ball Slam",
+        "V字仰臥起坐 V Sit-Up"
+      ],
+      "reasoning": "keyword/equipment-match → 腹直肌 Rectus Abdominis | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "book_a3dc072f38e0",
+      "name": "仰臥雙腳抱腿前踢伸展 Double-Leg Extension and Stretch",
+      "addPrimaryMuscles": [
+        "股四頭肌 Quadriceps"
+      ],
+      "addSecondaryMuscles": [
+        "腹直肌 Rectus Abdominis",
+        "斜方肌 Trapezius",
+        "豎脊肌 Erector Spinae"
+      ],
+      "addEquipment": [],
+      "addAlternatives": [
+        "站立股四頭肌伸展 Standing Quad Stretch",
+        "仰臥單腳抱腿前踢 Single-Leg Extension and Stretch"
+      ],
+      "reasoning": "keyword/equipment-match → 股四頭肌 Quadriceps / 2nd: 腹直肌 Rectus Abdominis, 斜方肌 Trapezius, 豎脊肌 Erector Spinae | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "cmlzdcaay001f11jllfppnro4",
+      "name": "伏地挺身 Push-up",
+      "addPrimaryMuscles": [],
+      "addSecondaryMuscles": [
+        "腹直肌 Rectus Abdominis"
+      ],
+      "addEquipment": [],
+      "addAlternatives": [],
+      "reasoning": "keyword/equipment-match → (none primary) / 2nd: 腹直肌 Rectus Abdominis"
+    },
+    {
+      "id": "cmlzzvv8s0000pddrjfqdn4ul",
+      "name": "保加利亞分腿蹲 Bulgarian Split Squat",
+      "addPrimaryMuscles": [
+        "臀大肌 Glutes"
+      ],
+      "addSecondaryMuscles": [],
+      "addEquipment": [
+        "Bodyweight / 自體重量"
+      ],
+      "addAlternatives": [],
+      "reasoning": "keyword/equipment-match → 臀大肌 Glutes / eq: Bodyweight / 自體重量"
+    },
+    {
+      "id": "book_0010ab03697a",
+      "name": "保加利亞式槓鈴分腿 squat Bulgarian Barbell Split Squat",
+      "addPrimaryMuscles": [
+        "臀大肌 Glutes"
+      ],
+      "addSecondaryMuscles": [
+        "腹直肌 Rectus Abdominis"
+      ],
+      "addEquipment": [],
+      "addAlternatives": [
+        "Back Squat Back Squat",
+        "FRONT BARBELL SQUAT  Front Barbell Squat"
+      ],
+      "reasoning": "keyword/equipment-match → 臀大肌 Glutes / 2nd: 腹直肌 Rectus Abdominis | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "book_84d1db7befe3",
+      "name": "俯臥啞鈴雙手走路 Raised Pike Dumbbell Hand-Walk",
+      "addPrimaryMuscles": [
+        "腹直肌 Rectus Abdominis"
+      ],
+      "addSecondaryMuscles": [
+        "豎脊肌 Erector Spinae",
+        "腘繩肌 Hamstrings"
+      ],
+      "addEquipment": [],
+      "addAlternatives": [
+        "仰臥捲腹移棍 Incline Dumbbell Rollout",
+        "啞鈴行走 Dumbbell Walkout"
+      ],
+      "reasoning": "keyword/equipment-match → 腹直肌 Rectus Abdominis / 2nd: 豎脊肌 Erector Spinae, 腘繩肌 Hamstrings | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "book_a976f800acc6",
+      "name": "俯臥抗力球雙膝向前捲腹 Front Knee Tuck on Ball",
+      "addPrimaryMuscles": [
+        "腹直肌 Rectus Abdominis"
+      ],
+      "addSecondaryMuscles": [],
+      "addEquipment": [],
+      "addAlternatives": [
+        "GHD仰臥起坐 GHD Sit-Up",
+        "仰臥超慢速單車 Super-Slow Bicycle"
+      ],
+      "reasoning": "keyword/equipment-match → 腹直肌 Rectus Abdominis | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "book_0afa8e9e4fdc",
+      "name": "俯臥抬腿 Prone Leg Lift",
+      "addPrimaryMuscles": [
+        "髖屈肌 Hip Flexors"
+      ],
+      "addSecondaryMuscles": [
+        "腹直肌 Rectus Abdominis"
+      ],
+      "addEquipment": [],
+      "addAlternatives": [
+        "仰臥下壓抬腿 Double-Leg Lower and Lift",
+        "仰臥屈膝抬腿 Knee Fold"
+      ],
+      "reasoning": "keyword/equipment-match → 髖屈肌 Hip Flexors / 2nd: 腹直肌 Rectus Abdominis | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "book_419edbfa8f44",
+      "name": "俯臥挺身進階版 Advanced Push-Up",
+      "addPrimaryMuscles": [
+        "胸大肌 Pectorals",
+        "腹直肌 Rectus Abdominis"
+      ],
+      "addSecondaryMuscles": [
+        "豎脊肌 Erector Spinae"
+      ],
+      "addEquipment": [],
+      "addAlternatives": [
+        "GHD仰臥起坐 GHD Sit-Up",
+        "仰臥超慢速單車 Super-Slow Bicycle"
+      ],
+      "reasoning": "keyword/equipment-match → 胸大肌 Pectorals, 腹直肌 Rectus Abdominis / 2nd: 豎脊肌 Erector Spinae | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "book_f7e9da764b34",
+      "name": "俯臥游泳 Swimming",
+      "addPrimaryMuscles": [
+        "腹直肌 Rectus Abdominis"
+      ],
+      "addSecondaryMuscles": [
+        "斜方肌 Trapezius",
+        "腹斜肌 Obliques"
+      ],
+      "addEquipment": [],
+      "addAlternatives": [
+        "Medicine Ball Slam Medicine Ball Slam",
+        "V字仰臥起坐 V Sit-Up"
+      ],
+      "reasoning": "keyword/equipment-match → 腹直肌 Rectus Abdominis / 2nd: 斜方肌 Trapezius, 腹斜肌 Obliques | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "book_9a3d65ee20f6",
+      "name": "俯臥腹部騰空 Prone Abdominal Hollowing",
+      "addPrimaryMuscles": [
+        "腹直肌 Rectus Abdominis"
+      ],
+      "addSecondaryMuscles": [
+        "豎脊肌 Erector Spinae"
+      ],
+      "addEquipment": [],
+      "addAlternatives": [
+        "Medicine Ball Slam Medicine Ball Slam",
+        "V字仰臥起坐 V Sit-Up"
+      ],
+      "reasoning": "keyword/equipment-match → 腹直肌 Rectus Abdominis / 2nd: 豎脊肌 Erector Spinae | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "cmm023vqp000aoqutrdl6m58j",
+      "name": "俯身啞鈴飛鳥 Bent-over Rear Delt Fly",
+      "addPrimaryMuscles": [
+        "胸大肌 Pectorals"
+      ],
+      "addSecondaryMuscles": [],
+      "addEquipment": [],
+      "addAlternatives": [
+        "上斜啞鈴臥推 Incline Dumbbell Press"
+      ],
+      "reasoning": "keyword/equipment-match → 胸大肌 Pectorals | alt: 1 (same-primary cohort)"
+    },
+    {
+      "id": "book_a2ad2bc6d359",
+      "name": "倒立走牆 Wall Walk",
+      "addPrimaryMuscles": [
+        "腹直肌 Rectus Abdominis"
+      ],
+      "addSecondaryMuscles": [],
+      "addEquipment": [],
+      "addAlternatives": [
+        "GHD仰臥起坐 GHD Sit-Up",
+        "仰臥超慢速單車 Super-Slow Bicycle"
+      ],
+      "reasoning": "keyword/equipment-match → 腹直肌 Rectus Abdominis | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "book_d8430fa4780f",
+      "name": "側向滑索內旋 Side Cable Inward Rotations",
+      "addPrimaryMuscles": [
+        "腹斜肌 Obliques"
+      ],
+      "addSecondaryMuscles": [
+        "側三角肌 Lateral Deltoid",
+        "腹直肌 Rectus Abdominis"
+      ],
+      "addEquipment": [],
+      "addAlternatives": [
+        "俄羅斯轉體 Russian Twist",
+        "側腹捲屈 Oblique Crunch"
+      ],
+      "reasoning": "keyword/equipment-match → 腹斜肌 Obliques / 2nd: 側三角肌 Lateral Deltoid, 腹直肌 Rectus Abdominis | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "book_ffceae0d151b",
+      "name": "側屈 Side Bend",
+      "addPrimaryMuscles": [
+        "腹直肌 Rectus Abdominis"
+      ],
+      "addSecondaryMuscles": [
+        "腹斜肌 Obliques"
+      ],
+      "addEquipment": [],
+      "addAlternatives": [
+        "Medicine Ball Slam Medicine Ball Slam",
+        "V字仰臥起坐 V Sit-Up"
+      ],
+      "reasoning": "keyword/equipment-match → 腹直肌 Rectus Abdominis / 2nd: 腹斜肌 Obliques | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "cmlzzvv9c0006pddr8e4gho6a",
+      "name": "側平舉機 Machine Lateral Raise",
+      "addPrimaryMuscles": [],
+      "addSecondaryMuscles": [
+        "斜方肌 Trapezius"
+      ],
+      "addEquipment": [
+        "Shoulder Press Machine / 肩推機"
+      ],
+      "addAlternatives": [],
+      "reasoning": "keyword/equipment-match → (none primary) / 2nd: 斜方肌 Trapezius / eq: Shoulder Press Machine / 肩推機"
+    },
+    {
+      "id": "cmm023vrp000moqutbhaewxss",
+      "name": "側棒式 Side Plank",
+      "addPrimaryMuscles": [
+        "腹直肌 Rectus Abdominis"
+      ],
+      "addSecondaryMuscles": [
+        "前臂 Forearms"
+      ],
+      "addEquipment": [],
+      "addAlternatives": [],
+      "reasoning": "keyword/equipment-match → 腹直肌 Rectus Abdominis / 2nd: 前臂 Forearms"
+    },
+    {
+      "id": "book_bbcd5cb5f6d7",
+      "name": "側腹捲屈 Oblique Crunch",
+      "addPrimaryMuscles": [
+        "腹直肌 Rectus Abdominis",
+        "腹斜肌 Obliques"
+      ],
+      "addSecondaryMuscles": [
+        "斜方肌 Trapezius"
+      ],
+      "addEquipment": [],
+      "addAlternatives": [
+        "4字形捲體 Figure-4 Crunch",
+        "仰臥起坐 Crunches"
+      ],
+      "reasoning": "keyword/equipment-match → 腹直肌 Rectus Abdominis, 腹斜肌 Obliques / 2nd: 斜方肌 Trapezius | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "book_455f90e02853",
+      "name": "側臥側腹捲屈 Side-Lying Lateral Crunch",
+      "addPrimaryMuscles": [
+        "腹直肌 Rectus Abdominis"
+      ],
+      "addSecondaryMuscles": [
+        "腹斜肌 Obliques"
+      ],
+      "addEquipment": [],
+      "addAlternatives": [
+        "Medicine Ball Slam Medicine Ball Slam",
+        "V字仰臥起坐 V Sit-Up"
+      ],
+      "reasoning": "keyword/equipment-match → 腹直肌 Rectus Abdominis / 2nd: 腹斜肌 Obliques | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "book_27931bd5751c",
+      "name": "側臥抬腿 Side-Lying Leg Lift",
+      "addPrimaryMuscles": [
+        "髖屈肌 Hip Flexors",
+        "腹直肌 Rectus Abdominis"
+      ],
+      "addSecondaryMuscles": [],
+      "addEquipment": [],
+      "addAlternatives": [
+        "4字形捲體 Figure-4 Crunch",
+        "V字抬腿 V-Leg Raise"
+      ],
+      "reasoning": "keyword/equipment-match → 髖屈肌 Hip Flexors, 腹直肌 Rectus Abdominis | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "book_71c971f56f49",
+      "name": "側臥軀幹旋轉 Lying Trunk Rotation",
+      "addPrimaryMuscles": [
+        "腹斜肌 Obliques"
+      ],
+      "addSecondaryMuscles": [],
+      "addEquipment": [],
+      "addAlternatives": [
+        "仰臥腰部扭轉 Lying Waist Twist",
+        "懸吊式側向單臂轉身 Suspended Single-Arm Core Rotation"
+      ],
+      "reasoning": "keyword/equipment-match → 腹斜肌 Obliques | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "book_8cd2336650c8",
+      "name": "側跨步弓步蹲 Lateral Lunge",
+      "addPrimaryMuscles": [
+        "臀大肌 Glutes"
+      ],
+      "addSecondaryMuscles": [
+        "腘繩肌 Hamstrings",
+        "小腿 Calves"
+      ],
+      "addEquipment": [],
+      "addAlternatives": [
+        "啞鈴分腿蹲 Dumbbell Split Squat",
+        "杠铃上跨步 Barbell Step-Up"
+      ],
+      "reasoning": "keyword/equipment-match → 臀大肌 Glutes / 2nd: 腘繩肌 Hamstrings, 小腿 Calves | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "book_dbfb23ef822b",
+      "name": "側身核心穩定動作 Side Plank with Hip Flexion and Extension",
+      "addPrimaryMuscles": [
+        "腹直肌 Rectus Abdominis"
+      ],
+      "addSecondaryMuscles": [
+        "腹斜肌 Obliques",
+        "胸大肌 Pectorals",
+        "豎脊肌 Erector Spinae"
+      ],
+      "addEquipment": [],
+      "addAlternatives": [
+        "Medicine Ball Slam Medicine Ball Slam",
+        "V字仰臥起坐 V Sit-Up"
+      ],
+      "reasoning": "keyword/equipment-match → 腹直肌 Rectus Abdominis / 2nd: 腹斜肌 Obliques, 胸大肌 Pectorals, 豎脊肌 Erector Spinae | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "book_a2fb14ed8590",
+      "name": "分腿式抓舉 Split Snatch",
+      "addPrimaryMuscles": [
+        "前三角肌 Anterior Deltoid"
+      ],
+      "addSecondaryMuscles": [
+        "側三角肌 Lateral Deltoid"
+      ],
+      "addEquipment": [],
+      "addAlternatives": [
+        "下蹲式上搏 Squat Clean",
+        "單膝跪姿壺鈴推舉 Single-Knee Push Press with Kettlebell"
+      ],
+      "reasoning": "keyword/equipment-match → 前三角肌 Anterior Deltoid / 2nd: 側三角肌 Lateral Deltoid | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "book_a7e2fd0f0ba5",
+      "name": "前俯棒式 Prone Plank",
+      "addPrimaryMuscles": [
+        "腹直肌 Rectus Abdominis"
+      ],
+      "addSecondaryMuscles": [
+        "豎脊肌 Erector Spinae",
+        "前臂 Forearms"
+      ],
+      "addEquipment": [],
+      "addAlternatives": [
+        "Medicine Ball Slam Medicine Ball Slam",
+        "V字仰臥起坐 V Sit-Up"
+      ],
+      "reasoning": "keyword/equipment-match → 腹直肌 Rectus Abdominis / 2nd: 豎脊肌 Erector Spinae, 前臂 Forearms | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "book_6f985c0a7323",
+      "name": "前槓鈴深蹲 Heavy Front Squat",
+      "addPrimaryMuscles": [
+        "股四頭肌 Quadriceps",
+        "臀大肌 Glutes"
+      ],
+      "addSecondaryMuscles": [
+        "上胸 Upper Chest"
+      ],
+      "addEquipment": [],
+      "addAlternatives": [
+        "Back Squat Back Squat",
+        "FRONT BARBELL SQUAT  Front Barbell Squat"
+      ],
+      "reasoning": "keyword/equipment-match → 股四頭肌 Quadriceps, 臀大肌 Glutes / 2nd: 上胸 Upper Chest | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "book_a471194dae9e",
+      "name": "前跨步弓步蹲 Forward Lunge",
+      "addPrimaryMuscles": [
+        "臀大肌 Glutes"
+      ],
+      "addSecondaryMuscles": [],
+      "addEquipment": [],
+      "addAlternatives": [
+        "徒手蹲舉 Bodyweight Squat",
+        "徒手蹲舉 Squat"
+      ],
+      "reasoning": "keyword/equipment-match → 臀大肌 Glutes | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "cmm023vr7000goqutfjm806i2",
+      "name": "前蹲 Front Squat",
+      "addPrimaryMuscles": [
+        "臀大肌 Glutes"
+      ],
+      "addSecondaryMuscles": [
+        "前三角肌 Anterior Deltoid"
+      ],
+      "addEquipment": [],
+      "addAlternatives": [
+        "Back Squat Back Squat"
+      ],
+      "reasoning": "keyword/equipment-match → 臀大肌 Glutes / 2nd: 前三角肌 Anterior Deltoid | alt: 1 (same-primary cohort)"
+    },
+    {
+      "id": "book_4992c3fbda88",
+      "name": "反向側舉 Reverse Lateral Raise",
+      "addPrimaryMuscles": [
+        "側三角肌 Lateral Deltoid",
+        "斜方肌 Trapezius"
+      ],
+      "addSecondaryMuscles": [],
+      "addEquipment": [],
+      "addAlternatives": [
+        "啞鈴側平舉 Dumbbell Lateral Raise",
+        "側平舉機 Machine Lateral Raise"
+      ],
+      "reasoning": "keyword/equipment-match → 側三角肌 Lateral Deltoid, 斜方肌 Trapezius | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "book_d021d79b4c73",
+      "name": "反向拋藥球 Medicine Ball Reverse Throw",
+      "addPrimaryMuscles": [
+        "菱形肌 Rhomboids",
+        "腹直肌 Rectus Abdominis"
+      ],
+      "addSecondaryMuscles": [
+        "胸大肌 Pectorals"
+      ],
+      "addEquipment": [],
+      "addAlternatives": [
+        "T槓划船 T-bar Row",
+        "下斜槓鈴臥推 Decline Barbell Bench Press"
+      ],
+      "reasoning": "keyword/equipment-match → 菱形肌 Rhomboids, 腹直肌 Rectus Abdominis / 2nd: 胸大肌 Pectorals | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "book_0169ca4d840d",
+      "name": "反向肩側舉 Rear Lateral Raise",
+      "addPrimaryMuscles": [
+        "側三角肌 Lateral Deltoid"
+      ],
+      "addSecondaryMuscles": [
+        "前三角肌 Anterior Deltoid",
+        "菱形肌 Rhomboids",
+        "上胸 Upper Chest"
+      ],
+      "addEquipment": [],
+      "addAlternatives": [
+        "側平舉機 Machine Lateral Raise",
+        "反向側舉 Reverse Lateral Raise"
+      ],
+      "reasoning": "keyword/equipment-match → 側三角肌 Lateral Deltoid / 2nd: 前三角肌 Anterior Deltoid, 菱形肌 Rhomboids, 上胸 Upper Chest | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "book_98f4be29904b",
+      "name": "反握槓鈴彎舉 Reverse Barbell Curl",
+      "addPrimaryMuscles": [
+        "二頭肌 Biceps Brachii",
+        "前臂 Forearms"
+      ],
+      "addSecondaryMuscles": [],
+      "addEquipment": [],
+      "addAlternatives": [
+        "反握槓鈴槌式彎舉 Reverse Grip Barbell Curl (Hammer Curl)",
+        "啞鈴彎舉 Dumbbell Curl"
+      ],
+      "reasoning": "keyword/equipment-match → 二頭肌 Biceps Brachii, 前臂 Forearms | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "book_ede9be3ebc7f",
+      "name": "反握槓鈴槌式彎舉 Reverse Grip Barbell Curl (Hammer Curl)",
+      "addPrimaryMuscles": [
+        "二頭肌 Biceps Brachii",
+        "前臂 Forearms"
+      ],
+      "addSecondaryMuscles": [
+        "上胸 Upper Chest"
+      ],
+      "addEquipment": [],
+      "addAlternatives": [
+        "槓鈴彎舉 Barbell Bicep Curl",
+        "反握槓鈴彎舉 Reverse Barbell Curl"
+      ],
+      "reasoning": "keyword/equipment-match → 二頭肌 Biceps Brachii, 前臂 Forearms / 2nd: 上胸 Upper Chest | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "book_392de864634f",
+      "name": "反握滑索上舉 Reverse Grip Cable Press",
+      "addPrimaryMuscles": [
+        "上胸 Upper Chest",
+        "前臂 Forearms"
+      ],
+      "addSecondaryMuscles": [],
+      "addEquipment": [],
+      "addAlternatives": [
+        "45度角睫推舉 45 Degree Incline Chest Press",
+        "上斜啞鈴臥推 Incline Dumbbell Press"
+      ],
+      "reasoning": "keyword/equipment-match → 上胸 Upper Chest, 前臂 Forearms | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "cmlzdcaf0002011jljukrmp61",
+      "name": "哈克深蹲 Hack Squat",
+      "addPrimaryMuscles": [
+        "臀大肌 Glutes"
+      ],
+      "addSecondaryMuscles": [],
+      "addEquipment": [],
+      "addAlternatives": [],
+      "reasoning": "keyword/equipment-match → 臀大肌 Glutes"
+    },
+    {
+      "id": "cmm023vrk000koqut853zr9vv",
+      "name": "哈克深蹲 Hack Squat Machine",
+      "addPrimaryMuscles": [
+        "臀大肌 Glutes"
+      ],
+      "addSecondaryMuscles": [],
+      "addEquipment": [],
+      "addAlternatives": [],
+      "reasoning": "keyword/equipment-match → 臀大肌 Glutes"
+    },
+    {
+      "id": "cmlzdcabl001i11jluth1tf18",
+      "name": "啞鈴側平舉 Dumbbell Lateral Raise",
+      "addPrimaryMuscles": [
+        "斜方肌 Trapezius"
+      ],
+      "addSecondaryMuscles": [],
+      "addEquipment": [],
+      "addAlternatives": [],
+      "reasoning": "keyword/equipment-match → 斜方肌 Trapezius"
+    },
+    {
+      "id": "book_92ac0b357ec9",
+      "name": "啞鈴分腿蹲 Dumbbell Split Squat",
+      "addPrimaryMuscles": [
+        "臀大肌 Glutes"
+      ],
+      "addSecondaryMuscles": [
+        "股四頭肌 Quadriceps"
+      ],
+      "addEquipment": [],
+      "addAlternatives": [
+        "側跨步弓步蹲 Lateral Lunge",
+        "杠铃上跨步 Barbell Step-Up"
+      ],
+      "reasoning": "keyword/equipment-match → 臀大肌 Glutes / 2nd: 股四頭肌 Quadriceps | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "cmlzzvv900002pddrut303r65",
+      "name": "啞鈴彎舉 Dumbbell Curl",
+      "addPrimaryMuscles": [],
+      "addSecondaryMuscles": [],
+      "addEquipment": [
+        "Dumbbells / 啞鈴"
+      ],
+      "addAlternatives": [],
+      "reasoning": "keyword/equipment-match → (none primary) / eq: Dumbbells / 啞鈴"
+    },
+    {
+      "id": "book_dadce0024d2e",
+      "name": "啞鈴肩側舉 Lateral Dumbbell Raise",
+      "addPrimaryMuscles": [
+        "前三角肌 Anterior Deltoid"
+      ],
+      "addSecondaryMuscles": [
+        "側三角肌 Lateral Deltoid"
+      ],
+      "addEquipment": [],
+      "addAlternatives": [
+        "啞鈴肩前舉 Front Dumbbell Raise",
+        "啞鈴肩推 Dumbbell Shoulder Press"
+      ],
+      "reasoning": "keyword/equipment-match → 前三角肌 Anterior Deltoid / 2nd: 側三角肌 Lateral Deltoid | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "book_688df3d59fd7",
+      "name": "啞鈴肩前舉 Front Dumbbell Raise",
+      "addPrimaryMuscles": [
+        "前三角肌 Anterior Deltoid"
+      ],
+      "addSecondaryMuscles": [],
+      "addEquipment": [],
+      "addAlternatives": [
+        "啞鈴肩側舉 Lateral Dumbbell Raise",
+        "啞鈴肩推 Dumbbell Shoulder Press"
+      ],
+      "reasoning": "keyword/equipment-match → 前三角肌 Anterior Deltoid | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "cmm023vqe0007oqut9hv4hylu",
+      "name": "啞鈴肩推 Dumbbell Shoulder Press",
+      "addPrimaryMuscles": [],
+      "addSecondaryMuscles": [
+        "腹直肌 Rectus Abdominis"
+      ],
+      "addEquipment": [],
+      "addAlternatives": [],
+      "reasoning": "keyword/equipment-match → (none primary) / 2nd: 腹直肌 Rectus Abdominis"
+    },
+    {
+      "id": "book_891bac551708",
+      "name": "啞鈴肱三頭肌伸展 Dumbbell Triceps Extension",
+      "addPrimaryMuscles": [
+        "三頭肌 Triceps Brachii"
+      ],
+      "addSecondaryMuscles": [],
+      "addEquipment": [],
+      "addAlternatives": [
+        "肱三頭肌伸展 Triceps Extension",
+        "肱三頭肌伸展 Triceps Extension (Prone)"
+      ],
+      "reasoning": "keyword/equipment-match → 三頭肌 Triceps Brachii | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "book_26299986c2cf",
+      "name": "啞鈴行走 Dumbbell Walkout",
+      "addPrimaryMuscles": [
+        "腹直肌 Rectus Abdominis",
+        "豎脊肌 Erector Spinae"
+      ],
+      "addSecondaryMuscles": [],
+      "addEquipment": [],
+      "addAlternatives": [
+        "仰臥捲腹移棍 Incline Dumbbell Rollout",
+        "俯臥啞鈴雙手走路 Raised Pike Dumbbell Hand-Walk"
+      ],
+      "reasoning": "keyword/equipment-match → 腹直肌 Rectus Abdominis, 豎脊肌 Erector Spinae | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "cmlzdcadz001u11jljizol0p2",
+      "name": "啞鈴錘式彎舉 Dumbbell Hammer Curl",
+      "addPrimaryMuscles": [
+        "前臂 Forearms"
+      ],
+      "addSecondaryMuscles": [],
+      "addEquipment": [],
+      "addAlternatives": [],
+      "reasoning": "keyword/equipment-match → 前臂 Forearms"
+    },
+    {
+      "id": "book_603f8d8706b7",
+      "name": "啟動核心的動作 Core Activation Exercise",
+      "addPrimaryMuscles": [
+        "腹直肌 Rectus Abdominis"
+      ],
+      "addSecondaryMuscles": [
+        "豎脊肌 Erector Spinae"
+      ],
+      "addEquipment": [],
+      "addAlternatives": [
+        "Medicine Ball Slam Medicine Ball Slam",
+        "V字仰臥起坐 V Sit-Up"
+      ],
+      "reasoning": "keyword/equipment-match → 腹直肌 Rectus Abdominis / 2nd: 豎脊肌 Erector Spinae | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "book_067ff5b489f5",
+      "name": "啟動骨盆底肌 Activate Pelvic Floor",
+      "addPrimaryMuscles": [
+        "腹直肌 Rectus Abdominis"
+      ],
+      "addSecondaryMuscles": [
+        "豎脊肌 Erector Spinae"
+      ],
+      "addEquipment": [],
+      "addAlternatives": [
+        "Medicine Ball Slam Medicine Ball Slam",
+        "V字仰臥起坐 V Sit-Up"
+      ],
+      "reasoning": "keyword/equipment-match → 腹直肌 Rectus Abdominis / 2nd: 豎脊肌 Erector Spinae | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "book_57dfa951a1f4",
+      "name": "單手硬舉 Single-Arm Deadlift",
+      "addPrimaryMuscles": [
+        "豎脊肌 Erector Spinae",
+        "腘繩肌 Hamstrings"
+      ],
+      "addSecondaryMuscles": [
+        "腹直肌 Rectus Abdominis"
+      ],
+      "addEquipment": [],
+      "addAlternatives": [
+        "杠铃哈克蹲举 Barbell Hack Squat",
+        "槓鈴肩伸 Barbell Pull-Over"
+      ],
+      "reasoning": "keyword/equipment-match → 豎脊肌 Erector Spinae, 腘繩肌 Hamstrings / 2nd: 腹直肌 Rectus Abdominis | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "book_5ae6e0004d36",
+      "name": "單腿單手滑索上推 Single-Leg, Single-Arm Cable Press",
+      "addPrimaryMuscles": [
+        "腹直肌 Rectus Abdominis"
+      ],
+      "addSecondaryMuscles": [
+        "背闊肌 Latissimus Dorsi"
+      ],
+      "addEquipment": [],
+      "addAlternatives": [
+        "直臂下拉 Straight-arm Lat Pulldown",
+        "繩索臀踢腿 Cable Kickback"
+      ],
+      "reasoning": "keyword/equipment-match → 腹直肌 Rectus Abdominis / 2nd: 背闊肌 Latissimus Dorsi | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "book_dd815a7310bc",
+      "name": "單腿橋式 Single-Leg Bridge",
+      "addPrimaryMuscles": [
+        "豎脊肌 Erector Spinae"
+      ],
+      "addSecondaryMuscles": [
+        "腹直肌 Rectus Abdominis"
+      ],
+      "addEquipment": [],
+      "addAlternatives": [
+        "GHD臀腿下背伸展 GHD Back Extension",
+        "下背伸展 Lower Back Stretch"
+      ],
+      "reasoning": "keyword/equipment-match → 豎脊肌 Erector Spinae / 2nd: 腹直肌 Rectus Abdominis | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "book_483851d4fa2a",
+      "name": "單腿站姿划船 Single-Leg Standing Row",
+      "addPrimaryMuscles": [
+        "菱形肌 Rhomboids"
+      ],
+      "addSecondaryMuscles": [
+        "背闊肌 Latissimus Dorsi",
+        "後三角肌 Rear Deltoid"
+      ],
+      "addEquipment": [],
+      "addAlternatives": [
+        "單臂啞鈴划船 Single-arm Dumbbell Row",
+        "直立划船 Upright Row"
+      ],
+      "reasoning": "keyword/equipment-match → 菱形肌 Rhomboids / 2nd: 背闊肌 Latissimus Dorsi, 後三角肌 Rear Deltoid | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "book_a755660dd247",
+      "name": "單膝跪姿壺鈴推舉 Single-Knee Push Press with Kettlebell",
+      "addPrimaryMuscles": [
+        "前三角肌 Anterior Deltoid",
+        "腹直肌 Rectus Abdominis"
+      ],
+      "addSecondaryMuscles": [
+        "側三角肌 Lateral Deltoid"
+      ],
+      "addEquipment": [],
+      "addAlternatives": [
+        "下斜槓鈴臥推 Decline Barbell Bench Press",
+        "下蹲式上搏 Squat Clean"
+      ],
+      "reasoning": "keyword/equipment-match → 前三角肌 Anterior Deltoid, 腹直肌 Rectus Abdominis / 2nd: 側三角肌 Lateral Deltoid | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "cmm023vq20003oqutch89wzql",
+      "name": "單臂啞鈴划船 Single-arm Dumbbell Row",
+      "addPrimaryMuscles": [
+        "菱形肌 Rhomboids"
+      ],
+      "addSecondaryMuscles": [],
+      "addEquipment": [],
+      "addAlternatives": [],
+      "reasoning": "keyword/equipment-match → 菱形肌 Rhomboids"
+    },
+    {
+      "id": "book_21a9632d1bbb",
+      "name": "單臂坐姿划船 Seated Single-Arm Pulley Row",
+      "addPrimaryMuscles": [
+        "菱形肌 Rhomboids"
+      ],
+      "addSecondaryMuscles": [
+        "背闊肌 Latissimus Dorsi",
+        "豎脊肌 Erector Spinae"
+      ],
+      "addEquipment": [],
+      "addAlternatives": [
+        "坐姿划船 Seated Cable Row",
+        "T槓划船 T-bar Row"
+      ],
+      "reasoning": "keyword/equipment-match → 菱形肌 Rhomboids / 2nd: 背闊肌 Latissimus Dorsi, 豎脊肌 Erector Spinae | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "book_9e0be8e53706",
+      "name": "四足跪姿骨盆後傾 Four-Legged Pelvic Tilt",
+      "addPrimaryMuscles": [
+        "腹直肌 Rectus Abdominis",
+        "斜方肌 Trapezius"
+      ],
+      "addSecondaryMuscles": [
+        "豎脊肌 Erector Spinae"
+      ],
+      "addEquipment": [],
+      "addAlternatives": [
+        "Medicine Ball Slam Medicine Ball Slam",
+        "V字仰臥起坐 V Sit-Up"
+      ],
+      "reasoning": "keyword/equipment-match → 腹直肌 Rectus Abdominis, 斜方肌 Trapezius / 2nd: 豎脊肌 Erector Spinae | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "cmm023vrw000ooqutyzlloz88",
+      "name": "坐姿提踵 Seated Calf Raise",
+      "addPrimaryMuscles": [
+        "股四頭肌 Quadriceps"
+      ],
+      "addSecondaryMuscles": [
+        "臀大肌 Glutes"
+      ],
+      "addEquipment": [],
+      "addAlternatives": [
+        "腿推機 Leg Press"
+      ],
+      "reasoning": "keyword/equipment-match → 股四頭肌 Quadriceps / 2nd: 臀大肌 Glutes | alt: 1 (same-primary cohort)"
+    },
+    {
+      "id": "book_ec72c686c155",
+      "name": "坐姿背部挺身 Seated Back Extension",
+      "addPrimaryMuscles": [
+        "豎脊肌 Erector Spinae"
+      ],
+      "addSecondaryMuscles": [
+        "腹斜肌 Obliques"
+      ],
+      "addEquipment": [],
+      "addAlternatives": [
+        "GHD臀腿下背伸展 GHD Back Extension",
+        "下背伸展 Lower Back Stretch"
+      ],
+      "reasoning": "keyword/equipment-match → 豎脊肌 Erector Spinae / 2nd: 腹斜肌 Obliques | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "stretch_hamstring_seated",
+      "name": "坐姿腘繩肌伸展 Seated Hamstring Stretch",
+      "addPrimaryMuscles": [
+        "腘繩肌 Hamstrings"
+      ],
+      "addSecondaryMuscles": [],
+      "addEquipment": [
+        "Bodyweight / 自體重量"
+      ],
+      "addAlternatives": [
+        "站姿體前彎 Standing Roll-Down",
+        "單手硬舉 Single-Arm Deadlift"
+      ],
+      "reasoning": "keyword/equipment-match → 腘繩肌 Hamstrings / eq: Bodyweight / 自體重量 | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "cmm023vre000ioqutsrjemnr4",
+      "name": "坐姿腿彎舉 Seated Leg Curl",
+      "addPrimaryMuscles": [
+        "二頭肌 Biceps Brachii"
+      ],
+      "addSecondaryMuscles": [],
+      "addEquipment": [],
+      "addAlternatives": [],
+      "reasoning": "keyword/equipment-match → 二頭肌 Biceps Brachii"
+    },
+    {
+      "id": "book_05a3c614fbaf",
+      "name": "壺鈴擺動 Kettlebell Swing",
+      "addPrimaryMuscles": [
+        "前三角肌 Anterior Deltoid",
+        "腹直肌 Rectus Abdominis"
+      ],
+      "addSecondaryMuscles": [
+        "側三角肌 Lateral Deltoid",
+        "豎脊肌 Erector Spinae"
+      ],
+      "addEquipment": [],
+      "addAlternatives": [
+        "GHD仰臥起坐 GHD Sit-Up",
+        "仰臥超慢速單車 Super-Slow Bicycle"
+      ],
+      "reasoning": "keyword/equipment-match → 前三角肌 Anterior Deltoid, 腹直肌 Rectus Abdominis / 2nd: 側三角肌 Lateral Deltoid, 豎脊肌 Erector Spinae | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "book_ba54495d9e37",
+      "name": "壺鈴繞身體擺動 Kettlebell Round-Body Swing",
+      "addPrimaryMuscles": [
+        "腹直肌 Rectus Abdominis"
+      ],
+      "addSecondaryMuscles": [],
+      "addEquipment": [],
+      "addAlternatives": [
+        "下斜槓鈴臥推 Decline Barbell Bench Press",
+        "仰臥拱橋直臂下壓 Long-Arm Bridge Pull-Over"
+      ],
+      "reasoning": "keyword/equipment-match → 腹直肌 Rectus Abdominis | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "book_784a71757d8e",
+      "name": "壺鈴高拉 Kettlebell High Pull",
+      "addPrimaryMuscles": [
+        "前三角肌 Anterior Deltoid"
+      ],
+      "addSecondaryMuscles": [
+        "側三角肌 Lateral Deltoid",
+        "股四頭肌 Quadriceps",
+        "臀大肌 Glutes"
+      ],
+      "addEquipment": [],
+      "addAlternatives": [
+        "下蹲式上搏 Squat Clean",
+        "分腿式抓舉 Split Snatch"
+      ],
+      "reasoning": "keyword/equipment-match → 前三角肌 Anterior Deltoid / 2nd: 側三角肌 Lateral Deltoid, 股四頭肌 Quadriceps, 臀大肌 Glutes | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "book_b97a8ada2d70",
+      "name": "壺鈴高拉 Kettlebell High-Pull",
+      "addPrimaryMuscles": [
+        "前三角肌 Anterior Deltoid"
+      ],
+      "addSecondaryMuscles": [
+        "側三角肌 Lateral Deltoid"
+      ],
+      "addEquipment": [],
+      "addAlternatives": [
+        "下蹲式上搏 Squat Clean",
+        "分腿式抓舉 Split Snatch"
+      ],
+      "reasoning": "keyword/equipment-match → 前三角肌 Anterior Deltoid / 2nd: 側三角肌 Lateral Deltoid | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "book_280b2e4505a2",
+      "name": "奧林匹克杠铃推舉 Olympic Barbell Press",
+      "addPrimaryMuscles": [
+        "胸大肌 Pectorals",
+        "腹直肌 Rectus Abdominis"
+      ],
+      "addSecondaryMuscles": [
+        "前臂 Forearms"
+      ],
+      "addEquipment": [],
+      "addAlternatives": [
+        "45度角睫推舉 45 Degree Incline Chest Press",
+        "上斜槓鈴臥推 Incline Barbell Bench Press"
+      ],
+      "reasoning": "keyword/equipment-match → 胸大肌 Pectorals, 腹直肌 Rectus Abdominis / 2nd: 前臂 Forearms | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "stretch_child_pose",
+      "name": "嬰兒式 Child's Pose",
+      "addPrimaryMuscles": [
+        "豎脊肌 Erector Spinae"
+      ],
+      "addSecondaryMuscles": [],
+      "addEquipment": [
+        "Bodyweight / 自體重量"
+      ],
+      "addAlternatives": [
+        "GHD臀腿下背伸展 GHD Back Extension",
+        "下背伸展 Lower Back Stretch"
+      ],
+      "reasoning": "keyword/equipment-match → 豎脊肌 Erector Spinae / eq: Bodyweight / 自體重量 | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "cmm023vq80005oqut77k4kbv5",
+      "name": "寬距引體向上 Wide-grip Pull-up",
+      "addPrimaryMuscles": [
+        "腹直肌 Rectus Abdominis"
+      ],
+      "addSecondaryMuscles": [],
+      "addEquipment": [],
+      "addAlternatives": [
+        "懸掛舉腿 Hanging Leg Raise"
+      ],
+      "reasoning": "keyword/equipment-match → 腹直肌 Rectus Abdominis | alt: 1 (same-primary cohort)"
+    },
+    {
+      "id": "book_0a087d48d8c3",
+      "name": "屈膝划船 Knee Flexion Row",
+      "addPrimaryMuscles": [
+        "背闊肌 Latissimus Dorsi",
+        "菱形肌 Rhomboids"
+      ],
+      "addSecondaryMuscles": [
+        "斜方肌 Trapezius",
+        "股四頭肌 Quadriceps"
+      ],
+      "addEquipment": [],
+      "addAlternatives": [
+        "T槓划船 T-bar Row",
+        "反向拋藥球 Medicine Ball Reverse Throw"
+      ],
+      "reasoning": "keyword/equipment-match → 背闊肌 Latissimus Dorsi, 菱形肌 Rhomboids / 2nd: 斜方肌 Trapezius, 股四頭肌 Quadriceps | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "book_d20202e4fa39",
+      "name": "左右交替上階伸展 Alternating Side Reach Stretch",
+      "addPrimaryMuscles": [
+        "腹直肌 Rectus Abdominis"
+      ],
+      "addSecondaryMuscles": [],
+      "addEquipment": [],
+      "addAlternatives": [
+        "Medicine Ball Slam Medicine Ball Slam",
+        "V字仰臥起坐 V Sit-Up"
+      ],
+      "reasoning": "keyword/equipment-match → 腹直肌 Rectus Abdominis | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "book_84f37f7ffc0f",
+      "name": "平板推舉 Plank Push-Up",
+      "addPrimaryMuscles": [
+        "胸大肌 Pectorals"
+      ],
+      "addSecondaryMuscles": [
+        "腹直肌 Rectus Abdominis"
+      ],
+      "addEquipment": [],
+      "addAlternatives": [
+        "伏地挺身 Push-up",
+        "俯臥挺身進階版 Advanced Push-Up"
+      ],
+      "reasoning": "keyword/equipment-match → 胸大肌 Pectorals / 2nd: 腹直肌 Rectus Abdominis | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "book_bca2579b69f8",
+      "name": "後三角肌下拉 Seated Cable Row",
+      "addPrimaryMuscles": [
+        "背闊肌 Latissimus Dorsi",
+        "菱形肌 Rhomboids"
+      ],
+      "addSecondaryMuscles": [
+        "後三角肌 Rear Deltoid",
+        "腹直肌 Rectus Abdominis",
+        "斜方肌 Trapezius"
+      ],
+      "addEquipment": [],
+      "addAlternatives": [
+        "直臂下拉 Straight-arm Lat Pulldown",
+        "肱三頭肌下拉 Triceps Cable Pull-Down"
+      ],
+      "reasoning": "keyword/equipment-match → 背闊肌 Latissimus Dorsi, 菱形肌 Rhomboids / 2nd: 後三角肌 Rear Deltoid, 腹直肌 Rectus Abdominis, 斜方肌 Trapezius | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "book_eb5e1423793a",
+      "name": "徒手蹲舉 Bodyweight Squat",
+      "addPrimaryMuscles": [
+        "臀大肌 Glutes"
+      ],
+      "addSecondaryMuscles": [],
+      "addEquipment": [],
+      "addAlternatives": [
+        "前跨步弓步蹲 Forward Lunge",
+        "徒手蹲舉 Squat"
+      ],
+      "reasoning": "keyword/equipment-match → 臀大肌 Glutes | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "book_1dbb329ffb8c",
+      "name": "徒手蹲舉 Squat",
+      "addPrimaryMuscles": [
+        "臀大肌 Glutes",
+        "腹直肌 Rectus Abdominis"
+      ],
+      "addSecondaryMuscles": [],
+      "addEquipment": [],
+      "addAlternatives": [
+        "GHD仰臥起坐 GHD Sit-Up",
+        "仰臥超慢速單車 Super-Slow Bicycle"
+      ],
+      "reasoning": "keyword/equipment-match → 臀大肌 Glutes, 腹直肌 Rectus Abdominis | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "book_974d519b0e82",
+      "name": "從競部屈曲 Pike",
+      "addPrimaryMuscles": [
+        "腹直肌 Rectus Abdominis"
+      ],
+      "addSecondaryMuscles": [],
+      "addEquipment": [],
+      "addAlternatives": [
+        "GHD仰臥起坐 GHD Sit-Up",
+        "仰臥超慢速單車 Super-Slow Bicycle"
+      ],
+      "reasoning": "keyword/equipment-match → 腹直肌 Rectus Abdominis | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "book_20ec0e38f2ac",
+      "name": "急推 Bench Press",
+      "addPrimaryMuscles": [
+        "胸大肌 Pectorals",
+        "前三角肌 Anterior Deltoid"
+      ],
+      "addSecondaryMuscles": [
+        "側三角肌 Lateral Deltoid",
+        "三頭肌 Triceps Brachii",
+        "腹直肌 Rectus Abdominis"
+      ],
+      "addEquipment": [],
+      "addAlternatives": [
+        "45度角睫推舉 45 Degree Incline Chest Press",
+        "上斜槓鈴臥推 Incline Barbell Bench Press"
+      ],
+      "reasoning": "keyword/equipment-match → 胸大肌 Pectorals, 前三角肌 Anterior Deltoid / 2nd: 側三角肌 Lateral Deltoid, 三頭肌 Triceps Brachii, 腹直肌 Rectus Abdominis | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "book_4db7601e39ca",
+      "name": "急推Push Press Push Press (Title Case)",
+      "addPrimaryMuscles": [
+        "前三角肌 Anterior Deltoid"
+      ],
+      "addSecondaryMuscles": [
+        "側三角肌 Lateral Deltoid"
+      ],
+      "addEquipment": [],
+      "addAlternatives": [
+        "下蹲式上搏 Squat Clean",
+        "分腿式抓舉 Split Snatch"
+      ],
+      "reasoning": "keyword/equipment-match → 前三角肌 Anterior Deltoid / 2nd: 側三角肌 Lateral Deltoid | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "book_91e8471f1e56",
+      "name": "懸吊側腹捲腹 Suspended Oblique Crunch",
+      "addPrimaryMuscles": [
+        "腹直肌 Rectus Abdominis"
+      ],
+      "addSecondaryMuscles": [
+        "腹斜肌 Obliques"
+      ],
+      "addEquipment": [],
+      "addAlternatives": [
+        "4字形捲體 Figure-4 Crunch",
+        "仰臥起坐 Crunches"
+      ],
+      "reasoning": "keyword/equipment-match → 腹直肌 Rectus Abdominis / 2nd: 腹斜肌 Obliques | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "book_a1ed963a77e7",
+      "name": "懸吊屈髓抬腿 Hanging Toe Tuck",
+      "addPrimaryMuscles": [
+        "髖屈肌 Hip Flexors"
+      ],
+      "addSecondaryMuscles": [
+        "腹直肌 Rectus Abdominis",
+        "臀大肌 Glutes"
+      ],
+      "addEquipment": [],
+      "addAlternatives": [
+        "板凳V字抬腿 Board Bench V-Leg Raise",
+        "V字抬腿 V-Leg Raise"
+      ],
+      "reasoning": "keyword/equipment-match → 髖屈肌 Hip Flexors / 2nd: 腹直肌 Rectus Abdominis, 臀大肌 Glutes | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "book_c133361cc590",
+      "name": "懸吊式側向單臂轉身 Suspended Single-Arm Core Rotation",
+      "addPrimaryMuscles": [
+        "腹斜肌 Obliques",
+        "腹直肌 Rectus Abdominis"
+      ],
+      "addSecondaryMuscles": [],
+      "addEquipment": [],
+      "addAlternatives": [
+        "Medicine Ball Slam Medicine Ball Slam",
+        "V字仰臥起坐 V Sit-Up"
+      ],
+      "reasoning": "keyword/equipment-match → 腹斜肌 Obliques, 腹直肌 Rectus Abdominis | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "book_f2e894c39291",
+      "name": "懸吊捲腹 Suspended Crunch",
+      "addPrimaryMuscles": [
+        "腹直肌 Rectus Abdominis"
+      ],
+      "addSecondaryMuscles": [],
+      "addEquipment": [],
+      "addAlternatives": [
+        "GHD仰臥起坐 GHD Sit-Up",
+        "仰臥超慢速單車 Super-Slow Bicycle"
+      ],
+      "reasoning": "keyword/equipment-match → 腹直肌 Rectus Abdominis | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "book_de84df5d50f5",
+      "name": "懸吊鐘擺 Suspended Pendulum",
+      "addPrimaryMuscles": [
+        "腹直肌 Rectus Abdominis"
+      ],
+      "addSecondaryMuscles": [
+        "豎脊肌 Erector Spinae",
+        "腹斜肌 Obliques"
+      ],
+      "addEquipment": [],
+      "addAlternatives": [
+        "GHD仰臥起坐 GHD Sit-Up",
+        "仰臥超慢速單車 Super-Slow Bicycle"
+      ],
+      "reasoning": "keyword/equipment-match → 腹直肌 Rectus Abdominis / 2nd: 豎脊肌 Erector Spinae, 腹斜肌 Obliques | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "book_8742a1232d7c",
+      "name": "懸掛式上搏 Hanging Press",
+      "addPrimaryMuscles": [
+        "前三角肌 Anterior Deltoid"
+      ],
+      "addSecondaryMuscles": [
+        "側三角肌 Lateral Deltoid",
+        "後三角肌 Rear Deltoid",
+        "腹斜肌 Obliques"
+      ],
+      "addEquipment": [],
+      "addAlternatives": [
+        "下蹲式上搏 Squat Clean",
+        "分腿式抓舉 Split Snatch"
+      ],
+      "reasoning": "keyword/equipment-match → 前三角肌 Anterior Deltoid / 2nd: 側三角肌 Lateral Deltoid, 後三角肌 Rear Deltoid, 腹斜肌 Obliques | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "book_4fe8d8bc2e91",
+      "name": "懸掛式上搏 Power Clean From Hang",
+      "addPrimaryMuscles": [
+        "前三角肌 Anterior Deltoid"
+      ],
+      "addSecondaryMuscles": [
+        "側三角肌 Lateral Deltoid",
+        "腹斜肌 Obliques"
+      ],
+      "addEquipment": [],
+      "addAlternatives": [
+        "壺鈴擺動 Kettlebell Swing",
+        "沙袋肩推 Sanbag Shouldering"
+      ],
+      "reasoning": "keyword/equipment-match → 前三角肌 Anterior Deltoid / 2nd: 側三角肌 Lateral Deltoid, 腹斜肌 Obliques | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "book_e75da0f219d9",
+      "name": "懸掛式抓舉 Hang Clean",
+      "addPrimaryMuscles": [
+        "前三角肌 Anterior Deltoid"
+      ],
+      "addSecondaryMuscles": [
+        "側三角肌 Lateral Deltoid",
+        "股四頭肌 Quadriceps",
+        "臀大肌 Glutes"
+      ],
+      "addEquipment": [],
+      "addAlternatives": [
+        "下蹲式上搏 Squat Clean",
+        "分腿式抓舉 Split Snatch"
+      ],
+      "reasoning": "keyword/equipment-match → 前三角肌 Anterior Deltoid / 2nd: 側三角肌 Lateral Deltoid, 股四頭肌 Quadriceps, 臀大肌 Glutes | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "book_24c35fe0ef74",
+      "name": "懸掛式抓舉 Power Snatch From Hang",
+      "addPrimaryMuscles": [
+        "前三角肌 Anterior Deltoid"
+      ],
+      "addSecondaryMuscles": [
+        "側三角肌 Lateral Deltoid"
+      ],
+      "addEquipment": [],
+      "addAlternatives": [
+        "下蹲式上搏 Squat Clean",
+        "分腿式抓舉 Split Snatch"
+      ],
+      "reasoning": "keyword/equipment-match → 前三角肌 Anterior Deltoid / 2nd: 側三角肌 Lateral Deltoid | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "cmm023vrn000loqutdqn2ezfk",
+      "name": "懸掛舉腿 Hanging Leg Raise",
+      "addPrimaryMuscles": [],
+      "addSecondaryMuscles": [
+        "背闊肌 Latissimus Dorsi"
+      ],
+      "addEquipment": [],
+      "addAlternatives": [
+        "寬距引體向上 Wide-grip Pull-up"
+      ],
+      "reasoning": "keyword/equipment-match → (none primary) / 2nd: 背闊肌 Latissimus Dorsi | alt: 1 (same-primary cohort)"
+    },
+    {
+      "id": "book_a92c66a3e64a",
+      "name": "抓舉 Clean",
+      "addPrimaryMuscles": [
+        "前三角肌 Anterior Deltoid"
+      ],
+      "addSecondaryMuscles": [
+        "側三角肌 Lateral Deltoid",
+        "股四頭肌 Quadriceps",
+        "臀大肌 Glutes"
+      ],
+      "addEquipment": [],
+      "addAlternatives": [
+        "下蹲式上搏 Squat Clean",
+        "分腿式抓舉 Split Snatch"
+      ],
+      "reasoning": "keyword/equipment-match → 前三角肌 Anterior Deltoid / 2nd: 側三角肌 Lateral Deltoid, 股四頭肌 Quadriceps, 臀大肌 Glutes | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "book_d97b4833ef3e",
+      "name": "抓舉接槓 Snatch Balance",
+      "addPrimaryMuscles": [
+        "前三角肌 Anterior Deltoid"
+      ],
+      "addSecondaryMuscles": [
+        "側三角肌 Lateral Deltoid",
+        "臀大肌 Glutes",
+        "腹直肌 Rectus Abdominis"
+      ],
+      "addEquipment": [],
+      "addAlternatives": [
+        "下蹲式上搏 Squat Clean",
+        "分腿式抓舉 Split Snatch"
+      ],
+      "reasoning": "keyword/equipment-match → 前三角肌 Anterior Deltoid / 2nd: 側三角肌 Lateral Deltoid, 臀大肌 Glutes, 腹直肌 Rectus Abdominis | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "book_51501773867d",
+      "name": "抗力球伏地挺身 Ball Press-Up",
+      "addPrimaryMuscles": [
+        "胸大肌 Pectorals",
+        "腹直肌 Rectus Abdominis"
+      ],
+      "addSecondaryMuscles": [],
+      "addEquipment": [],
+      "addAlternatives": [
+        "GHD仰臥起坐 GHD Sit-Up",
+        "仰臥超慢速單車 Super-Slow Bicycle"
+      ],
+      "reasoning": "keyword/equipment-match → 胸大肌 Pectorals, 腹直肌 Rectus Abdominis | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "book_5f7757fd7438",
+      "name": "抗力球前推 Resistance Ball Push",
+      "addPrimaryMuscles": [
+        "腹直肌 Rectus Abdominis"
+      ],
+      "addSecondaryMuscles": [
+        "前臂 Forearms"
+      ],
+      "addEquipment": [],
+      "addAlternatives": [
+        "GHD仰臥起坐 GHD Sit-Up",
+        "仰臥超慢速單車 Super-Slow Bicycle"
+      ],
+      "reasoning": "keyword/equipment-match → 腹直肌 Rectus Abdominis / 2nd: 前臂 Forearms | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "book_e15559cdca7d",
+      "name": "抗力球屈體 Ball Jack-Knife",
+      "addPrimaryMuscles": [
+        "腹直肌 Rectus Abdominis"
+      ],
+      "addSecondaryMuscles": [
+        "豎脊肌 Erector Spinae"
+      ],
+      "addEquipment": [],
+      "addAlternatives": [
+        "GHD仰臥起坐 GHD Sit-Up",
+        "仰臥超慢速單車 Super-Slow Bicycle"
+      ],
+      "reasoning": "keyword/equipment-match → 腹直肌 Rectus Abdominis / 2nd: 豎脊肌 Erector Spinae | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "book_83f2c352765f",
+      "name": "挺舉接橫 Clean and Press (Title Case)",
+      "addPrimaryMuscles": [
+        "前三角肌 Anterior Deltoid"
+      ],
+      "addSecondaryMuscles": [
+        "側三角肌 Lateral Deltoid",
+        "胸大肌 Pectorals",
+        "背闊肌 Latissimus Dorsi"
+      ],
+      "addEquipment": [],
+      "addAlternatives": [
+        "下蹲式上搏 Squat Clean",
+        "分腿式抓舉 Split Snatch"
+      ],
+      "reasoning": "keyword/equipment-match → 前三角肌 Anterior Deltoid / 2nd: 側三角肌 Lateral Deltoid, 胸大肌 Pectorals, 背闊肌 Latissimus Dorsi | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "book_2d4f2c50d3a1",
+      "name": "斜板間舉 Dumbbell Upright Row (Incline)",
+      "addPrimaryMuscles": [
+        "菱形肌 Rhomboids"
+      ],
+      "addSecondaryMuscles": [
+        "上胸 Upper Chest",
+        "後三角肌 Rear Deltoid"
+      ],
+      "addEquipment": [],
+      "addAlternatives": [
+        "稻草人外旋 Scarecrow Rotation",
+        "臉拉 Face Pull"
+      ],
+      "reasoning": "keyword/equipment-match → 菱形肌 Rhomboids / 2nd: 上胸 Upper Chest, 後三角肌 Rear Deltoid | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "book_77e7c949d996",
+      "name": "早安式 Good Morning",
+      "addPrimaryMuscles": [
+        "豎脊肌 Erector Spinae"
+      ],
+      "addSecondaryMuscles": [],
+      "addEquipment": [],
+      "addAlternatives": [
+        "GHD臀腿下背伸展 GHD Back Extension",
+        "下背伸展 Lower Back Stretch"
+      ],
+      "reasoning": "keyword/equipment-match → 豎脊肌 Erector Spinae | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "book_a428ad7f20c2",
+      "name": "星星式 Star",
+      "addPrimaryMuscles": [
+        "豎脊肌 Erector Spinae",
+        "腹直肌 Rectus Abdominis"
+      ],
+      "addSecondaryMuscles": [
+        "斜方肌 Trapezius"
+      ],
+      "addEquipment": [],
+      "addAlternatives": [
+        "GHD臀腿下背伸展 GHD Back Extension",
+        "Medicine Ball Slam Medicine Ball Slam"
+      ],
+      "reasoning": "keyword/equipment-match → 豎脊肌 Erector Spinae, 腹直肌 Rectus Abdominis / 2nd: 斜方肌 Trapezius | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "book_ab4b3ddf6084",
+      "name": "木貝鈴硬舉 Barbell Deadlift",
+      "addPrimaryMuscles": [
+        "豎脊肌 Erector Spinae",
+        "腘繩肌 Hamstrings"
+      ],
+      "addSecondaryMuscles": [],
+      "addEquipment": [],
+      "addAlternatives": [
+        "仰臥拱橋直臂下壓 Long-Arm Bridge Pull-Over",
+        "直腿硬舉 Straight-Leg Deadlift"
+      ],
+      "reasoning": "keyword/equipment-match → 豎脊肌 Erector Spinae, 腘繩肌 Hamstrings | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "book_37d98045a380",
+      "name": "杠铃上跨步 Barbell Step-Up",
+      "addPrimaryMuscles": [
+        "臀大肌 Glutes"
+      ],
+      "addSecondaryMuscles": [
+        "股四頭肌 Quadriceps",
+        "腘繩肌 Hamstrings",
+        "腹直肌 Rectus Abdominis"
+      ],
+      "addEquipment": [],
+      "addAlternatives": [
+        "側跨步弓步蹲 Lateral Lunge",
+        "啞鈴分腿蹲 Dumbbell Split Squat"
+      ],
+      "reasoning": "keyword/equipment-match → 臀大肌 Glutes / 2nd: 股四頭肌 Quadriceps, 腘繩肌 Hamstrings, 腹直肌 Rectus Abdominis | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "book_d0a6982eddcc",
+      "name": "杠铃哈克蹲举 Barbell Hack Squat",
+      "addPrimaryMuscles": [
+        "股四頭肌 Quadriceps",
+        "腘繩肌 Hamstrings"
+      ],
+      "addSecondaryMuscles": [
+        "臀大肌 Glutes",
+        "腹直肌 Rectus Abdominis"
+      ],
+      "addEquipment": [],
+      "addAlternatives": [
+        "仰臥單腳抱腿前踢 Single-Leg Extension and Stretch",
+        "單手硬舉 Single-Arm Deadlift"
+      ],
+      "reasoning": "keyword/equipment-match → 股四頭肌 Quadriceps, 腘繩肌 Hamstrings / 2nd: 臀大肌 Glutes, 腹直肌 Rectus Abdominis | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "book_9040e21ff4bb",
+      "name": "杠铃转体 Barbell Twist",
+      "addPrimaryMuscles": [
+        "腹斜肌 Obliques",
+        "腹直肌 Rectus Abdominis"
+      ],
+      "addSecondaryMuscles": [],
+      "addEquipment": [],
+      "addAlternatives": [
+        "下斜槓鈴臥推 Decline Barbell Bench Press",
+        "仰臥拱橋直臂下壓 Long-Arm Bridge Pull-Over"
+      ],
+      "reasoning": "keyword/equipment-match → 腹斜肌 Obliques, 腹直肌 Rectus Abdominis | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "book_3dc2d3642a2f",
+      "name": "板凳V字抬腿 Board Bench V-Leg Raise",
+      "addPrimaryMuscles": [
+        "髖屈肌 Hip Flexors",
+        "腹直肌 Rectus Abdominis"
+      ],
+      "addSecondaryMuscles": [
+        "股四頭肌 Quadriceps"
+      ],
+      "addEquipment": [],
+      "addAlternatives": [
+        "GHD仰臥起坐 GHD Sit-Up",
+        "下斜槓鈴臥推 Decline Barbell Bench Press"
+      ],
+      "reasoning": "keyword/equipment-match → 髖屈肌 Hip Flexors, 腹直肌 Rectus Abdominis / 2nd: 股四頭肌 Quadriceps | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "book_28a9d240589c",
+      "name": "核心啟動 Core Activation",
+      "addPrimaryMuscles": [
+        "腹直肌 Rectus Abdominis"
+      ],
+      "addSecondaryMuscles": [
+        "豎脊肌 Erector Spinae"
+      ],
+      "addEquipment": [],
+      "addAlternatives": [
+        "Medicine Ball Slam Medicine Ball Slam",
+        "V字仰臥起坐 V Sit-Up"
+      ],
+      "reasoning": "keyword/equipment-match → 腹直肌 Rectus Abdominis / 2nd: 豎脊肌 Erector Spinae | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "book_994851b76c8b",
+      "name": "核心啟動伸展 Core Activation Stretch",
+      "addPrimaryMuscles": [
+        "腹直肌 Rectus Abdominis"
+      ],
+      "addSecondaryMuscles": [],
+      "addEquipment": [],
+      "addAlternatives": [
+        "Medicine Ball Slam Medicine Ball Slam",
+        "V字仰臥起坐 V Sit-Up"
+      ],
+      "reasoning": "keyword/equipment-match → 腹直肌 Rectus Abdominis | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "book_1ff223384989",
+      "name": "核心板旋轉 Core Board Rotation",
+      "addPrimaryMuscles": [
+        "腹直肌 Rectus Abdominis",
+        "腹斜肌 Obliques"
+      ],
+      "addSecondaryMuscles": [],
+      "addEquipment": [],
+      "addAlternatives": [
+        "Medicine Ball Slam Medicine Ball Slam",
+        "V字仰臥起坐 V Sit-Up"
+      ],
+      "reasoning": "keyword/equipment-match → 腹直肌 Rectus Abdominis, 腹斜肌 Obliques | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "cmlzdcafb002211jlia06estv",
+      "name": "棒式 Plank",
+      "addPrimaryMuscles": [],
+      "addSecondaryMuscles": [
+        "前臂 Forearms"
+      ],
+      "addEquipment": [],
+      "addAlternatives": [
+        "4字形捲體 Figure-4 Crunch"
+      ],
+      "reasoning": "keyword/equipment-match → (none primary) / 2nd: 前臂 Forearms | alt: 1 (same-primary cohort)"
+    },
+    {
+      "id": "book_a0a371f95df6",
+      "name": "棒式槓片前推 Plank with Plate Push",
+      "addPrimaryMuscles": [
+        "腹直肌 Rectus Abdominis"
+      ],
+      "addSecondaryMuscles": [
+        "前臂 Forearms"
+      ],
+      "addEquipment": [],
+      "addAlternatives": [
+        "側棒式 Side Plank",
+        "下斜槓鈴臥推 Decline Barbell Bench Press"
+      ],
+      "reasoning": "keyword/equipment-match → 腹直肌 Rectus Abdominis / 2nd: 前臂 Forearms | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "book_4ec746cfc568",
+      "name": "構鈴仰臥推举 Dumbbell Incline Press",
+      "addPrimaryMuscles": [
+        "胸大肌 Pectorals"
+      ],
+      "addSecondaryMuscles": [
+        "上胸 Upper Chest",
+        "前三角肌 Anterior Deltoid"
+      ],
+      "addEquipment": [],
+      "addAlternatives": [
+        "上斜啞鈴臥推 Incline Dumbbell Press",
+        "俯身啞鈴飛鳥 Bent-over Rear Delt Fly"
+      ],
+      "reasoning": "keyword/equipment-match → 胸大肌 Pectorals / 2nd: 上胸 Upper Chest, 前三角肌 Anterior Deltoid | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "cmlzdcadf001r11jlj17yojvy",
+      "name": "槓鈴划船 Barbell Row",
+      "addPrimaryMuscles": [],
+      "addSecondaryMuscles": [
+        "斜方肌 Trapezius"
+      ],
+      "addEquipment": [],
+      "addAlternatives": [],
+      "reasoning": "keyword/equipment-match → (none primary) / 2nd: 斜方肌 Trapezius"
+    },
+    {
+      "id": "book_2069b5cac729",
+      "name": "槓鈴弓步蹲 Barbell Lunge",
+      "addPrimaryMuscles": [
+        "臀大肌 Glutes"
+      ],
+      "addSecondaryMuscles": [
+        "腹直肌 Rectus Abdominis"
+      ],
+      "addEquipment": [],
+      "addAlternatives": [
+        "前跨步弓步蹲 Forward Lunge",
+        "徒手蹲舉 Bodyweight Squat"
+      ],
+      "reasoning": "keyword/equipment-match → 臀大肌 Glutes / 2nd: 腹直肌 Rectus Abdominis | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "cmlzdcae5001v11jlx20nwifb",
+      "name": "槓鈴深蹲 Barbell Back Squat",
+      "addPrimaryMuscles": [],
+      "addSecondaryMuscles": [
+        "斜方肌 Trapezius"
+      ],
+      "addEquipment": [],
+      "addAlternatives": [],
+      "reasoning": "keyword/equipment-match → (none primary) / 2nd: 斜方肌 Trapezius"
+    },
+    {
+      "id": "book_cfaa9b3421a6",
+      "name": "槓鈴肩伸 Barbell Pull-Over",
+      "addPrimaryMuscles": [
+        "豎脊肌 Erector Spinae"
+      ],
+      "addSecondaryMuscles": [],
+      "addEquipment": [],
+      "addAlternatives": [
+        "單手硬舉 Single-Arm Deadlift",
+        "臀橋 Glute Bridge"
+      ],
+      "reasoning": "keyword/equipment-match → 豎脊肌 Erector Spinae | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "book_d052da54c938",
+      "name": "槓鈴肩推 Military Barbell Press",
+      "addPrimaryMuscles": [
+        "前三角肌 Anterior Deltoid"
+      ],
+      "addSecondaryMuscles": [
+        "側三角肌 Lateral Deltoid"
+      ],
+      "addEquipment": [],
+      "addAlternatives": [
+        "下蹲式上搏 Squat Clean",
+        "分腿式抓舉 Split Snatch"
+      ],
+      "reasoning": "keyword/equipment-match → 前三角肌 Anterior Deltoid / 2nd: 側三角肌 Lateral Deltoid | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "cmlzdcaba001h11jlw4qesrqg",
+      "name": "槓鈴肩推 Overhead Barbell Press",
+      "addPrimaryMuscles": [],
+      "addSecondaryMuscles": [
+        "前臂 Forearms"
+      ],
+      "addEquipment": [],
+      "addAlternatives": [],
+      "reasoning": "keyword/equipment-match → (none primary) / 2nd: 前臂 Forearms"
+    },
+    {
+      "id": "cmlzdca9o001a11jl6e68w6k8",
+      "name": "槓鈴臥推 Barbell Bench Press",
+      "addPrimaryMuscles": [
+        "前三角肌 Anterior Deltoid"
+      ],
+      "addSecondaryMuscles": [
+        "前臂 Forearms"
+      ],
+      "addEquipment": [],
+      "addAlternatives": [],
+      "reasoning": "keyword/equipment-match → 前三角肌 Anterior Deltoid / 2nd: 前臂 Forearms"
+    },
+    {
+      "id": "book_72512e4d5966",
+      "name": "槓鈴轉體 O-Bar Rotation",
+      "addPrimaryMuscles": [
+        "腹斜肌 Obliques",
+        "腹直肌 Rectus Abdominis"
+      ],
+      "addSecondaryMuscles": [],
+      "addEquipment": [],
+      "addAlternatives": [
+        "下斜槓鈴臥推 Decline Barbell Bench Press",
+        "仰臥拱橋直臂下壓 Long-Arm Bridge Pull-Over"
+      ],
+      "reasoning": "keyword/equipment-match → 腹斜肌 Obliques, 腹直肌 Rectus Abdominis | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "book_801c3640d44d",
+      "name": "機器式大腿伸展 Machine Leg Extension",
+      "addPrimaryMuscles": [
+        "股四頭肌 Quadriceps"
+      ],
+      "addSecondaryMuscles": [
+        "腘繩肌 Hamstrings"
+      ],
+      "addEquipment": [],
+      "addAlternatives": [
+        "腿屈伸 Leg Extension",
+        "仰臥單腳抱腿前踢 Single-Leg Extension and Stretch"
+      ],
+      "reasoning": "keyword/equipment-match → 股四頭肌 Quadriceps / 2nd: 腘繩肌 Hamstrings | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "book_653624c0cd50",
+      "name": "機械飛鳥 Machinery Fly",
+      "addPrimaryMuscles": [
+        "胸大肌 Pectorals"
+      ],
+      "addSecondaryMuscles": [],
+      "addEquipment": [],
+      "addAlternatives": [
+        "上斜繩索飛鳥 Incline Cable Fly",
+        "啞鈴飛鳥 Dumbbell Fly"
+      ],
+      "reasoning": "keyword/equipment-match → 胸大肌 Pectorals | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "book_936db716ea33",
+      "name": "橫鈴肩伸 Barbell Lateral Raise",
+      "addPrimaryMuscles": [
+        "豎脊肌 Erector Spinae"
+      ],
+      "addSecondaryMuscles": [
+        "側三角肌 Lateral Deltoid",
+        "上胸 Upper Chest"
+      ],
+      "addEquipment": [],
+      "addAlternatives": [
+        "背伸展 Back Extension",
+        "仰臥拱橋直臂下壓 Long-Arm Bridge Pull-Over"
+      ],
+      "reasoning": "keyword/equipment-match → 豎脊肌 Erector Spinae / 2nd: 側三角肌 Lateral Deltoid, 上胸 Upper Chest | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "book_a3f683f69239",
+      "name": "橫鈴蹲舉 Barbell Front Squat",
+      "addPrimaryMuscles": [
+        "股四頭肌 Quadriceps",
+        "臀大肌 Glutes"
+      ],
+      "addSecondaryMuscles": [
+        "腹直肌 Rectus Abdominis"
+      ],
+      "addEquipment": [],
+      "addAlternatives": [
+        "Back Squat Back Squat",
+        "FRONT BARBELL SQUAT  Front Barbell Squat"
+      ],
+      "reasoning": "keyword/equipment-match → 股四頭肌 Quadriceps, 臀大肌 Glutes / 2nd: 腹直肌 Rectus Abdominis | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "book_d0cd041cd8e2",
+      "name": "沙袋肩推 Sanbag Shouldering",
+      "addPrimaryMuscles": [
+        "前三角肌 Anterior Deltoid"
+      ],
+      "addSecondaryMuscles": [
+        "側三角肌 Lateral Deltoid",
+        "腹直肌 Rectus Abdominis"
+      ],
+      "addEquipment": [],
+      "addAlternatives": [
+        "壺鈴擺動 Kettlebell Swing",
+        "懸掛式上搏 Power Clean From Hang"
+      ],
+      "reasoning": "keyword/equipment-match → 前三角肌 Anterior Deltoid / 2nd: 側三角肌 Lateral Deltoid, 腹直肌 Rectus Abdominis | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "book_e17c63394735",
+      "name": "滑索上舉 Pulley Lift",
+      "addPrimaryMuscles": [
+        "腹斜肌 Obliques",
+        "腹直肌 Rectus Abdominis"
+      ],
+      "addSecondaryMuscles": [],
+      "addEquipment": [],
+      "addAlternatives": [
+        "GHD仰臥起坐 GHD Sit-Up",
+        "仰臥超慢速單車 Super-Slow Bicycle"
+      ],
+      "reasoning": "keyword/equipment-match → 腹斜肌 Obliques, 腹直肌 Rectus Abdominis | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "book_e4dfd2977097",
+      "name": "滑索下壓 Pulley Chop",
+      "addPrimaryMuscles": [
+        "腹斜肌 Obliques",
+        "腹直肌 Rectus Abdominis"
+      ],
+      "addSecondaryMuscles": [
+        "背闊肌 Latissimus Dorsi"
+      ],
+      "addEquipment": [],
+      "addAlternatives": [
+        "下斜槓鈴臥推 Decline Barbell Bench Press",
+        "仰臥拱橋直臂下壓 Long-Arm Bridge Pull-Over"
+      ],
+      "reasoning": "keyword/equipment-match → 腹斜肌 Obliques, 腹直肌 Rectus Abdominis / 2nd: 背闊肌 Latissimus Dorsi | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "book_e61b8e4225e4",
+      "name": "滑索飛烏 Slide Cable Fly",
+      "addPrimaryMuscles": [
+        "胸大肌 Pectorals"
+      ],
+      "addSecondaryMuscles": [
+        "上胸 Upper Chest"
+      ],
+      "addEquipment": [],
+      "addAlternatives": [
+        "45度角睫推舉 45 Degree Incline Chest Press",
+        "上斜啞鈴臥推 Incline Dumbbell Press"
+      ],
+      "reasoning": "keyword/equipment-match → 胸大肌 Pectorals / 2nd: 上胸 Upper Chest | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "book_4f3082d7d226",
+      "name": "煤數式上搏 Clean and Press (Title Case)",
+      "addPrimaryMuscles": [
+        "前三角肌 Anterior Deltoid",
+        "腹直肌 Rectus Abdominis"
+      ],
+      "addSecondaryMuscles": [
+        "側三角肌 Lateral Deltoid"
+      ],
+      "addEquipment": [],
+      "addAlternatives": [
+        "下斜槓鈴臥推 Decline Barbell Bench Press",
+        "下蹲式上搏 Squat Clean"
+      ],
+      "reasoning": "keyword/equipment-match → 前三角肌 Anterior Deltoid, 腹直肌 Rectus Abdominis / 2nd: 側三角肌 Lateral Deltoid | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "book_ecbf10433360",
+      "name": "爆發式上搏 Power Clean",
+      "addPrimaryMuscles": [
+        "前三角肌 Anterior Deltoid"
+      ],
+      "addSecondaryMuscles": [
+        "側三角肌 Lateral Deltoid",
+        "腹斜肌 Obliques"
+      ],
+      "addEquipment": [],
+      "addAlternatives": [
+        "下蹲式上搏 Squat Clean",
+        "分腿式抓舉 Split Snatch"
+      ],
+      "reasoning": "keyword/equipment-match → 前三角肌 Anterior Deltoid / 2nd: 側三角肌 Lateral Deltoid, 腹斜肌 Obliques | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "book_0eaa29071ba4",
+      "name": "爆發式抓舉 Power Clean (Title Case)",
+      "addPrimaryMuscles": [
+        "前三角肌 Anterior Deltoid",
+        "腹直肌 Rectus Abdominis"
+      ],
+      "addSecondaryMuscles": [
+        "側三角肌 Lateral Deltoid",
+        "斜方肌 Trapezius",
+        "腹斜肌 Obliques"
+      ],
+      "addEquipment": [],
+      "addAlternatives": [
+        "下斜槓鈴臥推 Decline Barbell Bench Press",
+        "下蹲式上搏 Squat Clean"
+      ],
+      "reasoning": "keyword/equipment-match → 前三角肌 Anterior Deltoid, 腹直肌 Rectus Abdominis / 2nd: 側三角肌 Lateral Deltoid, 斜方肌 Trapezius, 腹斜肌 Obliques | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "book_29e3947a9190",
+      "name": "爆發式抓舉 Power Snatch",
+      "addPrimaryMuscles": [
+        "前三角肌 Anterior Deltoid"
+      ],
+      "addSecondaryMuscles": [
+        "側三角肌 Lateral Deltoid"
+      ],
+      "addEquipment": [],
+      "addAlternatives": [
+        "下蹲式上搏 Squat Clean",
+        "分腿式抓舉 Split Snatch"
+      ],
+      "reasoning": "keyword/equipment-match → 前三角肌 Anterior Deltoid / 2nd: 側三角肌 Lateral Deltoid | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "book_8dd23208da99",
+      "name": "牆側拋 Wall Side Throw",
+      "addPrimaryMuscles": [
+        "菱形肌 Rhomboids"
+      ],
+      "addSecondaryMuscles": [
+        "腹直肌 Rectus Abdominis"
+      ],
+      "addEquipment": [],
+      "addAlternatives": [
+        "T槓划船 T-bar Row",
+        "反向拋藥球 Medicine Ball Reverse Throw"
+      ],
+      "reasoning": "keyword/equipment-match → 菱形肌 Rhomboids / 2nd: 腹直肌 Rectus Abdominis | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "book_0053dfe5e9b9",
+      "name": "牆面行走 Wall Walk",
+      "addPrimaryMuscles": [
+        "腹直肌 Rectus Abdominis"
+      ],
+      "addSecondaryMuscles": [],
+      "addEquipment": [],
+      "addAlternatives": [
+        "Medicine Ball Slam Medicine Ball Slam",
+        "V字仰臥起坐 V Sit-Up"
+      ],
+      "reasoning": "keyword/equipment-match → 腹直肌 Rectus Abdominis | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "book_2c9bf81c0545",
+      "name": "球上俯身撑 Push-Up on Ball",
+      "addPrimaryMuscles": [
+        "胸大肌 Pectorals",
+        "腹直肌 Rectus Abdominis"
+      ],
+      "addSecondaryMuscles": [],
+      "addEquipment": [],
+      "addAlternatives": [
+        "GHD仰臥起坐 GHD Sit-Up",
+        "仰臥超慢速單車 Super-Slow Bicycle"
+      ],
+      "reasoning": "keyword/equipment-match → 胸大肌 Pectorals, 腹直肌 Rectus Abdominis | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "book_19d492330cf9",
+      "name": "球上屈體 Ball Jack Knife",
+      "addPrimaryMuscles": [
+        "腹直肌 Rectus Abdominis"
+      ],
+      "addSecondaryMuscles": [
+        "斜方肌 Trapezius"
+      ],
+      "addEquipment": [],
+      "addAlternatives": [
+        "Medicine Ball Slam Medicine Ball Slam",
+        "V字仰臥起坐 V Sit-Up"
+      ],
+      "reasoning": "keyword/equipment-match → 腹直肌 Rectus Abdominis / 2nd: 斜方肌 Trapezius | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "book_2dcccac12a22",
+      "name": "登山者 Mountain Climber",
+      "addPrimaryMuscles": [
+        "腹直肌 Rectus Abdominis"
+      ],
+      "addSecondaryMuscles": [
+        "胸大肌 Pectorals"
+      ],
+      "addEquipment": [],
+      "addAlternatives": [
+        "Medicine Ball Slam Medicine Ball Slam",
+        "V字仰臥起坐 V Sit-Up"
+      ],
+      "reasoning": "keyword/equipment-match → 腹直肌 Rectus Abdominis / 2nd: 胸大肌 Pectorals | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "book_20c5ba90005e",
+      "name": "直立划船 Standing Row",
+      "addPrimaryMuscles": [
+        "背闊肌 Latissimus Dorsi",
+        "菱形肌 Rhomboids"
+      ],
+      "addSecondaryMuscles": [],
+      "addEquipment": [],
+      "addAlternatives": [
+        "T槓划船 T-bar Row",
+        "反向拋藥球 Medicine Ball Reverse Throw"
+      ],
+      "reasoning": "keyword/equipment-match → 背闊肌 Latissimus Dorsi, 菱形肌 Rhomboids | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "book_e7e8c3949167",
+      "name": "直立划船 Upright Row",
+      "addPrimaryMuscles": [
+        "菱形肌 Rhomboids"
+      ],
+      "addSecondaryMuscles": [],
+      "addEquipment": [],
+      "addAlternatives": [
+        "單腿站姿划船 Single-Leg Standing Row",
+        "單臂啞鈴划船 Single-arm Dumbbell Row"
+      ],
+      "reasoning": "keyword/equipment-match → 菱形肌 Rhomboids | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "book_80ba2cabe398",
+      "name": "直腿硬舉 Straight-Leg Deadlift",
+      "addPrimaryMuscles": [
+        "腘繩肌 Hamstrings"
+      ],
+      "addSecondaryMuscles": [
+        "豎脊肌 Erector Spinae"
+      ],
+      "addEquipment": [],
+      "addAlternatives": [
+        "木貝鈴硬舉 Barbell Deadlift",
+        "硬舉 Deadlift"
+      ],
+      "reasoning": "keyword/equipment-match → 腘繩肌 Hamstrings / 2nd: 豎脊肌 Erector Spinae | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "cmm023vq50004oqutaawnuqmb",
+      "name": "直臂下拉 Straight-arm Lat Pulldown",
+      "addPrimaryMuscles": [
+        "腹直肌 Rectus Abdominis"
+      ],
+      "addSecondaryMuscles": [],
+      "addEquipment": [],
+      "addAlternatives": [],
+      "reasoning": "keyword/equipment-match → 腹直肌 Rectus Abdominis"
+    },
+    {
+      "id": "book_f62c2439ee61",
+      "name": "短跑仰臥起坐 Sprинтер Sit-Up",
+      "addPrimaryMuscles": [
+        "腹直肌 Rectus Abdominis"
+      ],
+      "addSecondaryMuscles": [],
+      "addEquipment": [],
+      "addAlternatives": [
+        "GHD仰臥起坐 GHD Sit-Up",
+        "仰臥超慢速單車 Super-Slow Bicycle"
+      ],
+      "reasoning": "keyword/equipment-match → 腹直肌 Rectus Abdominis | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "book_07533448822c",
+      "name": "稻草人外旋 Rope-A-Dope External Rotation",
+      "addPrimaryMuscles": [
+        "腹斜肌 Obliques"
+      ],
+      "addSecondaryMuscles": [
+        "上胸 Upper Chest",
+        "前臂 Forearms"
+      ],
+      "addEquipment": [],
+      "addAlternatives": [
+        "俄羅斯轉體 Russian Twist",
+        "側向滑索內旋 Side Cable Inward Rotations"
+      ],
+      "reasoning": "keyword/equipment-match → 腹斜肌 Obliques / 2nd: 上胸 Upper Chest, 前臂 Forearms | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "book_e25787873112",
+      "name": "稻草人外旋 Scarecrow Rotation",
+      "addPrimaryMuscles": [
+        "菱形肌 Rhomboids",
+        "腹斜肌 Obliques"
+      ],
+      "addSecondaryMuscles": [
+        "腹直肌 Rectus Abdominis"
+      ],
+      "addEquipment": [],
+      "addAlternatives": [
+        "俄羅斯轉體 Russian Twist",
+        "側腹捲屈 Oblique Crunch"
+      ],
+      "reasoning": "keyword/equipment-match → 菱形肌 Rhomboids, 腹斜肌 Obliques / 2nd: 腹直肌 Rectus Abdominis | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "book_482eaa269e97",
+      "name": "窄握仰臥推舉 Narrow-Grip Bench Press",
+      "addPrimaryMuscles": [
+        "菱形肌 Rhomboids"
+      ],
+      "addSecondaryMuscles": [
+        "胸大肌 Pectorals"
+      ],
+      "addEquipment": [],
+      "addAlternatives": [
+        "T槓划船 T-bar Row",
+        "反向拋藥球 Medicine Ball Reverse Throw"
+      ],
+      "reasoning": "keyword/equipment-match → 菱形肌 Rhomboids / 2nd: 胸大肌 Pectorals | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "cmm023vr1000eoqutt1sh2uh9",
+      "name": "窄距臥推 Close-grip Bench Press",
+      "addPrimaryMuscles": [
+        "胸大肌 Pectorals"
+      ],
+      "addSecondaryMuscles": [],
+      "addEquipment": [],
+      "addAlternatives": [],
+      "reasoning": "keyword/equipment-match → 胸大肌 Pectorals"
+    },
+    {
+      "id": "book_7c6855b57ae2",
+      "name": "站姿側屈 Side Bend",
+      "addPrimaryMuscles": [
+        "腹斜肌 Obliques"
+      ],
+      "addSecondaryMuscles": [],
+      "addEquipment": [],
+      "addAlternatives": [
+        "俄羅斯轉體 Russian Twist",
+        "側腹捲屈 Oblique Crunch"
+      ],
+      "reasoning": "keyword/equipment-match → 腹斜肌 Obliques | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "book_c4d04fc9a267",
+      "name": "站姿割草機 Lawnmower",
+      "addPrimaryMuscles": [
+        "腹斜肌 Obliques",
+        "腹直肌 Rectus Abdominis"
+      ],
+      "addSecondaryMuscles": [],
+      "addEquipment": [],
+      "addAlternatives": [
+        "仰臥捲腹移棍 Incline Dumbbell Rollout",
+        "俯臥啞鈴雙手走路 Raised Pike Dumbbell Hand-Walk"
+      ],
+      "reasoning": "keyword/equipment-match → 腹斜肌 Obliques, 腹直肌 Rectus Abdominis | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "book_ff4be1c1b8bc",
+      "name": "站姿槓片轉體 Standing Plate Twist",
+      "addPrimaryMuscles": [
+        "腹斜肌 Obliques",
+        "腹直肌 Rectus Abdominis"
+      ],
+      "addSecondaryMuscles": [],
+      "addEquipment": [],
+      "addAlternatives": [
+        "下斜槓鈴臥推 Decline Barbell Bench Press",
+        "仰臥拱橋直臂下壓 Long-Arm Bridge Pull-Over"
+      ],
+      "reasoning": "keyword/equipment-match → 腹斜肌 Obliques, 腹直肌 Rectus Abdominis | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "book_f65ece8764ac",
+      "name": "站姿藥球下砍 Stationary Medicine Ball Chop",
+      "addPrimaryMuscles": [
+        "腹直肌 Rectus Abdominis"
+      ],
+      "addSecondaryMuscles": [
+        "腹斜肌 Obliques"
+      ],
+      "addEquipment": [],
+      "addAlternatives": [
+        "GHD仰臥起坐 GHD Sit-Up",
+        "仰臥超慢速單車 Super-Slow Bicycle"
+      ],
+      "reasoning": "keyword/equipment-match → 腹直肌 Rectus Abdominis / 2nd: 腹斜肌 Obliques | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "book_4d0f4bfeb126",
+      "name": "站姿體前彎 Standing Roll-Down",
+      "addPrimaryMuscles": [
+        "豎脊肌 Erector Spinae",
+        "腘繩肌 Hamstrings"
+      ],
+      "addSecondaryMuscles": [
+        "斜方肌 Trapezius",
+        "腹直肌 Rectus Abdominis"
+      ],
+      "addEquipment": [],
+      "addAlternatives": [
+        "GHD臀腿下背伸展 GHD Back Extension",
+        "下背伸展 Lower Back Stretch"
+      ],
+      "reasoning": "keyword/equipment-match → 豎脊肌 Erector Spinae, 腘繩肌 Hamstrings / 2nd: 斜方肌 Trapezius, 腹直肌 Rectus Abdominis | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "stretch_calf_standing",
+      "name": "站立小腿伸展 Standing Calf Stretch",
+      "addPrimaryMuscles": [
+        "小腿 Calves"
+      ],
+      "addSecondaryMuscles": [
+        "腘繩肌 Hamstrings"
+      ],
+      "addEquipment": [
+        "Bodyweight / 自體重量"
+      ],
+      "addAlternatives": [
+        "坐姿提踵 Seated Calf Raise",
+        "提踵 Calf Raise"
+      ],
+      "reasoning": "keyword/equipment-match → 小腿 Calves / 2nd: 腘繩肌 Hamstrings / eq: Bodyweight / 自體重量 | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "stretch_quad_standing",
+      "name": "站立股四頭肌伸展 Standing Quad Stretch",
+      "addPrimaryMuscles": [
+        "股四頭肌 Quadriceps"
+      ],
+      "addSecondaryMuscles": [],
+      "addEquipment": [
+        "Bodyweight / 自體重量"
+      ],
+      "addAlternatives": [
+        "仰臥雙腳抱腿前踢伸展 Double-Leg Extension and Stretch",
+        "仰臥單腳抱腿前踢 Single-Leg Extension and Stretch"
+      ],
+      "reasoning": "keyword/equipment-match → 股四頭肌 Quadriceps / eq: Bodyweight / 自體重量 | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "cmlzzvv990005pddrxvx21c5y",
+      "name": "繩索彎舉 Cable Curl",
+      "addPrimaryMuscles": [],
+      "addSecondaryMuscles": [],
+      "addEquipment": [
+        "Cable Machine / 纜繩機"
+      ],
+      "addAlternatives": [],
+      "reasoning": "keyword/equipment-match → (none primary) / eq: Cable Machine / 纜繩機"
+    },
+    {
+      "id": "cmm023vrh000joqutlb9axi5w",
+      "name": "繩索臀踢腿 Cable Kickback",
+      "addPrimaryMuscles": [
+        "腹直肌 Rectus Abdominis"
+      ],
+      "addSecondaryMuscles": [],
+      "addEquipment": [],
+      "addAlternatives": [
+        "單腿單手滑索上推 Single-Leg, Single-Arm Cable Press"
+      ],
+      "reasoning": "keyword/equipment-match → 腹直肌 Rectus Abdominis | alt: 1 (same-primary cohort)"
+    },
+    {
+      "id": "cmlzdcael001x11jlvcwa15nv",
+      "name": "羅馬尼亞硬舉 Romanian Deadlift",
+      "addPrimaryMuscles": [
+        "豎脊肌 Erector Spinae"
+      ],
+      "addSecondaryMuscles": [],
+      "addEquipment": [],
+      "addAlternatives": [],
+      "reasoning": "keyword/equipment-match → 豎脊肌 Erector Spinae"
+    },
+    {
+      "id": "book_0eb77c06422d",
+      "name": "羅馬椅側傾 Roman Chair Side Bend",
+      "addPrimaryMuscles": [
+        "腹直肌 Rectus Abdominis"
+      ],
+      "addSecondaryMuscles": [
+        "腹斜肌 Obliques"
+      ],
+      "addEquipment": [],
+      "addAlternatives": [
+        "Medicine Ball Slam Medicine Ball Slam",
+        "V字仰臥起坐 V Sit-Up"
+      ],
+      "reasoning": "keyword/equipment-match → 腹直肌 Rectus Abdominis / 2nd: 腹斜肌 Obliques | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "stretch_shoulder_cross",
+      "name": "肩部交叉伸展 Cross-body Shoulder Stretch",
+      "addPrimaryMuscles": [
+        "後三角肌 Rear Deltoid",
+        "腹斜肌 Obliques"
+      ],
+      "addSecondaryMuscles": [],
+      "addEquipment": [
+        "Bodyweight / 自體重量"
+      ],
+      "addAlternatives": [
+        "仰臥脊椎旋轉 Supine Spinal Twist",
+        "仰臥腰部扭轉 Lying Waist Twist"
+      ],
+      "reasoning": "keyword/equipment-match → 後三角肌 Rear Deltoid, 腹斜肌 Obliques / eq: Bodyweight / 自體重量 | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "book_e9c858adb0b6",
+      "name": "肩部迴旋 Shoulder Rotation",
+      "addPrimaryMuscles": [
+        "腹斜肌 Obliques",
+        "前三角肌 Anterior Deltoid"
+      ],
+      "addSecondaryMuscles": [
+        "側三角肌 Lateral Deltoid"
+      ],
+      "addEquipment": [],
+      "addAlternatives": [
+        "仰臥腰部扭轉 Lying Waist Twist",
+        "側臥軀幹旋轉 Lying Trunk Rotation"
+      ],
+      "reasoning": "keyword/equipment-match → 腹斜肌 Obliques, 前三角肌 Anterior Deltoid / 2nd: 側三角肌 Lateral Deltoid | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "book_ae2afa4d9d46",
+      "name": "肱三頭肌下拉 Triceps Cable Pull-Down",
+      "addPrimaryMuscles": [
+        "背闊肌 Latissimus Dorsi",
+        "三頭肌 Triceps Brachii"
+      ],
+      "addSecondaryMuscles": [
+        "腹直肌 Rectus Abdominis"
+      ],
+      "addEquipment": [],
+      "addAlternatives": [
+        "後三角肌下拉 Seated Cable Row",
+        "直臂下拉 Straight-arm Lat Pulldown"
+      ],
+      "reasoning": "keyword/equipment-match → 背闊肌 Latissimus Dorsi, 三頭肌 Triceps Brachii / 2nd: 腹直肌 Rectus Abdominis | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "book_e7de825771db",
+      "name": "肱三頭肌伸展 Triceps Extension",
+      "addPrimaryMuscles": [
+        "三頭肌 Triceps Brachii"
+      ],
+      "addSecondaryMuscles": [
+        "腹直肌 Rectus Abdominis",
+        "股四頭肌 Quadriceps",
+        "二頭肌 Biceps Brachii"
+      ],
+      "addEquipment": [],
+      "addAlternatives": [
+        "啞鈴肱三頭肌伸展 Dumbbell Triceps Extension",
+        "肱三頭肌伸展 Triceps Extension (Prone)"
+      ],
+      "reasoning": "keyword/equipment-match → 三頭肌 Triceps Brachii / 2nd: 腹直肌 Rectus Abdominis, 股四頭肌 Quadriceps, 二頭肌 Biceps Brachii | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "book_41ba0ad3ffb6",
+      "name": "肱三頭肌伸展 Triceps Extension (Prone)",
+      "addPrimaryMuscles": [
+        "三頭肌 Triceps Brachii"
+      ],
+      "addSecondaryMuscles": [
+        "胸大肌 Pectorals",
+        "腹直肌 Rectus Abdominis"
+      ],
+      "addEquipment": [],
+      "addAlternatives": [
+        "啞鈴肱三頭肌伸展 Dumbbell Triceps Extension",
+        "肱三頭肌伸展 Triceps Extension"
+      ],
+      "reasoning": "keyword/equipment-match → 三頭肌 Triceps Brachii / 2nd: 胸大肌 Pectorals, 腹直肌 Rectus Abdominis | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "cmlzzvv930003pddrrtcxbkdn",
+      "name": "背伸展 Back Extension",
+      "addPrimaryMuscles": [],
+      "addSecondaryMuscles": [],
+      "addEquipment": [
+        "Bodyweight / 自體重量"
+      ],
+      "addAlternatives": [
+        "橫鈴肩伸 Barbell Lateral Raise"
+      ],
+      "reasoning": "keyword/equipment-match → (none primary) / eq: Bodyweight / 自體重量 | alt: 1 (same-primary cohort)"
+    },
+    {
+      "id": "book_629af09651c4",
+      "name": "背滾式 Back Roll",
+      "addPrimaryMuscles": [
+        "豎脊肌 Erector Spinae",
+        "腹直肌 Rectus Abdominis"
+      ],
+      "addSecondaryMuscles": [
+        "斜方肌 Trapezius"
+      ],
+      "addEquipment": [],
+      "addAlternatives": [
+        "GHD臀腿下背伸展 GHD Back Extension",
+        "Medicine Ball Slam Medicine Ball Slam"
+      ],
+      "reasoning": "keyword/equipment-match → 豎脊肌 Erector Spinae, 腹直肌 Rectus Abdominis / 2nd: 斜方肌 Trapezius | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "book_a318b04b0054",
+      "name": "背部挺身 Dorsal Raise (Title Case)",
+      "addPrimaryMuscles": [
+        "腹直肌 Rectus Abdominis"
+      ],
+      "addSecondaryMuscles": [
+        "斜方肌 Trapezius"
+      ],
+      "addEquipment": [],
+      "addAlternatives": [
+        "Medicine Ball Slam Medicine Ball Slam",
+        "V字仰臥起坐 V Sit-Up"
+      ],
+      "reasoning": "keyword/equipment-match → 腹直肌 Rectus Abdominis / 2nd: 斜方肌 Trapezius | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "stretch_lat_side_bend",
+      "name": "背闊肌側彎伸展 Lat Side Bend Stretch",
+      "addPrimaryMuscles": [
+        "背闊肌 Latissimus Dorsi"
+      ],
+      "addSecondaryMuscles": [
+        "菱形肌 Rhomboids"
+      ],
+      "addEquipment": [
+        "Bodyweight / 自體重量"
+      ],
+      "addAlternatives": [
+        "T槓划船 T-bar Row",
+        "單臂啞鈴划船 Single-arm Dumbbell Row"
+      ],
+      "reasoning": "keyword/equipment-match → 背闊肌 Latissimus Dorsi / 2nd: 菱形肌 Rhomboids / eq: Bodyweight / 自體重量 | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "stretch_chest_doorway",
+      "name": "胸部門框伸展 Doorway Chest Stretch",
+      "addPrimaryMuscles": [
+        "胸大肌 Pectorals"
+      ],
+      "addSecondaryMuscles": [],
+      "addEquipment": [
+        "Bodyweight / 自體重量"
+      ],
+      "addAlternatives": [
+        "蝴蝶式大腿內側伸展 Butterfly Stretch",
+        "平板推舉 Plank Push-Up"
+      ],
+      "reasoning": "keyword/equipment-match → 胸大肌 Pectorals / eq: Bodyweight / 自體重量 | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "book_da6aab29718e",
+      "name": "腕伸展 Wrist Extension",
+      "addPrimaryMuscles": [
+        "前臂 Forearms"
+      ],
+      "addSecondaryMuscles": [],
+      "addEquipment": [],
+      "addAlternatives": [
+        "啞鈴錘式彎舉 Dumbbell Hammer Curl",
+        "反握槓鈴彎舉 Reverse Barbell Curl"
+      ],
+      "reasoning": "keyword/equipment-match → 前臂 Forearms | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "book_775b9bb42de1",
+      "name": "腹斜肌延伸 Oblique Reach",
+      "addPrimaryMuscles": [
+        "腹斜肌 Obliques"
+      ],
+      "addSecondaryMuscles": [
+        "腹直肌 Rectus Abdominis"
+      ],
+      "addEquipment": [],
+      "addAlternatives": [
+        "仰臥脊椎旋轉 Supine Spinal Twist",
+        "仰臥腰部扭轉 Lying Waist Twist"
+      ],
+      "reasoning": "keyword/equipment-match → 腹斜肌 Obliques / 2nd: 腹直肌 Rectus Abdominis | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "book_7d6db6bcc0b5",
+      "name": "腹橫肌雙人藥球拋接 Abdominal Oblique Double Medicine Ball Swap",
+      "addPrimaryMuscles": [
+        "腹斜肌 Obliques"
+      ],
+      "addSecondaryMuscles": [
+        "腹直肌 Rectus Abdominis"
+      ],
+      "addEquipment": [],
+      "addAlternatives": [
+        "滑索上舉 Pulley Lift",
+        "藥球仰臥橋式雙手轉體 Medicine Ball Bridge with Twist"
+      ],
+      "reasoning": "keyword/equipment-match → 腹斜肌 Obliques / 2nd: 腹直肌 Rectus Abdominis | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "book_a79bfb8a2a89",
+      "name": "腹部捲屈 Abdominal Crunch",
+      "addPrimaryMuscles": [
+        "腹直肌 Rectus Abdominis"
+      ],
+      "addSecondaryMuscles": [],
+      "addEquipment": [],
+      "addAlternatives": [
+        "GHD仰臥起坐 GHD Sit-Up",
+        "仰臥超慢速單車 Super-Slow Bicycle"
+      ],
+      "reasoning": "keyword/equipment-match → 腹直肌 Rectus Abdominis | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "book_312310475987",
+      "name": "腹部捲牘 Ab Roll-Up",
+      "addPrimaryMuscles": [
+        "腹直肌 Rectus Abdominis"
+      ],
+      "addSecondaryMuscles": [],
+      "addEquipment": [],
+      "addAlternatives": [
+        "Medicine Ball Slam Medicine Ball Slam",
+        "V字仰臥起坐 V Sit-Up"
+      ],
+      "reasoning": "keyword/equipment-match → 腹直肌 Rectus Abdominis | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "book_5ba56a275fd7",
+      "name": "腹部捲體 Abdominal Crunch",
+      "addPrimaryMuscles": [
+        "腹直肌 Rectus Abdominis"
+      ],
+      "addSecondaryMuscles": [
+        "斜方肌 Trapezius"
+      ],
+      "addEquipment": [],
+      "addAlternatives": [
+        "Medicine Ball Slam Medicine Ball Slam",
+        "V字仰臥起坐 V Sit-Up"
+      ],
+      "reasoning": "keyword/equipment-match → 腹直肌 Rectus Abdominis / 2nd: 斜方肌 Trapezius | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "book_d9e8a893fdbb",
+      "name": "腹部旋轉放鬆 TORSO ROTATION",
+      "addPrimaryMuscles": [
+        "腹斜肌 Obliques",
+        "腹直肌 Rectus Abdominis"
+      ],
+      "addSecondaryMuscles": [],
+      "addEquipment": [],
+      "addAlternatives": [
+        "Medicine Ball Slam Medicine Ball Slam",
+        "V字仰臥起坐 V Sit-Up"
+      ],
+      "reasoning": "keyword/equipment-match → 腹斜肌 Obliques, 腹直肌 Rectus Abdominis | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "cmlzdcaes001y11jl2exl4cfi",
+      "name": "腿彎舉 Leg Curl",
+      "addPrimaryMuscles": [
+        "二頭肌 Biceps Brachii"
+      ],
+      "addSecondaryMuscles": [
+        "豎脊肌 Erector Spinae"
+      ],
+      "addEquipment": [],
+      "addAlternatives": [
+        "反握槓鈴彎舉 Reverse Barbell Curl"
+      ],
+      "reasoning": "keyword/equipment-match → 二頭肌 Biceps Brachii / 2nd: 豎脊肌 Erector Spinae | alt: 1 (same-primary cohort)"
+    },
+    {
+      "id": "cmlzzvv8x0001pddr37fi77sa",
+      "name": "臀推 Hip Thrust",
+      "addPrimaryMuscles": [],
+      "addSecondaryMuscles": [
+        "豎脊肌 Erector Spinae"
+      ],
+      "addEquipment": [
+        "Bodyweight / 自體重量"
+      ],
+      "addAlternatives": [],
+      "reasoning": "keyword/equipment-match → (none primary) / 2nd: 豎脊肌 Erector Spinae / eq: Bodyweight / 自體重量"
+    },
+    {
+      "id": "cmm023vrb000hoqutqv2m1oxg",
+      "name": "臀橋 Glute Bridge",
+      "addPrimaryMuscles": [
+        "豎脊肌 Erector Spinae"
+      ],
+      "addSecondaryMuscles": [],
+      "addEquipment": [],
+      "addAlternatives": [
+        "前跨步弓步蹲 Forward Lunge"
+      ],
+      "reasoning": "keyword/equipment-match → 豎脊肌 Erector Spinae | alt: 1 (same-primary cohort)"
+    },
+    {
+      "id": "stretch_glute_pigeon",
+      "name": "臀部梨狀肌伸展 Figure-4 Glute Stretch",
+      "addPrimaryMuscles": [
+        "臀大肌 Glutes"
+      ],
+      "addSecondaryMuscles": [],
+      "addEquipment": [
+        "Bodyweight / 自體重量"
+      ],
+      "addAlternatives": [
+        "髖屈肌弓步伸展 Hip Flexor Lunge Stretch",
+        "45度腿推舉 45-Degree Leg Press"
+      ],
+      "reasoning": "keyword/equipment-match → 臀大肌 Glutes / eq: Bodyweight / 自體重量 | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "book_ed9e04324284",
+      "name": "臀部畫圈 Hip Circle",
+      "addPrimaryMuscles": [
+        "腹直肌 Rectus Abdominis"
+      ],
+      "addSecondaryMuscles": [
+        "腹斜肌 Obliques"
+      ],
+      "addEquipment": [],
+      "addAlternatives": [
+        "Medicine Ball Slam Medicine Ball Slam",
+        "V字仰臥起坐 V Sit-Up"
+      ],
+      "reasoning": "keyword/equipment-match → 腹直肌 Rectus Abdominis / 2nd: 腹斜肌 Obliques | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "cmlzdcadp001s11jledg98qnn",
+      "name": "臉拉 Face Pull",
+      "addPrimaryMuscles": [
+        "菱形肌 Rhomboids"
+      ],
+      "addSecondaryMuscles": [
+        "前臂 Forearms"
+      ],
+      "addEquipment": [],
+      "addAlternatives": [
+        "斜板間舉 Dumbbell Upright Row (Incline)"
+      ],
+      "reasoning": "keyword/equipment-match → 菱形肌 Rhomboids / 2nd: 前臂 Forearms | alt: 1 (same-primary cohort)"
+    },
+    {
+      "id": "book_9f44f96e7aaa",
+      "name": "藥球仰臥橋式雙手轉體 Medicine Ball Bridge with Twist",
+      "addPrimaryMuscles": [
+        "腹斜肌 Obliques",
+        "豎脊肌 Erector Spinae"
+      ],
+      "addSecondaryMuscles": [
+        "腹直肌 Rectus Abdominis"
+      ],
+      "addEquipment": [],
+      "addAlternatives": [
+        "單手硬舉 Single-Arm Deadlift",
+        "槓鈴肩伸 Barbell Pull-Over"
+      ],
+      "reasoning": "keyword/equipment-match → 腹斜肌 Obliques, 豎脊肌 Erector Spinae / 2nd: 腹直肌 Rectus Abdominis | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "book_18d142812d94",
+      "name": "藥球擠壓 Pillow Squeeze",
+      "addPrimaryMuscles": [
+        "腹直肌 Rectus Abdominis"
+      ],
+      "addSecondaryMuscles": [],
+      "addEquipment": [],
+      "addAlternatives": [
+        "Medicine Ball Slam Medicine Ball Slam",
+        "V字仰臥起坐 V Sit-Up"
+      ],
+      "reasoning": "keyword/equipment-match → 腹直肌 Rectus Abdominis | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "book_7d78afd7fa24",
+      "name": "藥球臀部旋轉 Ball Hip Twist",
+      "addPrimaryMuscles": [
+        "腹斜肌 Obliques",
+        "腹直肌 Rectus Abdominis"
+      ],
+      "addSecondaryMuscles": [],
+      "addEquipment": [],
+      "addAlternatives": [
+        "GHD仰臥起坐 GHD Sit-Up",
+        "仰臥超慢速單車 Super-Slow Bicycle"
+      ],
+      "reasoning": "keyword/equipment-match → 腹斜肌 Obliques, 腹直肌 Rectus Abdominis | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "book_3c3d0c3d39e9",
+      "name": "蚌式開合 Oyster",
+      "addPrimaryMuscles": [
+        "腹直肌 Rectus Abdominis"
+      ],
+      "addSecondaryMuscles": [
+        "斜方肌 Trapezius",
+        "腹斜肌 Obliques"
+      ],
+      "addEquipment": [],
+      "addAlternatives": [
+        "Medicine Ball Slam Medicine Ball Slam",
+        "V字仰臥起坐 V Sit-Up"
+      ],
+      "reasoning": "keyword/equipment-match → 腹直肌 Rectus Abdominis / 2nd: 斜方肌 Trapezius, 腹斜肌 Obliques | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "stretch_butterfly",
+      "name": "蝴蝶式大腿內側伸展 Butterfly Stretch",
+      "addPrimaryMuscles": [
+        "胸大肌 Pectorals"
+      ],
+      "addSecondaryMuscles": [],
+      "addEquipment": [
+        "Bodyweight / 自體重量"
+      ],
+      "addAlternatives": [
+        "胸部門框伸展 Doorway Chest Stretch",
+        "平板推舉 Plank Push-Up"
+      ],
+      "reasoning": "keyword/equipment-match → 胸大肌 Pectorals / eq: Bodyweight / 自體重量 | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "cmlzdcab6001g11jlh3ckucxp",
+      "name": "蝴蝶機夾胸 Pec Deck Fly",
+      "addPrimaryMuscles": [],
+      "addSecondaryMuscles": [
+        "上胸 Upper Chest",
+        "前臂 Forearms"
+      ],
+      "addEquipment": [],
+      "addAlternatives": [],
+      "reasoning": "keyword/equipment-match → (none primary) / 2nd: 上胸 Upper Chest, 前臂 Forearms"
+    },
+    {
+      "id": "stretch_cat_cow",
+      "name": "貓牛式 Cat-Cow Stretch",
+      "addPrimaryMuscles": [
+        "豎脊肌 Erector Spinae"
+      ],
+      "addSecondaryMuscles": [],
+      "addEquipment": [
+        "Bodyweight / 自體重量"
+      ],
+      "addAlternatives": [
+        "GHD臀腿下背伸展 GHD Back Extension",
+        "下背伸展 Lower Back Stretch"
+      ],
+      "reasoning": "keyword/equipment-match → 豎脊肌 Erector Spinae / eq: Bodyweight / 自體重量 | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "book_3f1576f52be5",
+      "name": "超人式 Superman",
+      "addPrimaryMuscles": [
+        "豎脊肌 Erector Spinae",
+        "腹直肌 Rectus Abdominis"
+      ],
+      "addSecondaryMuscles": [],
+      "addEquipment": [],
+      "addAlternatives": [
+        "GHD臀腿下背伸展 GHD Back Extension",
+        "Medicine Ball Slam Medicine Ball Slam"
+      ],
+      "reasoning": "keyword/equipment-match → 豎脊肌 Erector Spinae, 腹直肌 Rectus Abdominis | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "cmm023vr5000foqutg4ppycgz",
+      "name": "跨步蹲 Lunges",
+      "addPrimaryMuscles": [
+        "腘繩肌 Hamstrings"
+      ],
+      "addSecondaryMuscles": [],
+      "addEquipment": [],
+      "addAlternatives": [
+        "仰臥單腳抱腿前踢 Single-Leg Extension and Stretch"
+      ],
+      "reasoning": "keyword/equipment-match → 腘繩肌 Hamstrings | alt: 1 (same-primary cohort)"
+    },
+    {
+      "id": "book_bcd63af5f700",
+      "name": "輔助引體向上 Assisted Chin-Up",
+      "addPrimaryMuscles": [
+        "背闊肌 Latissimus Dorsi"
+      ],
+      "addSecondaryMuscles": [],
+      "addEquipment": [],
+      "addAlternatives": [
+        "引體向上 Pull-up",
+        "T槓划船 T-bar Row"
+      ],
+      "reasoning": "keyword/equipment-match → 背闊肌 Latissimus Dorsi | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "book_753b0205718a",
+      "name": "輔助架伏地挺身 Frame-Supported Press-Up",
+      "addPrimaryMuscles": [
+        "胸大肌 Pectorals",
+        "前三角肌 Anterior Deltoid"
+      ],
+      "addSecondaryMuscles": [
+        "二頭肌 Biceps Brachii",
+        "股四頭肌 Quadriceps",
+        "腹直肌 Rectus Abdominis"
+      ],
+      "addEquipment": [],
+      "addAlternatives": [
+        "伏地挺身 Push-up",
+        "俯臥挺身進階版 Advanced Push-Up"
+      ],
+      "reasoning": "keyword/equipment-match → 胸大肌 Pectorals, 前三角肌 Anterior Deltoid / 2nd: 二頭肌 Biceps Brachii, 股四頭肌 Quadriceps, 腹直肌 Rectus Abdominis | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "book_c13515508c2e",
+      "name": "過頭分腿蹲 Overhead Split Squat",
+      "addPrimaryMuscles": [
+        "臀大肌 Glutes",
+        "腹直肌 Rectus Abdominis"
+      ],
+      "addSecondaryMuscles": [],
+      "addEquipment": [],
+      "addAlternatives": [
+        "仰臥捲腹移棍 Incline Dumbbell Rollout",
+        "俯臥啞鈴雙手走路 Raised Pike Dumbbell Hand-Walk"
+      ],
+      "reasoning": "keyword/equipment-match → 臀大肌 Glutes, 腹直肌 Rectus Abdominis | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "book_76725dc3944d",
+      "name": "過頭弓步蹲 Overhead Lunge",
+      "addPrimaryMuscles": [
+        "臀大肌 Glutes"
+      ],
+      "addSecondaryMuscles": [],
+      "addEquipment": [],
+      "addAlternatives": [
+        "Back Squat Back Squat",
+        "FRONT BARBELL SQUAT  Front Barbell Squat"
+      ],
+      "reasoning": "keyword/equipment-match → 臀大肌 Glutes | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "book_1e21cdae3478",
+      "name": "過頭槓鈴弓步蹲 Overhead Barbell Lunge",
+      "addPrimaryMuscles": [
+        "股四頭肌 Quadriceps",
+        "腘繩肌 Hamstrings"
+      ],
+      "addSecondaryMuscles": [
+        "臀大肌 Glutes",
+        "腹直肌 Rectus Abdominis"
+      ],
+      "addEquipment": [],
+      "addAlternatives": [
+        "前槓鈴深蹲 Heavy Front Squat",
+        "前蹲 Front Squat"
+      ],
+      "reasoning": "keyword/equipment-match → 股四頭肌 Quadriceps, 腘繩肌 Hamstrings / 2nd: 臀大肌 Glutes, 腹直肌 Rectus Abdominis | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "book_1d7b85d0526c",
+      "name": "過頭蹲舉 Overhead Squat",
+      "addPrimaryMuscles": [
+        "臀大肌 Glutes"
+      ],
+      "addSecondaryMuscles": [
+        "腹直肌 Rectus Abdominis"
+      ],
+      "addEquipment": [],
+      "addAlternatives": [
+        "Back Squat Back Squat",
+        "FRONT BARBELL SQUAT  Front Barbell Squat"
+      ],
+      "reasoning": "keyword/equipment-match → 臀大肌 Glutes / 2nd: 腹直肌 Rectus Abdominis | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "book_59c02516a860",
+      "name": "阻力滑板滑行 Slide Board Wiper",
+      "addPrimaryMuscles": [
+        "腹直肌 Rectus Abdominis"
+      ],
+      "addSecondaryMuscles": [],
+      "addEquipment": [],
+      "addAlternatives": [
+        "GHD仰臥起坐 GHD Sit-Up",
+        "仰臥超慢速單車 Super-Slow Bicycle"
+      ],
+      "reasoning": "keyword/equipment-match → 腹直肌 Rectus Abdominis | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "cmm023vqj0008oqut09p4v06v",
+      "name": "阿諾德推舉 Arnold Press",
+      "addPrimaryMuscles": [
+        "腹斜肌 Obliques"
+      ],
+      "addSecondaryMuscles": [],
+      "addEquipment": [],
+      "addAlternatives": [
+        "站姿割草機 Lawnmower"
+      ],
+      "reasoning": "keyword/equipment-match → 腹斜肌 Obliques | alt: 1 (same-primary cohort)"
+    },
+    {
+      "id": "cmm023vqv000coquti2b09yqx",
+      "name": "集中彎舉 Concentration Curl",
+      "addPrimaryMuscles": [
+        "腹斜肌 Obliques"
+      ],
+      "addSecondaryMuscles": [],
+      "addEquipment": [],
+      "addAlternatives": [],
+      "reasoning": "keyword/equipment-match → 腹斜肌 Obliques"
+    },
+    {
+      "id": "book_081ff3b0d537",
+      "name": "雙手抓單槓懸吊抬膝 Single-Arm Dumbbell Lateral Raise",
+      "addPrimaryMuscles": [
+        "腹直肌 Rectus Abdominis"
+      ],
+      "addSecondaryMuscles": [
+        "側三角肌 Lateral Deltoid"
+      ],
+      "addEquipment": [],
+      "addAlternatives": [
+        "4字形捲體 Figure-4 Crunch",
+        "仰臥起坐 Crunches"
+      ],
+      "reasoning": "keyword/equipment-match → 腹直肌 Rectus Abdominis / 2nd: 側三角肌 Lateral Deltoid | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "cmm023vqy000doqutlnr0utk4",
+      "name": "頭頂三頭伸展 Overhead Tricep Extension",
+      "addPrimaryMuscles": [],
+      "addSecondaryMuscles": [
+        "前臂 Forearms"
+      ],
+      "addEquipment": [],
+      "addAlternatives": [],
+      "reasoning": "keyword/equipment-match → (none primary) / 2nd: 前臂 Forearms"
+    },
+    {
+      "id": "book_c4e52f90f2d1",
+      "name": "頸部伸展與彎曲 Neck Extension and Flexion",
+      "addPrimaryMuscles": [
+        "斜方肌 Trapezius"
+      ],
+      "addSecondaryMuscles": [],
+      "addEquipment": [],
+      "addAlternatives": [
+        "下背伸展 Lower Back Stretch",
+        "四足跪姿骨盆後傾 Four-Legged Pelvic Tilt"
+      ],
+      "reasoning": "keyword/equipment-match → 斜方肌 Trapezius | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "book_7193040ba8d3",
+      "name": "頸部側屈放鬆 Neck Side Flexion",
+      "addPrimaryMuscles": [
+        "斜方肌 Trapezius"
+      ],
+      "addSecondaryMuscles": [],
+      "addEquipment": [],
+      "addAlternatives": [
+        "下背伸展 Lower Back Stretch",
+        "四足跪姿骨盆後傾 Four-Legged Pelvic Tilt"
+      ],
+      "reasoning": "keyword/equipment-match → 斜方肌 Trapezius | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "stretch_neck_side",
+      "name": "頸部側邊伸展 Neck Side Stretch",
+      "addPrimaryMuscles": [
+        "斜方肌 Trapezius"
+      ],
+      "addSecondaryMuscles": [
+        "菱形肌 Rhomboids",
+        "前三角肌 Anterior Deltoid",
+        "側三角肌 Lateral Deltoid"
+      ],
+      "addEquipment": [
+        "Bodyweight / 自體重量"
+      ],
+      "addAlternatives": [
+        "下背伸展 Lower Back Stretch",
+        "四足跪姿骨盆後傾 Four-Legged Pelvic Tilt"
+      ],
+      "reasoning": "keyword/equipment-match → 斜方肌 Trapezius / 2nd: 菱形肌 Rhomboids, 前三角肌 Anterior Deltoid, 側三角肌 Lateral Deltoid / eq: Bodyweight / 自體重量 | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "book_4b2995363496",
+      "name": "飛金票式 Flutter Kick",
+      "addPrimaryMuscles": [
+        "腹直肌 Rectus Abdominis"
+      ],
+      "addSecondaryMuscles": [
+        "豎脊肌 Erector Spinae"
+      ],
+      "addEquipment": [],
+      "addAlternatives": [
+        "Medicine Ball Slam Medicine Ball Slam",
+        "V字仰臥起坐 V Sit-Up"
+      ],
+      "reasoning": "keyword/equipment-match → 腹直肌 Rectus Abdominis / 2nd: 豎脊肌 Erector Spinae | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "book_303442ff029f",
+      "name": "髓部迴旋 Hip Circle",
+      "addPrimaryMuscles": [
+        "腹直肌 Rectus Abdominis"
+      ],
+      "addSecondaryMuscles": [
+        "前臂 Forearms",
+        "腹斜肌 Obliques"
+      ],
+      "addEquipment": [],
+      "addAlternatives": [
+        "Medicine Ball Slam Medicine Ball Slam",
+        "V字仰臥起坐 V Sit-Up"
+      ],
+      "reasoning": "keyword/equipment-match → 腹直肌 Rectus Abdominis / 2nd: 前臂 Forearms, 腹斜肌 Obliques | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "book_0fd40b48027b",
+      "name": "體部滾動 Hip Roll",
+      "addPrimaryMuscles": [
+        "豎脊肌 Erector Spinae"
+      ],
+      "addSecondaryMuscles": [],
+      "addEquipment": [],
+      "addAlternatives": [
+        "GHD臀腿下背伸展 GHD Back Extension",
+        "下背伸展 Lower Back Stretch"
+      ],
+      "reasoning": "keyword/equipment-match → 豎脊肌 Erector Spinae | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "stretch_hip_flexor",
+      "name": "髖屈肌弓步伸展 Hip Flexor Lunge Stretch",
+      "addPrimaryMuscles": [
+        "臀大肌 Glutes",
+        "髖屈肌 Hip Flexors"
+      ],
+      "addSecondaryMuscles": [],
+      "addEquipment": [
+        "Bodyweight / 自體重量"
+      ],
+      "addAlternatives": [
+        "仰臥下壓抬腿 Double-Leg Lower and Lift",
+        "仰臥屈膝抬腿 Knee Fold"
+      ],
+      "reasoning": "keyword/equipment-match → 臀大肌 Glutes, 髖屈肌 Hip Flexors / eq: Bodyweight / 自體重量 | alt: 2 (same-primary cohort)"
+    },
+    {
+      "id": "cmlzdcafq002511jlv6jtambl",
+      "name": "俄羅斯轉體 Russian Twist",
+      "addPrimaryMuscles": [],
+      "addSecondaryMuscles": [],
+      "addEquipment": [],
+      "addAlternatives": [
+        "側腹捲屈 Oblique Crunch"
+      ],
+      "reasoning": "alt: 1 (same-primary cohort)"
+    },
+    {
+      "id": "cmm023vrt000noqutheg3dkpg",
+      "name": "反向捲腹 Reverse Crunch",
+      "addPrimaryMuscles": [],
+      "addSecondaryMuscles": [],
+      "addEquipment": [],
+      "addAlternatives": [
+        "GHD仰臥起坐 GHD Sit-Up"
+      ],
+      "reasoning": "alt: 1 (same-primary cohort)"
+    },
+    {
+      "id": "cmlzdcaf6002111jl0bi4su3q",
+      "name": "提踵 Calf Raise",
+      "addPrimaryMuscles": [],
+      "addSecondaryMuscles": [],
+      "addEquipment": [],
+      "addAlternatives": [
+        "站立小腿伸展 Standing Calf Stretch"
+      ],
+      "reasoning": "alt: 1 (same-primary cohort)"
+    },
+    {
+      "id": "cmm023vqs000boqut76fpmlw7",
+      "name": "斜板彎舉 Preacher Curl",
+      "addPrimaryMuscles": [],
+      "addSecondaryMuscles": [],
+      "addEquipment": [],
+      "addAlternatives": [
+        "坐姿腿彎舉 Seated Leg Curl"
+      ],
+      "reasoning": "alt: 1 (same-primary cohort)"
+    },
+    {
+      "id": "cmlzdcaew001z11jl05mkwr06",
+      "name": "腿屈伸 Leg Extension",
+      "addPrimaryMuscles": [],
+      "addSecondaryMuscles": [],
+      "addEquipment": [],
+      "addAlternatives": [
+        "機器式大腿伸展 Machine Leg Extension",
+        "仰臥單腳抱腿前踢 Single-Leg Extension and Stretch"
+      ],
+      "reasoning": "alt: 2 (same-primary cohort)"
+    }
+  ]
+}
