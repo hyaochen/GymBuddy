@@ -34,7 +34,13 @@ export default function ExerciseFilters({
     return (
         <div className="space-y-3">
             <form method="GET" className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <button
+                    type="submit"
+                    aria-label="搜尋"
+                    className="absolute left-0 top-0 h-11 w-9 flex items-center justify-center text-muted-foreground hover:text-foreground focus:outline-none focus:ring-2 focus:ring-ring rounded-l-lg"
+                >
+                    <Search className="h-4 w-4" />
+                </button>
                 <input
                     name="q"
                     defaultValue={q}
