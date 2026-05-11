@@ -162,9 +162,23 @@ self.addEventListener('pushsubscriptionchange', event => {
         try {
             const applicationServerKey = event.oldSubscription?.options?.applicationServerKey
             if (!applicationServerKey) {
-                // No key to resubscribe with — server cannot recover here; wait for the
-                // next visibilitychange resync from the client to send a fresh subscription.
+                // No key to resubscribe with — PushSubscriber's visibilitychange resync
+                // will re-subscribe and POST a fresh subscription the next time the user
+                // foregrounds the app. Meanwhile, ask the server to drop the dead row so
+                // it stops hitting 410 Gone on every scheduled push.
                 addLog('PUSH_RESUBSCRIBE_SKIPPED', { reason: 'no_application_server_key' })
+                if (oldEndpoint) {
+                    try {
+                        await fetch('/api/push/unsubscribe', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            credentials: 'include',
+                            body: JSON.stringify({ endpoint: oldEndpoint }),
+                        })
+                    } catch (err) {
+                        addLog('PUSH_UNSUBSCRIBE_FAILED', { error: String(err) })
+                    }
+                }
                 return
             }
             const newSub = await self.registration.pushManager.subscribe({
