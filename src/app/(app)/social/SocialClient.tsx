@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState, useCallback, useOptimistic, useTransition } from "react"
-import { Users, Activity, Trophy, UserPlus, Check, X, Search, Trash2, Eye, EyeOff, Flame, Dumbbell, Calendar, Swords, BookTemplate, Plus, Clock, Target, TrendingUp, ArrowRight, Heart, Download, ChevronDown } from "lucide-react"
+import { Users, Activity, Trophy, UserPlus, Check, X, Search, Trash2, Eye, EyeOff, Flame, Dumbbell, Calendar, Swords, Plus, Clock, Target, TrendingUp, ArrowRight, ChevronDown } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { addTaipeiDays, parseTaipeiDateInput, taipeiDateKey } from "@/lib/timezone"
 import PRShareCard from "@/components/PRShareCard"
@@ -22,18 +22,6 @@ const CHALLENGE_TYPE_UNITS: Record<string, string> = {
     TOTAL_SESSIONS: "次",
     WEIGHT_PR: "kg",
     VOLUME: "kg",
-}
-
-const DIFFICULTY_LABELS: Record<string, string> = {
-    BEGINNER: "初學者",
-    INTERMEDIATE: "中階",
-    ADVANCED: "進階",
-}
-
-const DIFFICULTY_COLORS: Record<string, string> = {
-    BEGINNER: "text-green-400 bg-green-400/15 border-green-400/30",
-    INTERMEDIATE: "text-yellow-400 bg-yellow-400/15 border-yellow-400/30",
-    ADVANCED: "text-red-400 bg-red-400/15 border-red-400/30",
 }
 
 interface FeedItem {
@@ -80,20 +68,6 @@ interface ChallengeData {
     myProgress: { currentValue: number; completed: boolean } | null
 }
 
-interface TemplateData {
-    id: string
-    name: string
-    description: string | null
-    daysPerWeek: number
-    difficulty: string
-    targetMuscles: string[]
-    likes: number
-    downloads: number
-    isLiked: boolean
-    creator: { id: string; name: string }
-    createdAt: string
-}
-
 type FeedOptimisticAction = {
     type: "kudo"
     feedItemId: string
@@ -104,10 +78,6 @@ type ChallengeOptimisticAction = {
     type: "join"
     challengeId: string
 }
-
-type TemplateOptimisticAction =
-    | { type: "like"; templateId: string }
-    | { type: "import"; templateId: string }
 
 function timeAgo(dateStr: string): string {
     const diff = Date.now() - new Date(dateStr).getTime()
@@ -188,15 +158,12 @@ export default function SocialPage() {
     const [friendData, setFriendData] = useState<FriendData | null>(null)
     const [leaderboard, setLeaderboard] = useState<LeaderboardData | null>(null)
     const [challenges, setChallenges] = useState<ChallengeData[]>([])
-    const [templates, setTemplates] = useState<TemplateData[]>([])
     const [loading, setLoading] = useState(true)
     const [searchName, setSearchName] = useState("")
     const [searchMsg, setSearchMsg] = useState<{ type: "success" | "error"; text: string } | null>(null)
     const [emojiPickerFor, setEmojiPickerFor] = useState<string | null>(null)
     const [prShareItem, setPrShareItem] = useState<FeedItem | null>(null)
     const [showCreateChallenge, setShowCreateChallenge] = useState(false)
-    const [templateSort, setTemplateSort] = useState<"recent" | "likes" | "downloads">("recent")
-    const [templateSearch, setTemplateSearch] = useState("")
     const [, startOptimisticTransition] = useTransition()
     const [optimisticFeed, applyOptimisticFeed] = useOptimistic(
         feed,
@@ -223,22 +190,6 @@ export default function SocialPage() {
             }
         }),
     )
-    const [optimisticTemplates, applyOptimisticTemplate] = useOptimistic(
-        templates,
-        (current, action: TemplateOptimisticAction) => current.map(template => {
-            if (template.id !== action.templateId) return template
-            if (action.type === "import") {
-                return { ...template, downloads: template.downloads + 1 }
-            }
-            const nextLiked = !template.isLiked
-            return {
-                ...template,
-                isLiked: nextLiked,
-                likes: Math.max(0, template.likes + (nextLiked ? 1 : -1)),
-            }
-        }),
-    )
-
     const fetchFeed = useCallback(async () => {
         const res = await fetch("/api/feed")
         if (res.ok) {
@@ -268,17 +219,6 @@ export default function SocialPage() {
         }
         setLoading(false)
     }, [])
-
-    const fetchTemplates = useCallback(async () => {
-        const params = new URLSearchParams({ sort: templateSort })
-        if (templateSearch) params.set("search", templateSearch)
-        const res = await fetch(`/api/templates?${params}`)
-        if (res.ok) {
-            const data = await res.json()
-            setTemplates(data.templates)
-        }
-        setLoading(false)
-    }, [templateSort, templateSearch])
 
     useEffect(() => {
         setLoading(true)
@@ -354,26 +294,6 @@ export default function SocialPage() {
             applyOptimisticChallenge({ type: "join", challengeId })
             await fetch(`/api/challenges/${challengeId}/join`, { method: "POST" })
             await fetchChallenges()
-        })
-    }
-
-    async function toggleTemplateLike(templateId: string) {
-        startOptimisticTransition(async () => {
-            applyOptimisticTemplate({ type: "like", templateId })
-            await fetch(`/api/templates/${templateId}/like`, { method: "POST" })
-            await fetchTemplates()
-        })
-    }
-
-    async function importTemplate(templateId: string) {
-        if (!confirm("確定要匯入此模板為新的訓練計畫？")) return
-        startOptimisticTransition(async () => {
-            applyOptimisticTemplate({ type: "import", templateId })
-            const res = await fetch(`/api/templates/${templateId}/import`, { method: "POST" })
-            if (res.ok) {
-                alert("模板已成功匯入為新計畫！")
-            }
-            await fetchTemplates()
         })
     }
 
@@ -670,54 +590,7 @@ export default function SocialPage() {
                 </div>
             )}
 
-            {/* Templates section removed — moved to Plans page */}
-            {/* Templates Tab was here — now lives in /plans */}
-            {false && (
-                <div className="space-y-4">
-                    {/* Search + sort */}
-                    <div className="flex gap-2">
-                        <div className="flex-1 relative">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                            <input
-                                type="text"
-                                placeholder="搜尋模板..."
-                                value={templateSearch}
-                                onChange={e => setTemplateSearch(e.target.value)}
-                                className="w-full bg-secondary/50 border border-border rounded-xl pl-9 pr-3 py-2.5 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
-                            />
-                        </div>
-                        <div className="relative">
-                            <select
-                                value={templateSort}
-                                onChange={e => setTemplateSort(e.target.value as "recent" | "likes" | "downloads")}
-                                className="appearance-none bg-secondary/50 border border-border rounded-xl px-3 pr-8 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
-                            >
-                                <option value="recent">最新</option>
-                                <option value="likes">最多讚</option>
-                                <option value="downloads">最多下載</option>
-                            </select>
-                            <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
-                        </div>
-                    </div>
-
-                    {optimisticTemplates.length === 0 && (
-                        <div className="text-center py-10 text-muted-foreground">
-                            <BookTemplate className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                            <p className="text-sm">還沒有社群模板</p>
-                            <p className="text-xs mt-1">在計畫頁面分享你的訓練計畫！</p>
-                        </div>
-                    )}
-
-                    {optimisticTemplates.map(t => (
-                        <TemplateCard
-                            key={t.id}
-                            template={t}
-                            onLike={() => toggleTemplateLike(t.id)}
-                            onImport={() => importTemplate(t.id)}
-                        />
-                    ))}
-                </div>
-            )}
+            {/* Templates section removed — moved to /plans */}
 
             {/* Leaderboard Tab */}
             {!loading && tab === "leaderboard" && leaderboard && (
@@ -1063,82 +936,6 @@ function CreateChallengeForm({ onCreated, onCancel }: { onCreated: () => void; o
                 </button>
             </div>
         </form>
-    )
-}
-
-// ─── Template Card ──────────────────────────────────────────────────────────
-
-function TemplateCard({ template: t, onLike, onImport }: {
-    template: TemplateData
-    onLike: () => void
-    onImport: () => void
-}) {
-    return (
-        <div className="bg-card rounded-xl border border-border p-4 space-y-3">
-            <div className="flex items-start justify-between">
-                <div className="space-y-1">
-                    <h3 className="text-sm font-bold">{t.name}</h3>
-                    {t.description && (
-                        <p className="text-xs text-muted-foreground line-clamp-2">{t.description}</p>
-                    )}
-                </div>
-                <span className={cn(
-                    "text-xs px-2 py-0.5 rounded-full border font-medium",
-                    DIFFICULTY_COLORS[t.difficulty] || "text-muted-foreground bg-secondary"
-                )}>
-                    {DIFFICULTY_LABELS[t.difficulty] || t.difficulty}
-                </span>
-            </div>
-
-            <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                <span className="flex items-center gap-1">
-                    <Calendar className="h-3.5 w-3.5" />
-                    {t.daysPerWeek} 天/週
-                </span>
-                <span>
-                    by {t.creator.name}
-                </span>
-                <span>{timeAgo(t.createdAt)}</span>
-            </div>
-
-            {/* Target muscles */}
-            {t.targetMuscles.length > 0 && (
-                <div className="flex flex-wrap gap-1">
-                    {t.targetMuscles.map((m: string) => (
-                        <span key={m} className="text-xs bg-secondary text-secondary-foreground rounded-lg px-2 py-0.5">
-                            {m}
-                        </span>
-                    ))}
-                </div>
-            )}
-
-            {/* Actions */}
-            <div className="flex items-center justify-between pt-1">
-                <div className="flex items-center gap-3">
-                    <button
-                        onClick={onLike}
-                        className={cn(
-                            "flex items-center gap-1 text-xs transition-colors",
-                            t.isLiked ? "text-red-400" : "text-muted-foreground hover:text-red-400"
-                        )}
-                    >
-                        <Heart className={cn("h-4 w-4", t.isLiked && "fill-current")} />
-                        {t.likes}
-                    </button>
-                    <span className="flex items-center gap-1 text-xs text-muted-foreground">
-                        <Download className="h-3.5 w-3.5" />
-                        {t.downloads}
-                    </span>
-                </div>
-                <button
-                    onClick={onImport}
-                    className="flex items-center gap-1 bg-primary/15 text-primary rounded-lg px-3 py-1.5 text-xs font-medium hover:bg-primary/25 transition-colors"
-                >
-                    <Download className="h-3.5 w-3.5" />
-                    匯入計畫
-                </button>
-            </div>
-        </div>
     )
 }
 
