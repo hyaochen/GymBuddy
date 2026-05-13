@@ -3,7 +3,25 @@
 import { use, useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { ChevronLeft, Save, Plus, Minus, Check, Trash2, Search, X } from 'lucide-react'
+import { ChevronLeft, Save, Plus, Minus, Check, Trash2, Search, X, GripVertical } from 'lucide-react'
+import {
+    DndContext,
+    closestCenter,
+    PointerSensor,
+    TouchSensor,
+    KeyboardSensor,
+    useSensor,
+    useSensors,
+    type DragEndEvent,
+} from '@dnd-kit/core'
+import {
+    SortableContext,
+    sortableKeyboardCoordinates,
+    useSortable,
+    arrayMove,
+    verticalListSortingStrategy,
+} from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
 
 type PlanExercise = {
     id: string
@@ -155,6 +173,34 @@ export default function PlanEditPage({ params }: { params: Promise<{ id: string 
         } catch { } finally { setSearching(false) }
     }
 
+    const reorderExercises = useCallback(async (dayId: string, fromId: string, toId: string) => {
+        if (fromId === toId) return
+        setPlan(prev => {
+            if (!prev) return prev
+            const next = {
+                ...prev,
+                days: prev.days.map(d => {
+                    if (d.id !== dayId) return d
+                    const oldIdx = d.exercises.findIndex(e => e.id === fromId)
+                    const newIdx = d.exercises.findIndex(e => e.id === toId)
+                    if (oldIdx < 0 || newIdx < 0) return d
+                    const reordered = arrayMove(d.exercises, oldIdx, newIdx).map((e, i) => ({ ...e, orderIndex: i }))
+                    return { ...d, exercises: reordered }
+                }),
+            }
+            const day = next.days.find(d => d.id === dayId)
+            if (day) {
+                const exerciseIds = day.exercises.map(e => e.id)
+                fetch(`/api/plan-days/${dayId}/reorder`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ exerciseIds }),
+                }).catch(() => {})
+            }
+            return next
+        })
+    }, [])
+
     const addExercise = async (dayId: string, exercise: { id: string; name: string }) => {
         if (!plan) return
         const res = await fetch('/api/plan-exercises', {
@@ -247,92 +293,14 @@ export default function PlanEditPage({ params }: { params: Promise<{ id: string 
                             <Trash2 className="h-3.5 w-3.5" />
                         </button>
                     </div>
-                    <div className="divide-y divide-border">
-                        {day.exercises.length === 0 && (
-                            <div className="px-4 py-6 text-center text-sm text-muted-foreground">尚無動作</div>
-                        )}
-                        {day.exercises.map((pe, idx) => {
-                            const sets = getVal(pe, 'defaultSets')
-                            const repsMin = getVal(pe, 'defaultRepsMin')
-                            const repsMax = getVal(pe, 'defaultRepsMax')
-                            const rest = getVal(pe, 'restSeconds')
-                            const weight = getVal(pe, 'defaultWeightKg')
-                            const isDirty = !!dirty[pe.id]
-
-                            return (
-                                <div key={pe.id} className={`px-4 py-3 space-y-2 ${isDirty ? 'bg-primary/5' : ''}`}>
-                                    <div className="flex items-center gap-2">
-                                        <span className="text-xs text-muted-foreground w-5">{idx + 1}.</span>
-                                        <span className="text-sm font-medium flex-1 leading-snug">
-                                            {pe.exercise.name.split(' ')[0]}
-                                        </span>
-                                        {isDirty && <span className="text-xs text-primary">●</span>}
-                                        <button
-                                            onClick={() => { if (confirm('確定刪除此動作？')) deleteExercise(day.id, pe.id) }}
-                                            className="text-muted-foreground hover:text-destructive transition-colors p-1"
-                                        >
-                                            <Trash2 className="h-3.5 w-3.5" />
-                                        </button>
-                                    </div>
-
-                                    <div className="grid grid-cols-2 gap-2 pl-7">
-                                        {/* Sets */}
-                                        <div className="space-y-1">
-                                            <label className="text-xs text-muted-foreground">組數</label>
-                                            <div className="flex items-center gap-2">
-                                                <button onClick={() => update(pe.id, 'defaultSets', Math.max(1, sets - 1))} className="w-7 h-7 rounded-md bg-muted flex items-center justify-center hover:bg-muted/80"><Minus className="h-3 w-3" /></button>
-                                                <span className="w-6 text-center text-sm font-medium">{sets}</span>
-                                                <button onClick={() => update(pe.id, 'defaultSets', Math.min(10, sets + 1))} className="w-7 h-7 rounded-md bg-muted flex items-center justify-center hover:bg-muted/80"><Plus className="h-3 w-3" /></button>
-                                            </div>
-                                        </div>
-
-                                        {/* Weight */}
-                                        <div className="space-y-1">
-                                            <label className="text-xs text-muted-foreground">重量 (kg)</label>
-                                            <div className="flex items-center gap-1">
-                                                <button onClick={() => update(pe.id, 'defaultWeightKg', Math.max(0, weight - 5))} className="w-7 h-7 rounded-md bg-muted flex items-center justify-center text-[10px] hover:bg-muted/80">-5</button>
-                                                <button onClick={() => update(pe.id, 'defaultWeightKg', Math.max(0, weight - 2.5))} className="w-7 h-7 rounded-md bg-muted flex items-center justify-center text-[10px] hover:bg-muted/80">-2.5</button>
-                                                <input
-                                                    type="number"
-                                                    inputMode="decimal"
-                                                    value={weight}
-                                                    step={0.1}
-                                                    min={0}
-                                                    onChange={e => update(pe.id, 'defaultWeightKg', parseFloat(e.target.value) || 0)}
-                                                    className="w-16 text-center text-sm font-medium bg-muted rounded-md py-1 outline-none focus:ring-1 focus:ring-primary tabular-nums"
-                                                    title="可直接輸入精確重量（0.1 kg 精度）"
-                                                />
-                                                <button onClick={() => update(pe.id, 'defaultWeightKg', weight + 2.5)} className="w-7 h-7 rounded-md bg-muted flex items-center justify-center text-[10px] hover:bg-muted/80">+2.5</button>
-                                                <button onClick={() => update(pe.id, 'defaultWeightKg', weight + 5)} className="w-7 h-7 rounded-md bg-muted flex items-center justify-center text-[10px] hover:bg-muted/80">+5</button>
-                                            </div>
-                                        </div>
-
-                                        {/* Reps */}
-                                        <div className="space-y-1">
-                                            <label className="text-xs text-muted-foreground">次數範圍</label>
-                                            <div className="flex items-center gap-1 text-sm">
-                                                <button onClick={() => update(pe.id, 'defaultRepsMin', Math.max(1, repsMin - 1))} className="w-7 h-7 rounded-md bg-muted flex items-center justify-center hover:bg-muted/80"><Minus className="h-3 w-3" /></button>
-                                                <span className="w-5 text-center font-medium">{repsMin}</span>
-                                                <span className="text-muted-foreground">–</span>
-                                                <span className="w-5 text-center font-medium">{repsMax}</span>
-                                                <button onClick={() => update(pe.id, 'defaultRepsMax', Math.min(30, repsMax + 1))} className="w-7 h-7 rounded-md bg-muted flex items-center justify-center hover:bg-muted/80"><Plus className="h-3 w-3" /></button>
-                                            </div>
-                                        </div>
-
-                                        {/* Rest */}
-                                        <div className="space-y-1">
-                                            <label className="text-xs text-muted-foreground">休息 (秒)</label>
-                                            <div className="flex items-center gap-1">
-                                                <button onClick={() => update(pe.id, 'restSeconds', Math.max(30, rest - 15))} className="w-7 h-7 rounded-md bg-muted flex items-center justify-center text-xs hover:bg-muted/80">-15</button>
-                                                <span className="w-10 text-center text-sm font-medium">{rest}s</span>
-                                                <button onClick={() => update(pe.id, 'restSeconds', Math.min(300, rest + 15))} className="w-7 h-7 rounded-md bg-muted flex items-center justify-center text-xs hover:bg-muted/80">+15</button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            )
-                        })}
-                    </div>
+                    <DayExerciseList
+                        day={day}
+                        dirty={dirty}
+                        getVal={getVal}
+                        update={update}
+                        deleteExercise={deleteExercise}
+                        reorderExercises={reorderExercises}
+                    />
                     {/* Add exercise */}
                     {addingTo === day.id ? (
                         <div className="px-4 py-3 border-t border-border space-y-2">
@@ -396,6 +364,164 @@ export default function PlanEditPage({ params }: { params: Promise<{ id: string 
             >
                 <Plus className="h-4 w-4" /> 新增訓練日
             </button>
+        </div>
+    )
+}
+
+type DayExerciseListProps = {
+    day: PlanDay
+    dirty: DirtyMap
+    getVal: (pe: PlanExercise, field: keyof PlanExercise) => number
+    update: (peId: string, field: keyof PlanExercise, value: number) => void
+    deleteExercise: (dayId: string, peId: string) => void
+    reorderExercises: (dayId: string, fromId: string, toId: string) => void
+}
+
+function DayExerciseList({ day, dirty, getVal, update, deleteExercise, reorderExercises }: DayExerciseListProps) {
+    const sensors = useSensors(
+        useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
+        useSensor(TouchSensor, { activationConstraint: { delay: 150, tolerance: 8 } }),
+        useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+    )
+
+    const handleDragEnd = (e: DragEndEvent) => {
+        const { active, over } = e
+        if (!over || active.id === over.id) return
+        reorderExercises(day.id, String(active.id), String(over.id))
+    }
+
+    return (
+        <div className="divide-y divide-border">
+            {day.exercises.length === 0 && (
+                <div className="px-4 py-6 text-center text-sm text-muted-foreground">尚無動作</div>
+            )}
+            <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+                <SortableContext items={day.exercises.map(e => e.id)} strategy={verticalListSortingStrategy}>
+                    {day.exercises.map((pe, idx) => (
+                        <SortableExerciseRow
+                            key={pe.id}
+                            pe={pe}
+                            idx={idx}
+                            dayId={day.id}
+                            isDirty={!!dirty[pe.id]}
+                            getVal={getVal}
+                            update={update}
+                            deleteExercise={deleteExercise}
+                        />
+                    ))}
+                </SortableContext>
+            </DndContext>
+        </div>
+    )
+}
+
+type SortableExerciseRowProps = {
+    pe: PlanExercise
+    idx: number
+    dayId: string
+    isDirty: boolean
+    getVal: (pe: PlanExercise, field: keyof PlanExercise) => number
+    update: (peId: string, field: keyof PlanExercise, value: number) => void
+    deleteExercise: (dayId: string, peId: string) => void
+}
+
+function SortableExerciseRow({ pe, idx, dayId, isDirty, getVal, update, deleteExercise }: SortableExerciseRowProps) {
+    const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: pe.id })
+    const sets = getVal(pe, 'defaultSets')
+    const repsMin = getVal(pe, 'defaultRepsMin')
+    const repsMax = getVal(pe, 'defaultRepsMax')
+    const rest = getVal(pe, 'restSeconds')
+    const weight = getVal(pe, 'defaultWeightKg')
+
+    const style: React.CSSProperties = {
+        transform: CSS.Transform.toString(transform),
+        transition,
+        opacity: isDragging ? 0.6 : 1,
+        zIndex: isDragging ? 10 : 'auto',
+    }
+
+    return (
+        <div
+            ref={setNodeRef}
+            style={style}
+            className={`px-4 py-3 space-y-2 ${isDirty ? 'bg-primary/5' : ''} ${isDragging ? 'bg-muted/30' : ''}`}
+        >
+            <div className="flex items-center gap-2">
+                <button
+                    {...attributes}
+                    {...listeners}
+                    aria-label="拖拉排序"
+                    className="touch-none cursor-grab active:cursor-grabbing text-muted-foreground hover:text-foreground p-0.5 -ml-1"
+                >
+                    <GripVertical className="h-4 w-4" />
+                </button>
+                <span className="text-xs text-muted-foreground w-5">{idx + 1}.</span>
+                <span className="text-sm font-medium flex-1 leading-snug">
+                    {pe.exercise.name.split(' ')[0]}
+                </span>
+                {isDirty && <span className="text-xs text-primary">●</span>}
+                <button
+                    onClick={() => { if (confirm('確定刪除此動作？')) deleteExercise(dayId, pe.id) }}
+                    className="text-muted-foreground hover:text-destructive transition-colors p-1"
+                >
+                    <Trash2 className="h-3.5 w-3.5" />
+                </button>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2 pl-7">
+                {/* Sets */}
+                <div className="space-y-1">
+                    <label className="text-xs text-muted-foreground">組數</label>
+                    <div className="flex items-center gap-2">
+                        <button onClick={() => update(pe.id, 'defaultSets', Math.max(1, sets - 1))} className="w-7 h-7 rounded-md bg-muted flex items-center justify-center hover:bg-muted/80"><Minus className="h-3 w-3" /></button>
+                        <span className="w-6 text-center text-sm font-medium">{sets}</span>
+                        <button onClick={() => update(pe.id, 'defaultSets', Math.min(10, sets + 1))} className="w-7 h-7 rounded-md bg-muted flex items-center justify-center hover:bg-muted/80"><Plus className="h-3 w-3" /></button>
+                    </div>
+                </div>
+
+                {/* Weight */}
+                <div className="space-y-1">
+                    <label className="text-xs text-muted-foreground">重量 (kg)</label>
+                    <div className="flex items-center gap-1">
+                        <button onClick={() => update(pe.id, 'defaultWeightKg', Math.max(0, weight - 5))} className="w-7 h-7 rounded-md bg-muted flex items-center justify-center text-[10px] hover:bg-muted/80">-5</button>
+                        <button onClick={() => update(pe.id, 'defaultWeightKg', Math.max(0, weight - 2.5))} className="w-7 h-7 rounded-md bg-muted flex items-center justify-center text-[10px] hover:bg-muted/80">-2.5</button>
+                        <input
+                            type="number"
+                            inputMode="decimal"
+                            value={weight}
+                            step={0.1}
+                            min={0}
+                            onChange={e => update(pe.id, 'defaultWeightKg', parseFloat(e.target.value) || 0)}
+                            className="w-16 text-center text-sm font-medium bg-muted rounded-md py-1 outline-none focus:ring-1 focus:ring-primary tabular-nums"
+                            title="可直接輸入精確重量（0.1 kg 精度）"
+                        />
+                        <button onClick={() => update(pe.id, 'defaultWeightKg', weight + 2.5)} className="w-7 h-7 rounded-md bg-muted flex items-center justify-center text-[10px] hover:bg-muted/80">+2.5</button>
+                        <button onClick={() => update(pe.id, 'defaultWeightKg', weight + 5)} className="w-7 h-7 rounded-md bg-muted flex items-center justify-center text-[10px] hover:bg-muted/80">+5</button>
+                    </div>
+                </div>
+
+                {/* Reps */}
+                <div className="space-y-1">
+                    <label className="text-xs text-muted-foreground">次數範圍</label>
+                    <div className="flex items-center gap-1 text-sm">
+                        <button onClick={() => update(pe.id, 'defaultRepsMin', Math.max(1, repsMin - 1))} className="w-7 h-7 rounded-md bg-muted flex items-center justify-center hover:bg-muted/80"><Minus className="h-3 w-3" /></button>
+                        <span className="w-5 text-center font-medium">{repsMin}</span>
+                        <span className="text-muted-foreground">–</span>
+                        <span className="w-5 text-center font-medium">{repsMax}</span>
+                        <button onClick={() => update(pe.id, 'defaultRepsMax', Math.min(30, repsMax + 1))} className="w-7 h-7 rounded-md bg-muted flex items-center justify-center hover:bg-muted/80"><Plus className="h-3 w-3" /></button>
+                    </div>
+                </div>
+
+                {/* Rest */}
+                <div className="space-y-1">
+                    <label className="text-xs text-muted-foreground">休息 (秒)</label>
+                    <div className="flex items-center gap-1">
+                        <button onClick={() => update(pe.id, 'restSeconds', Math.max(30, rest - 15))} className="w-7 h-7 rounded-md bg-muted flex items-center justify-center text-xs hover:bg-muted/80">-15</button>
+                        <span className="w-10 text-center text-sm font-medium">{rest}s</span>
+                        <button onClick={() => update(pe.id, 'restSeconds', Math.min(300, rest + 15))} className="w-7 h-7 rounded-md bg-muted flex items-center justify-center text-xs hover:bg-muted/80">+15</button>
+                    </div>
+                </div>
+            </div>
         </div>
     )
 }
