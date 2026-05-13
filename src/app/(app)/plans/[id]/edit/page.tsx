@@ -55,10 +55,12 @@ export default function PlanEditPage({ params }: { params: Promise<{ id: string 
     const router = useRouter()
     const [plan, setPlan] = useState<Plan | null>(null)
     const [dirty, setDirty] = useState<DirtyMap>({})
+    const [orderDirty, setOrderDirty] = useState<Set<string>>(new Set())
     const [saving, setSaving] = useState(false)
     const [saved, setSaved] = useState(false)
     const [planName, setPlanName] = useState('')
     const [deleteMsg, setDeleteMsg] = useState('')
+    const [errMsg, setErrMsg] = useState('')
     const [dayNames, setDayNames] = useState<Record<string, string>>({})
     const [addingTo, setAddingTo] = useState<string | null>(null)
     const [searchQ, setSearchQ] = useState('')
@@ -74,6 +76,23 @@ export default function PlanEditPage({ params }: { params: Promise<{ id: string 
             })
     }, [id])
 
+    const hasUnsaved = !!plan && (
+        planName !== plan.name ||
+        Object.keys(dirty).length > 0 ||
+        Object.keys(dayNames).length > 0 ||
+        orderDirty.size > 0
+    )
+
+    useEffect(() => {
+        if (!hasUnsaved) return
+        const handler = (e: BeforeUnloadEvent) => {
+            e.preventDefault()
+            e.returnValue = ''
+        }
+        window.addEventListener('beforeunload', handler)
+        return () => window.removeEventListener('beforeunload', handler)
+    }, [hasUnsaved])
+
     const update = useCallback((peId: string, field: keyof PlanExercise, value: number) => {
         setDirty(prev => ({ ...prev, [peId]: { ...prev[peId], [field]: value } }))
     }, [])
@@ -82,39 +101,57 @@ export default function PlanEditPage({ params }: { params: Promise<{ id: string 
         return (dirty[pe.id]?.[field] ?? pe[field]) as number
     }
 
+    const showError = (msg: string) => {
+        setErrMsg(msg)
+        setTimeout(() => setErrMsg(''), 3500)
+    }
+
     const saveAll = async () => {
         if (!plan) return
         setSaving(true)
+        const ensureOk = async (res: Response) => {
+            if (!res.ok) throw new Error(`${res.status} ${res.statusText}`)
+            return res
+        }
         try {
-            // Save plan name if changed
             if (planName !== plan.name) {
-                await fetch(`/api/plans/${id}`, {
+                await ensureOk(await fetch(`/api/plans/${id}`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ name: planName, description: plan.description, daysPerWeek: plan.days.length }),
-                })
+                }))
             }
-            // Save dirty day names
             await Promise.all(
                 Object.entries(dayNames).map(([dayId, newName]) =>
                     fetch(`/api/plan-days/${dayId}`, {
                         method: 'PATCH',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ dayName: newName }),
-                    })
+                    }).then(ensureOk)
                 )
             )
-            // Save each dirty exercise
             await Promise.all(
                 Object.entries(dirty).map(([peId, changes]) =>
                     fetch(`/api/plan-exercises/${peId}`, {
                         method: 'PATCH',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(changes),
-                    })
+                    }).then(ensureOk)
                 )
             )
-            // Update local plan state with saved day names
+            if (orderDirty.size > 0) {
+                await Promise.all(
+                    Array.from(orderDirty).map(dayId => {
+                        const day = plan.days.find(d => d.id === dayId)
+                        if (!day) return Promise.resolve(null)
+                        return fetch(`/api/plan-days/${dayId}/reorder`, {
+                            method: 'PATCH',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ exerciseIds: day.exercises.map(e => e.id) }),
+                        }).then(ensureOk)
+                    })
+                )
+            }
             if (Object.keys(dayNames).length > 0) {
                 setPlan(prev => prev ? {
                     ...prev,
@@ -123,8 +160,12 @@ export default function PlanEditPage({ params }: { params: Promise<{ id: string 
             }
             setDayNames({})
             setDirty({})
+            setOrderDirty(new Set())
             setSaved(true)
             setTimeout(() => setSaved(false), 2000)
+        } catch (e) {
+            const msg = e instanceof Error ? e.message : String(e)
+            showError(`儲存失敗：${msg}，請重試`)
         } finally {
             setSaving(false)
         }
@@ -173,32 +214,32 @@ export default function PlanEditPage({ params }: { params: Promise<{ id: string 
         } catch { } finally { setSearching(false) }
     }
 
-    const reorderExercises = useCallback(async (dayId: string, fromId: string, toId: string) => {
+    const reorderExercises = useCallback((dayId: string, fromId: string, toId: string) => {
         if (fromId === toId) return
+        let changed = false
         setPlan(prev => {
             if (!prev) return prev
-            const next = {
+            return {
                 ...prev,
                 days: prev.days.map(d => {
                     if (d.id !== dayId) return d
                     const oldIdx = d.exercises.findIndex(e => e.id === fromId)
                     const newIdx = d.exercises.findIndex(e => e.id === toId)
                     if (oldIdx < 0 || newIdx < 0) return d
+                    changed = true
                     const reordered = arrayMove(d.exercises, oldIdx, newIdx).map((e, i) => ({ ...e, orderIndex: i }))
                     return { ...d, exercises: reordered }
                 }),
             }
-            const day = next.days.find(d => d.id === dayId)
-            if (day) {
-                const exerciseIds = day.exercises.map(e => e.id)
-                fetch(`/api/plan-days/${dayId}/reorder`, {
-                    method: 'PATCH',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ exerciseIds }),
-                }).catch(() => {})
-            }
-            return next
         })
+        if (changed) {
+            setOrderDirty(prev => {
+                if (prev.has(dayId)) return prev
+                const next = new Set(prev)
+                next.add(dayId)
+                return next
+            })
+        }
     }, [])
 
     const addExercise = async (dayId: string, exercise: { id: string; name: string }) => {
@@ -237,7 +278,7 @@ export default function PlanEditPage({ params }: { params: Promise<{ id: string 
 
     if (!plan) return <div className="text-center py-20 text-muted-foreground">載入中...</div>
 
-    const hasDirty = planName !== plan.name || Object.keys(dirty).length > 0 || Object.keys(dayNames).length > 0
+    const hasDirty = hasUnsaved
 
     return (
         <div className="space-y-5 pb-10">
@@ -271,6 +312,12 @@ export default function PlanEditPage({ params }: { params: Promise<{ id: string 
                 </div>
             )}
 
+            {errMsg && (
+                <div className="bg-destructive/15 border border-destructive/40 text-destructive text-sm rounded-lg px-3 py-2 text-center">
+                    {errMsg}
+                </div>
+            )}
+
             {/* Days */}
             {plan.days.map(day => (
                 <div key={day.id} className="bg-card border border-border rounded-xl overflow-hidden">
@@ -286,6 +333,9 @@ export default function PlanEditPage({ params }: { params: Promise<{ id: string 
                             }}
                             className="font-semibold text-sm bg-transparent flex-1 outline-none border-b border-transparent focus:border-primary"
                         />
+                        {orderDirty.has(day.id) && (
+                            <span className="text-[10px] text-primary bg-primary/10 px-1.5 py-0.5 rounded">順序未存</span>
+                        )}
                         <button
                             onClick={() => { if (confirm(`確定刪除「${day.dayName}」？此操作無法復原。`)) deleteDay(day.id) }}
                             className="text-muted-foreground hover:text-destructive transition-colors p-1"
