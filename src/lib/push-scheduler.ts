@@ -156,6 +156,11 @@ function toWebPushSub(row: { endpoint: string; p256dh: string; auth: string }): 
 // ─── Public API ──────────────────────────────────────────────────────────────
 
 // Keyed by endpoint (unique). Multiple devices per user each get their own row.
+// Cap each user at PUSH_SUBSCRIPTION_CAP rows — enough for iPhone + iPad + spares.
+// Backstop against iOS endpoint rotation when the client misses `oldEndpoint` hint
+// (T-GB-004). Without this cap, owner accumulated 39 zombie rows in a month.
+const PUSH_SUBSCRIPTION_CAP = 5
+
 export async function savePushSubscription(userId: string, sub: webpush.PushSubscription) {
     await prisma.pushSubscription.upsert({
         where: { endpoint: sub.endpoint },
@@ -172,6 +177,16 @@ export async function savePushSubscription(userId: string, sub: webpush.PushSubs
             auth: sub.keys.auth,
         },
     })
+
+    const rows = await prisma.pushSubscription.findMany({
+        where: { userId },
+        orderBy: { createdAt: 'desc' },
+        select: { id: true },
+    })
+    if (rows.length > PUSH_SUBSCRIPTION_CAP) {
+        const dropIds = rows.slice(PUSH_SUBSCRIPTION_CAP).map(r => r.id)
+        await prisma.pushSubscription.deleteMany({ where: { id: { in: dropIds } } })
+    }
 }
 
 // Returns ALL subscriptions for this user (one per device).

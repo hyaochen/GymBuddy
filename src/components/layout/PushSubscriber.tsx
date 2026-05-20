@@ -15,26 +15,51 @@ function urlBase64ToUint8Array(base64String: string) {
     return Uint8Array.from([...rawData].map(c => c.charCodeAt(0)))
 }
 
+const OLD_ENDPOINT_KEY = 'oldPushEndpoint'
+
 async function ensurePushSubscription(
     reg: ServiceWorkerRegistration,
     vapidKey: string,
 ) {
     let sub = await reg.pushManager.getSubscription()
+    let oldEndpoint: string | null = null
+
     if (!sub) {
         // PushManager was cleared by the OS (iOS may drop the subscription after
         // long PWA inactivity, or sw.js's `pushsubscriptionchange` handler skipped
         // because `event.oldSubscription.options.applicationServerKey` was null).
-        // Re-subscribe here using the VAPID key we have client-side.
+        // Re-subscribe here using the VAPID key we have client-side, and pass the
+        // previous endpoint along so the server can purge the dead row (T-GB-004).
+        try {
+            oldEndpoint = localStorage.getItem(OLD_ENDPOINT_KEY)
+        } catch {
+            oldEndpoint = null
+        }
         sub = await reg.pushManager.subscribe({
             userVisibleOnly: true,
             applicationServerKey: urlBase64ToUint8Array(vapidKey),
         })
     }
+
+    const body: { subscription: PushSubscriptionJSON; oldEndpoint?: string } = {
+        subscription: sub.toJSON(),
+    }
+    if (oldEndpoint && oldEndpoint !== sub.endpoint) {
+        body.oldEndpoint = oldEndpoint
+    }
+
     await fetch('/api/push/subscribe', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ subscription: sub.toJSON() }),
+        body: JSON.stringify(body),
     })
+
+    try {
+        localStorage.setItem(OLD_ENDPOINT_KEY, sub.endpoint)
+    } catch {
+        // localStorage unavailable (private mode, etc.) — fine, next rotation
+        // just won't have an oldEndpoint hint and the server cap will catch it.
+    }
 }
 
 export default function PushSubscriber() {
