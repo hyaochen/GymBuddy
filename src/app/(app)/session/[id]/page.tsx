@@ -579,8 +579,10 @@ export default function ActiveSessionPage({ params }: { params: Promise<{ id: st
                 }),
             })
             const data = await res.json()
-            // Unique tag per set — avoids iOS Safari's silent-push throttling on repeated same-tag notifications
-            const notifTag = `rest-end-${sessionId}-${state.setNum}`
+            // Unique tag per set — avoids iOS Safari's silent-push throttling on repeated same-tag notifications.
+            // Includes exerciseId so cancelPush can prefix-match a single exercise (T-GB-005) without
+            // also killing pending pushes belonging to other exercises in the same session.
+            const notifTag = `rest-end-${sessionId}-${ex.exerciseId}-${state.setNum}`
             // Pre-schedule 60 s of repeating alarm (Web Audio, fires even in background)
             scheduleAlarm(restSeconds)
             // Send absolute endTime + unique tag to SW (local fallback for when app is briefly in background)
@@ -777,7 +779,16 @@ export default function ActiveSessionPage({ params }: { params: Promise<{ id: st
 
                 <div className="flex justify-center">
                     <button
-                        onClick={() => { cancelBeep(); fetch('/api/push/schedule', { method: 'DELETE' }).catch(() => {}); navigator.serviceWorker?.controller?.postMessage({ type: 'CANCEL_NOTIFICATION' }); dispatch({ type: 'SKIP_REST' }) }}
+                        onClick={() => {
+                            cancelBeep()
+                            // Cancel only this exercise's pending pushes — not pushes from other
+                            // exercises in the same session (T-GB-005). Trailing dash is required:
+                            // `rest-end-S-EX-` won't match other-exercise tags.
+                            const cancelPrefix = `rest-end-${sessionId}-${ex.exerciseId}-`
+                            fetch(`/api/push/schedule?tag=${encodeURIComponent(cancelPrefix)}`, { method: 'DELETE' }).catch(() => {})
+                            navigator.serviceWorker?.controller?.postMessage({ type: 'CANCEL_NOTIFICATION' })
+                            dispatch({ type: 'SKIP_REST' })
+                        }}
                         className="flex items-center gap-2 px-6 py-3 rounded-xl bg-secondary text-secondary-foreground font-medium text-sm"
                     >
                         <SkipForward className="h-4 w-4" />
@@ -815,7 +826,14 @@ export default function ActiveSessionPage({ params }: { params: Promise<{ id: st
                 {state.alarmRinging && (
                     <AlarmOverlay
                         label={`準備繼續 ${isLastEx ? '完成訓練' : '下一個動作'}`}
-                        onDismiss={() => { cancelBeep(); fetch('/api/push/schedule', { method: 'DELETE' }).catch(() => {}); navigator.serviceWorker?.controller?.postMessage({ type: 'CANCEL_NOTIFICATION' }); dispatch({ type: 'ALARM_DISMISS' }) }}
+                        onDismiss={() => {
+                            cancelBeep()
+                            // Same exercise-scoped cancel as SKIP_REST (T-GB-005).
+                            const cancelPrefix = `rest-end-${sessionId}-${ex.exerciseId}-`
+                            fetch(`/api/push/schedule?tag=${encodeURIComponent(cancelPrefix)}`, { method: 'DELETE' }).catch(() => {})
+                            navigator.serviceWorker?.controller?.postMessage({ type: 'CANCEL_NOTIFICATION' })
+                            dispatch({ type: 'ALARM_DISMISS' })
+                        }}
                     />
                 )}
 

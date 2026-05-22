@@ -32,17 +32,13 @@ function pushTimerKey(userId: string, tag: string) {
     return `${userId}:${tag}`
 }
 
-function clearLocalTimers(userId: string, tag?: string) {
-    if (tag) {
-        const key = pushTimerKey(userId, tag)
-        const timer = timers.get(key)
-        if (timer) clearTimeout(timer)
-        timers.delete(key)
-        return
-    }
-
+// Prefix-aware: a tagPattern matches any timer whose tag begins with it. An exact
+// tag is just a prefix that happens to match exactly one entry. Caller controls
+// scope by appending a trailing dash (e.g. `rest-end-${sessionId}-${exerciseId}-`).
+function clearLocalTimers(userId: string, tagPattern?: string) {
+    const prefix = tagPattern ? `${userId}:${tagPattern}` : `${userId}:`
     for (const [key, timer] of timers.entries()) {
-        if (key.startsWith(`${userId}:`)) {
+        if (key.startsWith(prefix)) {
             clearTimeout(timer)
             timers.delete(key)
         }
@@ -240,7 +236,11 @@ export async function schedulePush(
     const scheduledAt = new Date().toISOString()
     const expectedFireAt = fireAt.toISOString()
 
-    await cancelPush(userId)
+    // Only clear the local timer for this exact tag — the upsert below already
+    // makes the DB row idempotent. Previously we called cancelPush(userId) here
+    // with no tag, which CANCELLED every other pending push for this user (T-GB-005:
+    // owner's set-3 was killed when the next exercise's set-1 was scheduled).
+    clearLocalTimers(userId, tag)
     await prisma.pushJob.upsert({
         where: { userId_tag: { userId, tag } },
         update: {
@@ -274,18 +274,33 @@ export async function schedulePush(
     timers.set(pushTimerKey(userId, tag), timer)
 }
 
-export async function cancelPush(userId: string, tag?: string) {
-    clearLocalTimers(userId, tag)
+/**
+ * Cancel pending push jobs for `userId`.
+ *
+ * - `tagPattern` omitted → cancel ALL pending pushes for the user (session
+ *   end, logout). Use sparingly — non-selective.
+ * - `tagPattern` provided → cancel any pending job whose `tag` starts with
+ *   `tagPattern` (prefix match). Caller controls scope with trailing
+ *   separators:
+ *     - `rest-end-${sessionId}-${exerciseId}-` → all sets of one exercise
+ *     - `rest-end-${sessionId}-` → entire workout session
+ *     - `rest-end-${sessionId}-${exerciseId}-${setNum}` (no dash) → exact one
+ *       set, but beware: this also matches `setNum=30` if `setNum=3` was passed.
+ *       Append a trailing dash when you need exact-set semantics among
+ *       multi-digit setNums.
+ */
+export async function cancelPush(userId: string, tagPattern?: string) {
+    clearLocalTimers(userId, tagPattern)
     const result = await prisma.pushJob.updateMany({
         where: {
             userId,
-            ...(tag ? { tag } : {}),
+            ...(tagPattern ? { tag: { startsWith: tagPattern } } : {}),
             status: PUSH_JOB_STATUS.PENDING,
         },
         data: { status: PUSH_JOB_STATUS.CANCELLED },
     })
     if (result.count > 0) {
-        addPushLog('CANCELLED', userId, tag ? `tag=${tag}` : `count=${result.count}`)
+        addPushLog('CANCELLED', userId, tagPattern ? `tag^=${tagPattern} count=${result.count}` : `count=${result.count}`)
     }
 }
 
