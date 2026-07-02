@@ -11,6 +11,11 @@
 import { PrismaClient } from '@prisma/client'
 import * as argon2 from 'argon2'
 
+if (process.env.NODE_ENV === 'production') {
+  console.error('ERROR: create-test-account.ts must not run in production. NODE_ENV=production detected. Exiting.');
+  process.exit(1);
+}
+
 const prisma = new PrismaClient()
 
 async function main() {

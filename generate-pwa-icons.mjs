@@ -3,7 +3,11 @@ import fs from "fs";
 import path from "path";
 import sharp from "sharp";
 
-const API_KEY = "AIzaSyCT3YBM5xLlhpIxaFQYOpVHfyohIihPoAs";
+const API_KEY = process.env.GEMINI_API_KEY;
+if (!API_KEY) {
+  console.error('ERROR: GEMINI_API_KEY environment variable is not set. Exiting.');
+  process.exit(1);
+}
 const genAI = new GoogleGenerativeAI(API_KEY);
 
 const projects = [
