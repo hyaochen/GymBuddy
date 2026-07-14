@@ -47,5 +47,9 @@ prisma/audit/exercises-current-state.json
 
 # Exercise review images (source/staging only, not served)
 public/exercise-demos-review/
+
+# AI-generated exercise images (T-GB-012: not in repo; bind-mounted into container)
+generated-images/
+public/exercises/generated/
 photo/肌力訓練.pdf
 photo/*.pdf

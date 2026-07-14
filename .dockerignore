@@ -8,3 +8,8 @@ node_modules
 docker-data/
 backups/
 .DS_Store
+generated-images/
+uploads/
+public/book-exercises/
+public/exercises/
+public/exercise-demos-review/

@@ -50,6 +50,14 @@ services:
       RAG_API_URL: ${RAG_API_URL:-http://rag-api:8080}
     volumes:
       - ./uploads:/app/public/uploads
+      # Large git-tracked static assets are bind-mounted instead of baked into
+      # the image (T-GB-018 slimming: public/ was 475MB of the old 4.11GB image).
+      - ./public/book-exercises:/app/public/book-exercises:ro
+      - ./public/exercises:/app/public/exercises:ro
+      # AI-generated exercise images live on host, not in the image/repo
+      # (T-GB-012 decision; rescued from container in T-GB-018). Nested mount
+      # overlays the generated/ subdir of the exercises mount above.
+      - ./generated-images:/app/public/exercises/generated:ro
     logging:
       driver: json-file
       options:

@@ -40,6 +40,8 @@ FROM node:20-bookworm-slim AS runner
 
 WORKDIR /app
 ENV NODE_ENV=production
+ENV HOSTNAME=0.0.0.0
+ENV PORT=3000
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends ca-certificates openssl \
@@ -47,17 +49,30 @@ RUN apt-get update \
     && groupadd --system --gid 1001 nodejs \
     && useradd --system --uid 1001 --gid nodejs nextjs
 
-COPY package.json package-lock.json* ./
-COPY prisma ./prisma
-RUN npm ci --omit=dev && npm cache clean --force
+# Standalone output: server.js + file-traced node_modules subset (T-GB-018).
+# Replaces the old `npm ci --omit=dev` + full `.next` copy (4.11GB image —
+# .next/cache alone was multi-GB and never needed at runtime).
+# COPY --chown instead of a trailing `chown -R /app` — the latter duplicated
+# every copied byte into an extra 660MB layer.
+COPY --chown=nextjs:nodejs --from=builder /app/.next/standalone ./
+COPY --chown=nextjs:nodejs --from=builder /app/.next/static ./.next/static
+COPY --chown=nextjs:nodejs --from=builder /app/public ./public
 
-COPY --from=builder /app/.next ./.next
-COPY --from=builder /app/public ./public
-COPY --from=builder /app/docker-start.sh ./docker-start.sh
+# Prisma CLI + engines for `migrate deploy` in docker-start.sh.
+# File tracing only bundles the client runtime, not the CLI/schema-engine.
+COPY --chown=nextjs:nodejs --from=builder /app/prisma ./prisma
+COPY --chown=nextjs:nodejs --from=builder /app/node_modules/prisma ./node_modules/prisma
+COPY --chown=nextjs:nodejs --from=builder /app/node_modules/@prisma ./node_modules/@prisma
+COPY --chown=nextjs:nodejs --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 
+COPY --chown=nextjs:nodejs --from=builder /app/docker-start.sh ./docker-start.sh
+
+# Large static assets (public/book-exercises, public/exercises, uploads) are
+# NOT baked in — they are git-tracked (or host-managed) and bind-mounted
+# read-only via docker-compose. mkdir keeps the mount points owned by nextjs.
 RUN chmod +x docker-start.sh \
-    && mkdir -p /app/public/uploads \
-    && chown -R nextjs:nodejs /app
+    && mkdir -p /app/public/uploads /app/public/exercises/generated /app/public/book-exercises \
+    && chown -R nextjs:nodejs /app/public
 
 USER nextjs
 
