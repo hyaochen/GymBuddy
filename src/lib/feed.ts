@@ -125,7 +125,7 @@ async function notifyFriendsOfActivity(
     const displayName = user?.profile?.displayName || user?.name || '好友'
 
     const planInfo = session.plan?.name ? ` — ${session.plan.name}` : ''
-    const title = `💪 ${displayName} 完成了訓練！`
+    const title = `${displayName} 完成了訓練！`
     const body = `${totalSets} 組・${durationMin} 分鐘${planInfo}`
 
     sendPushToMany(friendIds, title, body, 'social-feed').catch(console.error)

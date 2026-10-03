@@ -87,7 +87,7 @@ export default async function DashboardPage() {
             {/* Welcome */}
             <div>
                 <h1 className="text-xl font-bold">
-                    嗨，{user.name.split(' ')[0]} 👋
+                    嗨，{user.name.split(' ')[0]}
                 </h1>
                 <p className="text-muted-foreground text-sm mt-0.5">
                     {lastSession

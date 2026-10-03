@@ -23,7 +23,7 @@ export async function POST(req: NextRequest) {
     await schedulePush(
         user.id,
         resolvedEndTime,
-        '⏱️ 休息結束！',
+        '休息結束！',
         '準備好下一組了嗎？點擊繼續訓練',
         { durationMs: typeof durationMs === 'number' ? durationMs : undefined, tag: typeof tag === 'string' ? tag : undefined },
     )

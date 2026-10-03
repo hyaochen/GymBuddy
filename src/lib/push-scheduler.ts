@@ -262,12 +262,12 @@ export async function schedulePush(
     })
 
     addPushLog('SCHEDULED', userId, `delay=${Math.round(delay/1000)}s fire=${expectedFireAt} tag=${tag}`)
-    console.log(`[push] 📋 Scheduled — user=${userId} delay=${Math.round(delay/1000)}s scheduledAt=${scheduledAt} expectedFireAt=${expectedFireAt} tag=${tag}`)
+    console.log(`[push] Scheduled — user=${userId} delay=${Math.round(delay/1000)}s scheduledAt=${scheduledAt} expectedFireAt=${expectedFireAt} tag=${tag}`)
     const timer = setTimeout(async () => {
         const actualFireAt = new Date().toISOString()
         const drift = Date.now() - serverEndTime
         addPushLog('TIMER_FIRED', userId, `drift=${drift}ms actual=${actualFireAt} tag=${tag}`)
-        console.log(`[push] ⏰ Timer fired — user=${userId} actualFireAt=${actualFireAt} drift=${drift}ms (scheduled ${scheduledAt}) tag=${tag}`)
+        console.log(`[push] Timer fired — user=${userId} actualFireAt=${actualFireAt} drift=${drift}ms (scheduled ${scheduledAt}) tag=${tag}`)
         timers.delete(pushTimerKey(userId, tag))
         await firePushJob(userId, tag)
     }, delay)
@@ -329,7 +329,7 @@ async function firePushJob(userId: string, tag: string) {
     const subs = await getAllSubscriptionsForUser(userId)
     if (subs.length === 0) {
         addPushLog('NO_SUBSCRIPTION', userId, `tag=${tag}`)
-        console.warn(`[push] ❌ No subscriptions for user ${userId}`)
+        console.warn(`[push] No subscriptions for user ${userId}`)
         await prisma.pushJob.update({
             where: { id: job.id },
             data: { status: PUSH_JOB_STATUS.FAILED },
@@ -356,7 +356,7 @@ async function sendWithRetry(sub: webpush.PushSubscription, userId: string, titl
     const payload = JSON.stringify({ title, body, tag })
     const endpointTail = sub.endpoint.slice(-24)
     try {
-        console.log(`[push] 📤 Sending push to user ${userId} tag=${tag} endpoint=...${endpointTail}`)
+        console.log(`[push] Sending push to user ${userId} tag=${tag} endpoint=...${endpointTail}`)
         let result = await sendNotificationWithOneHourJwt(sub, payload)
         let ok = result.statusCode >= 200 && result.statusCode < 300
 
@@ -367,7 +367,7 @@ async function sendWithRetry(sub: webpush.PushSubscription, userId: string, titl
             ok = result.statusCode >= 200 && result.statusCode < 300
         }
 
-        const status = ok ? '✅' : '❌'
+        const status = ok ? 'OK' : 'FAIL'
         addPushLog(ok ? 'PUSH_SENT_OK' : 'PUSH_SENT_FAIL', userId, `status=${result.statusCode} body=${result.body} tag=${tag} endpoint=...${endpointTail}`)
         console.log(`[push] ${status} Sent — status=${result.statusCode} body=${result.body} user=${userId} tag=${tag} endpoint=...${endpointTail}`)
         if (result.statusCode === 410) {
@@ -377,7 +377,7 @@ async function sendWithRetry(sub: webpush.PushSubscription, userId: string, titl
         if (ok) return true
     } catch (err) {
         addPushLog('PUSH_ERROR', userId, `${String(err)} endpoint=...${endpointTail}`)
-        console.error(`[push] ❌ Error for user ${userId} endpoint=...${endpointTail}:`, err)
+        console.error(`[push] Error for user ${userId} endpoint=...${endpointTail}:`, err)
         try {
             await new Promise(resolve => setTimeout(resolve, 5000))
             addPushLog('PUSH_RETRY_NETWORK', userId, `Retrying after network error endpoint=...${endpointTail}`)
@@ -391,7 +391,7 @@ async function sendWithRetry(sub: webpush.PushSubscription, userId: string, titl
             return retryOk
         } catch (retryErr) {
             addPushLog('PUSH_RETRY_ERROR', userId, `${String(retryErr)} endpoint=...${endpointTail}`)
-            console.error(`[push] ❌ Retry also failed for user ${userId} endpoint=...${endpointTail}:`, retryErr)
+            console.error(`[push] Retry also failed for user ${userId} endpoint=...${endpointTail}:`, retryErr)
         }
     }
 

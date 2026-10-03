@@ -292,7 +292,7 @@ async function main() {
         const allSteps: string[] = [...steps]
         if (ex.mistakes) {
             allSteps.push('── 常見錯誤 ──')
-            ex.mistakes.split('；').forEach(m => allSteps.push('⚠️ ' + m.trim()))
+            ex.mistakes.split('；').forEach(m => allSteps.push('注意：' + m.trim()))
         }
 
         await prisma.exercise.update({
@@ -322,7 +322,7 @@ async function main() {
             const steps = ex.cues.split('；').map(s => s.trim()).filter(Boolean)
             if (ex.mistakes) {
                 steps.push('── 常見錯誤 ──')
-                ex.mistakes.split('；').forEach(m => steps.push('⚠️ ' + m.trim()))
+                ex.mistakes.split('；').forEach(m => steps.push('注意：' + m.trim()))
             }
             await prisma.exercise.update({
                 where: { id: existing.id },
@@ -338,7 +338,7 @@ async function main() {
         const steps = ex.cues.split('；').map(s => s.trim()).filter(Boolean)
         if (ex.mistakes) {
             steps.push('── 常見錯誤 ──')
-            ex.mistakes.split('；').forEach(m => steps.push('⚠️ ' + m.trim()))
+            ex.mistakes.split('；').forEach(m => steps.push('注意：' + m.trim()))
         }
 
         const primaryMgs = ex.primaryMuscles

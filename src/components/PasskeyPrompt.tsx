@@ -68,7 +68,7 @@ export default function PasskeyPrompt() {
             <KeyRound className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
             <div className="flex-1 min-w-0">
                 {done ? (
-                    <p className="text-sm font-medium text-green-400">Face ID 綁定成功！下次可以直接刷臉登入 🎉</p>
+                    <p className="text-sm font-medium text-green-400">Face ID 綁定成功！下次可以直接刷臉登入</p>
                 ) : (
                     <>
                         <p className="text-sm font-medium">啟用 Face ID 快速登入？</p>

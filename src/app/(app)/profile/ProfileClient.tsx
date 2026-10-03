@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback, useRef, useActionState } from "react"
 import { User, Flame, Dumbbell, Calendar, Shield, Award, Camera, Loader2 } from "lucide-react"
 import Image from "next/image"
 import { cn } from "@/lib/utils"
+import BadgeIcon from "@/components/BadgeIcon"
 import { updateProfileSettings, type ProfileSettingsActionState } from "@/app/actions/profile"
 
 interface ProfileData {
@@ -300,7 +301,7 @@ export default function ProfilePage() {
                                             : "bg-secondary/50 border border-border opacity-40"
                                     )}
                                 >
-                                    <span className="text-xl">{b.icon}</span>
+                                    <span className="text-xl"><BadgeIcon name={b.icon} /></span>
                                     <span className="text-[9px] leading-tight mt-1 font-medium line-clamp-2">
                                         {b.name}
                                     </span>

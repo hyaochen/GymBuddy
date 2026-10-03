@@ -5,6 +5,7 @@ import { login } from "@/app/actions/auth"
 import { use, useActionState, useState, useEffect } from "react"
 import { browserSupportsWebAuthn, startAuthentication } from "@simplewebauthn/browser"
 import { useRouter } from "next/navigation"
+import { Dumbbell } from "lucide-react"
 
 export default function LoginPage({
     searchParams,
@@ -64,7 +65,7 @@ export default function LoginPage({
         <div className="min-h-screen flex items-center justify-center p-4">
             <div className="w-full max-w-sm">
                 <div className="text-center mb-8">
-                    <div className="text-4xl mb-3">💪</div>
+                    <Dumbbell className="mx-auto mb-3 h-10 w-10 text-primary" aria-hidden="true" />
                     <h1 className="text-2xl font-bold text-foreground">GymBuddy</h1>
                     <p className="text-muted-foreground text-sm mt-1">健身訓練追蹤器</p>
                 </div>

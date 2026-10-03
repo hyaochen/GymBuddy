@@ -1,14 +1,14 @@
 "use client"
 
 import { useEffect, useState, useCallback, useOptimistic, useTransition } from "react"
-import { Users, Activity, Trophy, UserPlus, Check, X, Search, Trash2, Eye, EyeOff, Flame, Dumbbell, Calendar, Swords, Plus, Clock, Target, TrendingUp, ArrowRight, ChevronDown } from "lucide-react"
+import { Users, Activity, Trophy, UserPlus, Check, X, Search, Trash2, Eye, EyeOff, Flame, Dumbbell, Calendar, Swords, Plus, Clock, Target, TrendingUp, ArrowRight, ChevronDown, Medal } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { addTaipeiDays, parseTaipeiDateInput, taipeiDateKey } from "@/lib/timezone"
 import PRShareCard from "@/components/PRShareCard"
+import KudoIcon from "@/components/KudoIcon"
+import { DEFAULT_KUDO, KUDO_KEYS, KUDO_LABELS } from "@/lib/kudos"
 
 type Tab = "feed" | "friends" | "leaderboard"
-
-const KUDOS_EMOJIS = ["💪", "🔥", "👏", "🏆", "⚡"]
 
 const CHALLENGE_TYPE_LABELS: Record<string, string> = {
     STREAK: "連續訓練天數",
@@ -116,9 +116,9 @@ function getActivityDescription(type: string, data: Record<string, unknown> | nu
             return `完成了 ${parts.join(" · ")}`
         }
         case "PR_ACHIEVED":
-            return `🏆 新 PR！${String(data.exerciseName)} ${String(data.weightKg)} kg × ${String(data.reps)} 下 (1RM ≈ ${Number(data.estimated1rm).toFixed(1)} kg)`
+            return `新 PR！${String(data.exerciseName)} ${String(data.weightKg)} kg × ${String(data.reps)} 下 (1RM ≈ ${Number(data.estimated1rm).toFixed(1)} kg)`
         case "STREAK_MILESTONE":
-            return `🔥 連續訓練 ${String(data.streakDays)} 天！`
+            return `連續訓練 ${String(data.streakDays)} 天！`
         default:
             return "完成了活動"
     }
@@ -374,7 +374,7 @@ export default function SocialPage() {
                                         <button
                                             onClick={() => {
                                                 if (item.hasKudoed) {
-                                                    handleKudo(item.id, "💪")
+                                                    handleKudo(item.id, DEFAULT_KUDO)
                                                 } else {
                                                     setEmojiPickerFor(emojiPickerFor === item.id ? null : item.id)
                                                 }
@@ -387,8 +387,8 @@ export default function SocialPage() {
                                             )}
                                         >
                                             {item.hasKudoed
-                                                ? item.myKudoEmoji || "💪"
-                                                : "💪"}
+                                                ? <KudoIcon value={item.myKudoEmoji} className="h-4 w-4" />
+                                                : <Dumbbell className="h-4 w-4" aria-hidden="true" />}
                                             {item.kudoCount > 0 && (
                                                 <span className="font-medium">{item.kudoCount}</span>
                                             )}
@@ -397,13 +397,15 @@ export default function SocialPage() {
                                         {/* Emoji picker */}
                                         {emojiPickerFor === item.id && (
                                             <div className="absolute bottom-full left-0 mb-1 flex gap-1 bg-card border border-border rounded-xl p-1.5 shadow-lg z-10">
-                                                {KUDOS_EMOJIS.map(e => (
+                                                {KUDO_KEYS.map(k => (
                                                     <button
-                                                        key={e}
-                                                        onClick={() => handleKudo(item.id, e)}
-                                                        className="hover:bg-secondary rounded-lg p-1 text-base transition-colors"
+                                                        key={k}
+                                                        onClick={() => handleKudo(item.id, k)}
+                                                        title={KUDO_LABELS[k]}
+                                                        aria-label={KUDO_LABELS[k]}
+                                                        className="hover:bg-secondary rounded-lg p-1.5 transition-colors"
                                                     >
-                                                        {e}
+                                                        <KudoIcon value={k} className="h-4 w-4" />
                                                     </button>
                                                 ))}
                                             </div>
@@ -711,7 +713,7 @@ function ChallengeCard({ challenge: c, onJoin }: { challenge: ChallengeData; onJ
                         return (
                             <div key={p.userId} className="flex items-center gap-2">
                                 <span className="text-xs w-20 truncate font-medium">
-                                    {p.completed ? "✅ " : ""}{p.user.name}
+                                    {p.completed && <Check className="mr-0.5 inline h-3 w-3 text-green-400" aria-label="已完成" />}{p.user.name}
                                 </span>
                                 <div className="flex-1 h-2 bg-secondary rounded-full overflow-hidden">
                                     <div
@@ -737,7 +739,7 @@ function ChallengeCard({ challenge: c, onJoin }: { challenge: ChallengeData; onJ
                     <span className="text-xs font-medium">你的進度</span>
                     <span className="text-sm font-bold text-primary tabular-nums">
                         {c.myProgress.currentValue} / {c.targetValue} {CHALLENGE_TYPE_UNITS[c.type]}
-                        {c.myProgress.completed && " ✅"}
+                        {c.myProgress.completed && <Check className="ml-1 inline h-3.5 w-3.5" aria-label="已完成" />}
                     </span>
                 </div>
             )}
@@ -949,7 +951,8 @@ function LeaderboardSection({ title, icon, items, emptyText }: {
 }) {
     if (items.length === 0) return null
 
-    const medals = ["🥇", "🥈", "🥉"]
+    // Gold / silver / bronze for ranks 1-3
+    const medalColors = ["text-yellow-400", "text-slate-300", "text-amber-600"]
 
     return (
         <div className="space-y-2">
@@ -965,7 +968,9 @@ function LeaderboardSection({ title, icon, items, emptyText }: {
                         <div key={item.name} className="flex items-center justify-between px-4 py-2.5">
                             <div className="flex items-center gap-3">
                                 <span className="text-sm w-6 text-center">
-                                    {item.rank <= 3 ? medals[item.rank - 1] : item.rank}
+                                    {item.rank <= 3
+                                        ? <Medal className={cn("mx-auto h-4 w-4", medalColors[item.rank - 1])} aria-label={`第 ${item.rank} 名`} />
+                                        : item.rank}
                                 </span>
                                 <span className="text-sm font-medium">{item.name}</span>
                             </div>

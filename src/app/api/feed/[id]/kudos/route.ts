@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
 import { getCurrentUser } from '@/lib/auth'
 import { checkSocialBadge } from '@/lib/badges'
+import { DEFAULT_KUDO, normalizeKudoKey } from '@/lib/kudos'
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
     const user = await getCurrentUser()
@@ -9,11 +10,11 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
     const { id: feedItemId } = await params
     const body = await req.json().catch(() => ({}))
-    const emoji = body.emoji || '💪'
-
-    const VALID_EMOJIS = ['💪', '🔥', '👏', '🏆', '⚡']
-    if (!VALID_EMOJIS.includes(emoji)) {
-        return NextResponse.json({ error: '無效的表情' }, { status: 400 })
+    // Reactions are stored as keys (see src/lib/kudos.ts); legacy emoji input from
+    // an older cached client is accepted and converted to the equivalent key.
+    const emoji = normalizeKudoKey(body.emoji || DEFAULT_KUDO)
+    if (!emoji) {
+        return NextResponse.json({ error: '無效的反應' }, { status: 400 })
     }
 
     // Verify feed item exists

@@ -43,14 +43,14 @@ async function notifyFriendsOfShare(userId: string, userName: string, type: stri
 
     if (type === 'PR_ACHIEVED' && data) {
         const parsed = JSON.parse(data)
-        title = `🏆 ${displayName} 破了個人紀錄！`
+        title = `${displayName} 破了個人紀錄！`
         body = `${parsed.exerciseName} — ${parsed.weightKg}kg × ${parsed.reps} 下`
     } else if (type === 'STREAK_MILESTONE' && data) {
         const parsed = JSON.parse(data)
-        title = `🔥 ${displayName} 達成連續訓練里程碑！`
+        title = `${displayName} 達成連續訓練里程碑！`
         body = `已連續訓練 ${parsed.streakDays} 天`
     } else {
-        title = `📣 ${displayName} 分享了新動態`
+        title = `${displayName} 分享了新動態`
         body = '點擊查看'
     }
 

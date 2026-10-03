@@ -24,7 +24,7 @@ export async function GET() {
     await pushTestLimiter.record(user.id)
 
     // Primary: our 1-hour JWT approach
-    const result = await sendPushNow(user.id, '✅ 推播測試成功！', '伺服器端 Web Push 運作正常')
+    const result = await sendPushNow(user.id, '推播測試成功！', '伺服器端 Web Push 運作正常')
 
     // If we have a subscription, also test with raw web-push (12-hour JWT)
     // to help diagnose if the issue is key-mismatch vs expiry

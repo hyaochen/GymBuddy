@@ -3,6 +3,7 @@
 import Link from "next/link"
 import { register } from "@/app/actions/auth"
 import { use, useActionState } from "react"
+import { Dumbbell } from "lucide-react"
 
 export default function RegisterPage({
     searchParams,
@@ -16,7 +17,7 @@ export default function RegisterPage({
         <div className="min-h-screen flex items-center justify-center p-4">
             <div className="w-full max-w-sm">
                 <div className="text-center mb-8">
-                    <div className="text-4xl mb-3">💪</div>
+                    <Dumbbell className="mx-auto mb-3 h-10 w-10 text-primary" aria-hidden="true" />
                     <h1 className="text-2xl font-bold text-foreground">GymBuddy</h1>
                     <p className="text-muted-foreground text-sm mt-1">建立你的健身帳號</p>
                 </div>

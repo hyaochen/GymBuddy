@@ -63,7 +63,7 @@ export async function POST(req: NextRequest) {
 
     // Notify the receiver via push
     const displayName = user.name
-    sendPushNow(target.id, `👋 ${displayName} 想加你為好友`, '點擊查看並回覆', 'friend-request')
+    sendPushNow(target.id, `${displayName} 想加你為好友`, '點擊查看並回覆', 'friend-request')
         .catch(console.error)
 
     return NextResponse.json({ success: true, id: friendship.id })

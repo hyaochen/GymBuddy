@@ -3,7 +3,7 @@
 import { use, useEffect, useReducer, useRef, useCallback, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { ChevronLeft, X, SkipForward, CheckCircle2, Dumbbell, Trophy, List } from 'lucide-react'
+import { ChevronLeft, X, SkipForward, CheckCircle2, Dumbbell, PartyPopper, Play, Square, Timer, Trophy, List } from 'lucide-react'
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -590,7 +590,7 @@ export default function ActiveSessionPage({ params }: { params: Promise<{ id: st
                 swRegRef.current.active.postMessage({
                     type: 'SCHEDULE_NOTIFICATION',
                     endTime: restEndTime,
-                    title: '⏱️ 休息結束！',
+                    title: '休息結束！',
                     body: '準備好下一組了嗎？點擊繼續訓練',
                     tag: notifTag,
                 })
@@ -655,7 +655,7 @@ export default function ActiveSessionPage({ params }: { params: Promise<{ id: st
         return (
             <div className="flex items-center justify-center min-h-[60vh]">
                 <div className="text-center">
-                    <div className="text-5xl mb-3 animate-pulse">💪</div>
+                    <Dumbbell className="mx-auto mb-3 h-12 w-12 animate-pulse text-primary" aria-hidden="true" />
                     <p className="text-muted-foreground text-sm">載入訓練...</p>
                 </div>
             </div>
@@ -676,7 +676,7 @@ export default function ActiveSessionPage({ params }: { params: Promise<{ id: st
     if (state.phase === 'done') {
         return (
             <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-6 px-4">
-                <div className="text-6xl">🎉</div>
+                <PartyPopper className="h-16 w-16 text-yellow-400" aria-hidden="true" />
                 <div className="text-center">
                     <h1 className="text-xl font-bold mb-1">訓練完成！</h1>
                     <p className="text-muted-foreground text-sm">太棒了，繼續保持！</p>
@@ -735,7 +735,7 @@ export default function ActiveSessionPage({ params }: { params: Promise<{ id: st
                     >
                         <Trophy className="h-5 w-5 text-yellow-400 flex-shrink-0" />
                         <div>
-                            <p className="text-yellow-400 font-semibold text-sm">🏆 新個人最佳！</p>
+                            <p className="text-yellow-400 font-semibold text-sm">新個人最佳！</p>
                             <p className="text-xs text-yellow-400/80">{state.newPR}</p>
                         </div>
                     </button>
@@ -800,7 +800,7 @@ export default function ActiveSessionPage({ params }: { params: Promise<{ id: st
                 <div className="bg-card rounded-xl border border-border p-4 text-center">
                     {allSetsDone ? (
                         isLastEx ? (
-                            <p className="text-sm font-medium">接下來：完成訓練 🎉</p>
+                            <p className="text-sm font-medium">接下來：完成訓練</p>
                         ) : (
                             <div>
                                 <p className="text-xs text-muted-foreground mb-0.5">接下來</p>
@@ -856,7 +856,7 @@ export default function ActiveSessionPage({ params }: { params: Promise<{ id: st
                 {state.newPR && (
                     <div className="bg-yellow-500/15 border border-yellow-500/40 rounded-xl p-3 flex items-center gap-3">
                         <Trophy className="h-5 w-5 text-yellow-400 flex-shrink-0" />
-                        <p className="text-yellow-400 text-sm font-semibold">🏆 新個人最佳 — {state.newPR}</p>
+                        <p className="text-yellow-400 text-sm font-semibold">新個人最佳 — {state.newPR}</p>
                     </div>
                 )}
 
@@ -885,7 +885,7 @@ export default function ActiveSessionPage({ params }: { params: Promise<{ id: st
                         disabled={submitting}
                         className="w-full h-14 rounded-xl bg-primary text-primary-foreground font-semibold text-base disabled:opacity-50"
                     >
-                        {submitting ? '儲存中...' : '完成訓練 🎉'}
+                        {submitting ? '儲存中...' : '完成訓練'}
                     </button>
                 ) : (
                     <button
@@ -1081,18 +1081,20 @@ export default function ActiveSessionPage({ params }: { params: Promise<{ id: st
                             /* Stop button while timing */
                             <button
                                 onClick={() => dispatch({ type: 'TIMING_STOP' })}
-                                className="w-full h-14 rounded-xl bg-destructive text-destructive-foreground font-semibold text-base active:scale-98 transition-transform"
+                                className="w-full h-14 rounded-xl bg-destructive text-destructive-foreground font-semibold text-base active:scale-98 transition-transform flex items-center justify-center gap-2"
                             >
-                                ⏹ 停止計時（{state.timingElapsed} 秒）
+                                <Square className="h-4 w-4 fill-current" aria-hidden="true" />
+                                停止計時（{state.timingElapsed} 秒）
                             </button>
                         ) : (
                             <>
                                 {/* Start timer + manual adjust */}
                                 <button
                                     onClick={() => dispatch({ type: 'TIMING_START' })}
-                                    className="w-full h-14 rounded-xl bg-primary text-primary-foreground font-semibold text-lg active:scale-98 transition-transform"
+                                    className="w-full h-14 rounded-xl bg-primary text-primary-foreground font-semibold text-lg active:scale-98 transition-transform flex items-center justify-center gap-2"
                                 >
-                                    ▶ 開始計時
+                                    <Play className="h-5 w-5 fill-current" aria-hidden="true" />
+                                    開始計時
                                 </button>
                                 <div className="flex items-center justify-center gap-3">
                                     <button onClick={() => dispatch({ type: 'ADJ_DURATION', delta: -10 })}
@@ -1138,7 +1140,7 @@ export default function ActiveSessionPage({ params }: { params: Promise<{ id: st
                             </div>
                             {/* Custom weight input — allows precise values (0.1 kg granularity) */}
                             <div className="mt-2 flex items-center justify-center gap-2">
-                                <label className="text-[11px] text-muted-foreground">🎯 精確重量</label>
+                                <label className="text-[11px] text-muted-foreground">精確重量</label>
                                 <input
                                     type="number"
                                     inputMode="decimal"
@@ -1218,7 +1220,7 @@ function AlarmOverlay({ label, onDismiss }: { label: string; onDismiss: () => vo
             className="fixed inset-0 z-50 bg-black/85 flex flex-col items-center justify-center gap-6 px-6"
             onClick={onDismiss}
         >
-            <div className="text-7xl animate-bounce">⏱️</div>
+            <Timer className="h-20 w-20 animate-bounce text-white" aria-hidden="true" />
             <div className="text-center">
                 <h2 className="text-3xl font-bold text-white">休息結束！</h2>
                 <p className="text-white/60 mt-2 text-sm">點擊任意處繼續</p>

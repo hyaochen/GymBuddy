@@ -5,6 +5,7 @@ import { BADGE_DEFINITIONS } from "@/lib/badges";
 import { User, Shield, Activity, Trophy, ArrowLeft, Flame, Dumbbell, Award, Clock } from "lucide-react";
 import Link from "next/link";
 import FriendAnalytics from "@/components/FriendAnalytics";
+import BadgeIcon from "@/components/BadgeIcon";
 
 export default async function UserProfilePage({ params }: { params: Promise<{ username: string }> }) {
     const user = await requireAuth();
@@ -158,7 +159,7 @@ export default async function UserProfilePage({ params }: { params: Promise<{ us
                             const def = BADGE_DEFINITIONS.find(d => d.key === b.badgeKey);
                             return (
                                 <div key={b.id} className="flex items-center gap-1.5 bg-muted/50 rounded-full px-3 py-1.5" title={def?.description || b.badgeKey}>
-                                    <span className="text-base">{def?.icon || "🏅"}</span>
+                                    <span className="text-base"><BadgeIcon name={def?.icon} /></span>
                                     <span className="text-xs font-medium">{def?.name || b.badgeKey}</span>
                                 </div>
                             );
@@ -180,9 +181,9 @@ export default async function UserProfilePage({ params }: { params: Promise<{ us
                             return (
                                 <div key={item.id} className="bg-muted/30 rounded-lg p-3 text-sm">
                                     <span className="font-medium">
-                                        {item.type === "WORKOUT_COMPLETED" && `🏋️ 完成訓練 — ${data.planName || ""} ${data.dayName || ""}`}
-                                        {item.type === "PR_ACHIEVED" && `🏆 新紀錄 — ${data.exerciseName} ${data.weightKg}kg × ${data.reps}下`}
-                                        {item.type === "STREAK_MILESTONE" && `🔥 連續訓練 ${data.streakDays} 天！`}
+                                        {item.type === "WORKOUT_COMPLETED" && `完成訓練 — ${data.planName || ""} ${data.dayName || ""}`}
+                                        {item.type === "PR_ACHIEVED" && `新紀錄 — ${data.exerciseName} ${data.weightKg}kg × ${data.reps}下`}
+                                        {item.type === "STREAK_MILESTONE" && `連續訓練 ${data.streakDays} 天！`}
                                     </span>
                                     {item.type === "WORKOUT_COMPLETED" && data.durationMin && (
                                         <p className="text-xs text-muted-foreground mt-1">{data.totalSets} 組 · {data.durationMin} 分鐘</p>

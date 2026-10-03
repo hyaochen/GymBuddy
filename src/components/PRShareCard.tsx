@@ -1,6 +1,6 @@
 "use client"
 
-import { X, Trophy } from "lucide-react"
+import { X, Trophy, Dumbbell } from "lucide-react"
 
 interface PRShareCardProps {
     exerciseName: string
@@ -59,7 +59,7 @@ export default function PRShareCard({ exerciseName, weightKg, reps, estimated1rm
                 {/* Date + Branding */}
                 <div className="flex items-center justify-between pt-2 border-t border-border/50">
                     <span className="text-xs text-muted-foreground">{formattedDate}</span>
-                    <span className="text-xs font-bold text-muted-foreground">💪 GymBuddy</span>
+                    <span className="inline-flex items-center gap-1 text-xs font-bold text-muted-foreground"><Dumbbell className="h-3.5 w-3.5" aria-hidden="true" />GymBuddy</span>
                 </div>
             </div>
 

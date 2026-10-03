@@ -53,3 +53,6 @@ generated-images/
 public/exercises/generated/
 photo/肌力訓練.pdf
 photo/*.pdf
+
+# Local DB dumps (contain user data): never commit
+_backups/

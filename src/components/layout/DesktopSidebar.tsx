@@ -91,7 +91,7 @@ export default function DesktopSidebar({ userName, avatarUrl }: DesktopSidebarPr
                 "flex items-center h-14 px-4 border-b border-border",
                 collapsed ? "justify-center px-2" : "gap-2"
             )}>
-                <span className="text-lg">💪</span>
+                <Dumbbell className="h-5 w-5 text-primary" aria-hidden="true" />
                 {!collapsed && <span className="font-bold text-foreground">GymBuddy</span>}
             </div>
 

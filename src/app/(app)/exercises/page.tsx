@@ -2,6 +2,7 @@ import Link from "next/link"
 import prisma from "@/lib/prisma"
 import { requireAuth } from "@/lib/auth"
 import { Badge } from "@/components/ui/badge"
+import { Search } from "lucide-react"
 import ExerciseFilters from "./ExerciseFilters"
 
 const DIFFICULTY_LABELS: Record<string, string> = {
@@ -98,7 +99,7 @@ export default async function ExercisesPage({
 
             {exercises.length === 0 && (
                 <div className="text-center py-12 text-muted-foreground">
-                    <div className="text-4xl mb-2">🔍</div>
+                    <Search className="mx-auto mb-2 h-10 w-10" aria-hidden="true" />
                     <p>找不到符合條件的動作</p>
                 </div>
             )}

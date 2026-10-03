@@ -3,28 +3,30 @@
 import { use, useEffect, useState } from 'react'
 import Link from 'next/link'
 import { Home, TrendingUp, TrendingDown, Minus, Trophy, Clock, Dumbbell, BarChart2, Award } from 'lucide-react'
+import BadgeIcon from '@/components/BadgeIcon'
 
+// icon values are BadgeIcon keys (same ids as src/lib/badges.ts)
 const BADGE_INFO: Record<string, { name: string; icon: string }> = {
-    first_workout: { name: '初次訓練', icon: '🎯' },
-    sessions_10: { name: '十場達成', icon: '💪' },
-    sessions_50: { name: '半百訓練', icon: '💪' },
-    sessions_100: { name: '百場俱樂部', icon: '💪' },
-    sessions_500: { name: '訓練狂人', icon: '💪' },
-    streak_7: { name: '一週不懈', icon: '🔥' },
-    streak_14: { name: '兩週不懈', icon: '🔥' },
-    streak_30: { name: '月度戰士', icon: '🔥' },
-    streak_60: { name: '鐵人意志', icon: '🔥' },
-    streak_90: { name: '傳說不休', icon: '🔥' },
-    first_pr: { name: '首次破紀錄', icon: '🏅' },
-    pr_count_10: { name: 'PR 收藏家', icon: '🏆' },
-    pr_count_50: { name: 'PR 大師', icon: '🏆' },
-    heavy_lifter: { name: '重量級', icon: '⚡' },
-    first_friend: { name: '社交起步', icon: '🤝' },
-    first_kudos_given: { name: '鼓勵家', icon: '👏' },
-    first_kudos_received: { name: '受人讚賞', icon: '⭐' },
-    first_challenge: { name: '挑戰新手', icon: '🎪' },
-    challenge_winner: { name: '挑戰達成', icon: '🥇' },
-    template_shared: { name: '模板分享者', icon: '📤' },
+    first_workout: { name: '初次訓練', icon: 'target' },
+    sessions_10: { name: '十場達成', icon: 'dumbbell' },
+    sessions_50: { name: '半百訓練', icon: 'dumbbell' },
+    sessions_100: { name: '百場俱樂部', icon: 'dumbbell' },
+    sessions_500: { name: '訓練狂人', icon: 'dumbbell' },
+    streak_7: { name: '一週不懈', icon: 'flame' },
+    streak_14: { name: '兩週不懈', icon: 'flame' },
+    streak_30: { name: '月度戰士', icon: 'flame' },
+    streak_60: { name: '鐵人意志', icon: 'flame' },
+    streak_90: { name: '傳說不休', icon: 'flame' },
+    first_pr: { name: '首次破紀錄', icon: 'medal' },
+    pr_count_10: { name: 'PR 收藏家', icon: 'trophy' },
+    pr_count_50: { name: 'PR 大師', icon: 'trophy' },
+    heavy_lifter: { name: '重量級', icon: 'zap' },
+    first_friend: { name: '社交起步', icon: 'handshake' },
+    first_kudos_given: { name: '鼓勵家', icon: 'thumbs-up' },
+    first_kudos_received: { name: '受人讚賞', icon: 'star' },
+    first_challenge: { name: '挑戰新手', icon: 'tent' },
+    challenge_winner: { name: '挑戰達成', icon: 'award' },
+    template_shared: { name: '模板分享者', icon: 'upload' },
 }
 
 type OverloadSuggestion = {
@@ -97,7 +99,7 @@ export default function SessionCompletePage({ params }: { params: Promise<{ id: 
         return (
             <div className="flex items-center justify-center min-h-[60vh]">
                 <div className="text-center">
-                    <div className="text-5xl mb-3 animate-pulse">📊</div>
+                    <BarChart2 className="mx-auto mb-3 h-12 w-12 animate-pulse text-primary" aria-hidden="true" />
                     <p className="text-muted-foreground text-sm">計算訓練成效...</p>
                 </div>
             </div>
@@ -126,7 +128,7 @@ export default function SessionCompletePage({ params }: { params: Promise<{ id: 
         <div className="space-y-5">
             {/* Header */}
             <div className="text-center space-y-2 py-4">
-                <div className="text-5xl">🏆</div>
+                <Trophy className="mx-auto h-12 w-12 text-yellow-400" aria-hidden="true" />
                 <h1 className="text-xl font-bold">訓練完成！</h1>
                 {session && (
                     <p className="text-muted-foreground text-sm">
@@ -174,7 +176,7 @@ export default function SessionCompletePage({ params }: { params: Promise<{ id: 
                             if (!info) return null
                             return (
                                 <div key={key} className="flex items-center gap-2 bg-card rounded-lg px-3 py-2 border border-border">
-                                    <span className="text-xl">{info.icon}</span>
+                                    <span className="text-xl"><BadgeIcon name={info.icon} /></span>
                                     <span className="text-sm font-medium">{info.name}</span>
                                 </div>
                             )

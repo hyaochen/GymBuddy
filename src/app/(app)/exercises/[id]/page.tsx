@@ -3,7 +3,7 @@ import Link from "next/link"
 import prisma from "@/lib/prisma"
 import { requireAuth } from "@/lib/auth"
 import { Badge } from "@/components/ui/badge"
-import { ChevronLeft, Video } from "lucide-react"
+import { ChevronLeft, Dumbbell, Video } from "lucide-react"
 import EquipmentImageDialog from "@/components/exercises/EquipmentImageDialog"
 
 const DIFFICULTY_LABELS: Record<string, string> = {
@@ -73,7 +73,7 @@ export default async function ExerciseDetailPage({
             ) : (
                 <div className="rounded-xl bg-card border border-border h-36 flex items-center justify-center">
                     <div className="text-center text-muted-foreground">
-                        <div className="text-3xl mb-1">🏋️</div>
+                        <Dumbbell className="mx-auto mb-1 h-8 w-8" aria-hidden="true" />
                         <p className="text-sm">無示範圖片</p>
                     </div>
                 </div>
@@ -179,7 +179,7 @@ export default async function ExerciseDetailPage({
                                     {alt.alternative.gifUrl ? (
                                         <img src={alt.alternative.gifUrl} alt="" className="w-12 h-12 object-cover rounded-lg" />
                                     ) : (
-                                        <div className="w-12 h-12 bg-secondary rounded-lg flex items-center justify-center text-xl">🏋️</div>
+                                        <div className="w-12 h-12 bg-secondary rounded-lg flex items-center justify-center"><Dumbbell className="h-5 w-5" aria-hidden="true" /></div>
                                     )}
                                     <div className="flex-1 min-w-0">
                                         <p className="font-medium text-sm">{alt.alternative.name}</p>

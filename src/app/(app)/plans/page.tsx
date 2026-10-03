@@ -1,7 +1,7 @@
 import Link from "next/link"
 import prisma from "@/lib/prisma"
 import { requireAuth } from "@/lib/auth"
-import { Plus, ChevronRight, Dumbbell } from "lucide-react"
+import { Plus, ChevronRight, Dumbbell, ClipboardList } from "lucide-react"
 import CommunityTemplates from "@/components/CommunityTemplates"
 
 export default async function PlansPage() {
@@ -34,7 +34,7 @@ export default async function PlansPage() {
 
                 {plans.length === 0 ? (
                     <div className="text-center py-16">
-                        <div className="text-5xl mb-3">📋</div>
+                        <ClipboardList className="mx-auto mb-3 h-12 w-12 text-muted-foreground" aria-hidden="true" />
                         <h2 className="font-semibold text-lg mb-2">還沒有訓練計畫</h2>
                         <p className="text-muted-foreground text-sm mb-6">建立你的第一個計畫，開始有系統地訓練</p>
                         <Link

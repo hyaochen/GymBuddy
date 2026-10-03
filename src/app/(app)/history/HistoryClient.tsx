@@ -5,7 +5,7 @@ import Link from 'next/link'
 import {
     AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from 'recharts'
-import { Calendar, Clock, Dumbbell, TrendingUp, ChevronDown, ChevronUp, Trash2, Pencil, Check, X } from 'lucide-react'
+import { Calendar, Clock, ClipboardList, Dumbbell, TrendingUp, ChevronDown, ChevronUp, Trash2, Pencil, Check, X } from 'lucide-react'
 import { sumSetsVolume, exName as extractExName } from '@/lib/utils'
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -481,7 +481,7 @@ export default function HistoryPage() {
                     </div>
                 ) : completedSessions.length === 0 ? (
                     <div className="text-center py-12">
-                        <div className="text-4xl mb-3">📋</div>
+                        <ClipboardList className="mx-auto mb-3 h-10 w-10 text-muted-foreground" aria-hidden="true" />
                         <p className="text-muted-foreground text-sm">尚無完成的訓練記錄</p>
                         <Link href="/session" className="text-primary text-sm mt-2 block">開始第一次訓練 →</Link>
                     </div>

@@ -32,7 +32,7 @@ export async function POST(req: NextRequest) {
         checkSocialBadge(friendship.requesterId, 'friend_added').catch(console.error)
 
         // Notify the requester that their request was accepted
-        sendPushNow(friendship.requesterId, `🎉 ${user.name} 接受了你的好友邀請`, '你們現在是好友了！', 'friend-accepted')
+        sendPushNow(friendship.requesterId, `${user.name} 接受了你的好友邀請`, '你們現在是好友了！', 'friend-accepted')
             .catch(console.error)
 
         return NextResponse.json({ success: true, status: 'ACCEPTED' })

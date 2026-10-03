@@ -91,7 +91,7 @@ export default async function SessionStartPage() {
             {/* ── Plan selection ── */}
             {plans.length === 0 ? (
                 <div className="text-center py-16">
-                    <div className="text-5xl mb-3">📋</div>
+                    <ClipboardList className="mx-auto mb-3 h-12 w-12 text-muted-foreground" aria-hidden="true" />
                     <h2 className="font-semibold text-lg mb-2">先建立訓練計畫</h2>
                     <p className="text-muted-foreground text-sm mb-6">建立計畫後就可以按表操課</p>
                     <Link

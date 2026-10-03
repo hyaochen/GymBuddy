@@ -6,34 +6,35 @@ export interface BadgeDefinition {
     key: string
     name: string
     description: string
+    /** Key into BADGE_ICONS (src/components/BadgeIcon.tsx), not a character. */
     icon: string
     category: 'milestone' | 'strength' | 'social'
 }
 
 export const BADGE_DEFINITIONS: BadgeDefinition[] = [
     // Milestone
-    { key: 'first_workout', name: '初次訓練', description: '完成第一次訓練', icon: '🎯', category: 'milestone' },
-    { key: 'sessions_10', name: '十場達成', description: '完成 10 次訓練', icon: '💪', category: 'milestone' },
-    { key: 'sessions_50', name: '半百訓練', description: '完成 50 次訓練', icon: '💪', category: 'milestone' },
-    { key: 'sessions_100', name: '百場俱樂部', description: '完成 100 次訓練', icon: '💪', category: 'milestone' },
-    { key: 'sessions_500', name: '訓練狂人', description: '完成 500 次訓練', icon: '💪', category: 'milestone' },
-    { key: 'streak_7', name: '一週不懈', description: '連續訓練 7 天', icon: '🔥', category: 'milestone' },
-    { key: 'streak_14', name: '兩週不懈', description: '連續訓練 14 天', icon: '🔥', category: 'milestone' },
-    { key: 'streak_30', name: '月度戰士', description: '連續訓練 30 天', icon: '🔥', category: 'milestone' },
-    { key: 'streak_60', name: '鐵人意志', description: '連續訓練 60 天', icon: '🔥', category: 'milestone' },
-    { key: 'streak_90', name: '傳說不休', description: '連續訓練 90 天', icon: '🔥', category: 'milestone' },
+    { key: 'first_workout', name: '初次訓練', description: '完成第一次訓練', icon: 'target', category: 'milestone' },
+    { key: 'sessions_10', name: '十場達成', description: '完成 10 次訓練', icon: 'dumbbell', category: 'milestone' },
+    { key: 'sessions_50', name: '半百訓練', description: '完成 50 次訓練', icon: 'dumbbell', category: 'milestone' },
+    { key: 'sessions_100', name: '百場俱樂部', description: '完成 100 次訓練', icon: 'dumbbell', category: 'milestone' },
+    { key: 'sessions_500', name: '訓練狂人', description: '完成 500 次訓練', icon: 'dumbbell', category: 'milestone' },
+    { key: 'streak_7', name: '一週不懈', description: '連續訓練 7 天', icon: 'flame', category: 'milestone' },
+    { key: 'streak_14', name: '兩週不懈', description: '連續訓練 14 天', icon: 'flame', category: 'milestone' },
+    { key: 'streak_30', name: '月度戰士', description: '連續訓練 30 天', icon: 'flame', category: 'milestone' },
+    { key: 'streak_60', name: '鐵人意志', description: '連續訓練 60 天', icon: 'flame', category: 'milestone' },
+    { key: 'streak_90', name: '傳說不休', description: '連續訓練 90 天', icon: 'flame', category: 'milestone' },
     // Strength
-    { key: 'first_pr', name: '首次破紀錄', description: '第一次打破個人紀錄', icon: '🏅', category: 'strength' },
-    { key: 'pr_count_10', name: 'PR 收藏家', description: '累計打破 10 次個人紀錄', icon: '🏆', category: 'strength' },
-    { key: 'pr_count_50', name: 'PR 大師', description: '累計打破 50 次個人紀錄', icon: '🏆', category: 'strength' },
-    { key: 'heavy_lifter', name: '重量級', description: '單次舉起超過 100kg', icon: '⚡', category: 'strength' },
+    { key: 'first_pr', name: '首次破紀錄', description: '第一次打破個人紀錄', icon: 'medal', category: 'strength' },
+    { key: 'pr_count_10', name: 'PR 收藏家', description: '累計打破 10 次個人紀錄', icon: 'trophy', category: 'strength' },
+    { key: 'pr_count_50', name: 'PR 大師', description: '累計打破 50 次個人紀錄', icon: 'trophy', category: 'strength' },
+    { key: 'heavy_lifter', name: '重量級', description: '單次舉起超過 100kg', icon: 'zap', category: 'strength' },
     // Social
-    { key: 'first_friend', name: '社交起步', description: '加第一個好友', icon: '🤝', category: 'social' },
-    { key: 'first_kudos_given', name: '鼓勵家', description: '第一次給別人按讚', icon: '👏', category: 'social' },
-    { key: 'first_kudos_received', name: '受人讚賞', description: '第一次被按讚', icon: '⭐', category: 'social' },
-    { key: 'first_challenge', name: '挑戰新手', description: '參加第一個挑戰', icon: '🎪', category: 'social' },
-    { key: 'challenge_winner', name: '挑戰達成', description: '完成一個挑戰', icon: '🥇', category: 'social' },
-    { key: 'template_shared', name: '模板分享者', description: '分享第一個模板', icon: '📤', category: 'social' },
+    { key: 'first_friend', name: '社交起步', description: '加第一個好友', icon: 'handshake', category: 'social' },
+    { key: 'first_kudos_given', name: '鼓勵家', description: '第一次給別人按讚', icon: 'thumbs-up', category: 'social' },
+    { key: 'first_kudos_received', name: '受人讚賞', description: '第一次被按讚', icon: 'star', category: 'social' },
+    { key: 'first_challenge', name: '挑戰新手', description: '參加第一個挑戰', icon: 'tent', category: 'social' },
+    { key: 'challenge_winner', name: '挑戰達成', description: '完成一個挑戰', icon: 'award', category: 'social' },
+    { key: 'template_shared', name: '模板分享者', description: '分享第一個模板', icon: 'upload', category: 'social' },
 ]
 
 export const BADGE_MAP = new Map(BADGE_DEFINITIONS.map(b => [b.key, b]))
