@@ -396,7 +396,8 @@ model Kudo {
   id         String   @id @default(cuid())
   userId     String
   feedItemId String
-  emoji      String   @default("💪")
+  // Reaction key (flex/fire/clap/trophy/bolt, see src/lib/kudos.ts); column name is historical
+  emoji      String   @default("flex")
   createdAt  DateTime @default(now())
 
   user     User             @relation(fields: [userId], references: [id], onDelete: Cascade)
