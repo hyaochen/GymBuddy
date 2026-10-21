@@ -58,41 +58,37 @@ export default function SessionCompletePage({ params }: { params: Promise<{ id: 
     const [loading, setLoading] = useState(true)
 
     useEffect(() => {
-        // Read suggestions from sessionStorage (written by active session page)
-        if (typeof window !== 'undefined') {
-            const stored = sessionStorage.getItem(`session-complete-${sessionId}`)
-            if (stored) {
-                try { setSummary(JSON.parse(stored)) } catch { /* ignore */ }
-            }
-        }
+        // Never POST /complete from here: the active session page already did it. Use the
+        // summary it left in sessionStorage; after a refresh / PWA restart rebuild it from the DB.
+        let cancelled = false
+        let stored: CompleteSummary | null = null
+        try {
+            const raw = sessionStorage.getItem(`session-complete-${sessionId}`)
+            if (raw) stored = JSON.parse(raw)
+        } catch { /* ignore */ }
+        if (stored) setSummary(stored)
 
-        // Also fetch session info
-        fetch(`/api/sessions/${sessionId}`)
+        const loadSession = fetch(`/api/sessions/${sessionId}`)
             .then(r => r.json())
             .then(data => {
-                if (data.session) {
-                    setSession({
-                        plan: data.session.plan,
-                        day: data.session.day,
-                        startedAt: data.session.startedAt,
-                    })
-
-                    // If we didn't get summary from sessionStorage (e.g. direct load), try calling complete
-                    if (!summary) {
-                        fetch(`/api/sessions/${sessionId}/complete`, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({}),
-                        })
-                            .then(r => r.json())
-                            .then(d => { if (d.durationMin !== undefined) setSummary(d) })
-                            .catch(() => { /* session might already be completed */ })
-                    }
-                }
+                if (cancelled || !data.session) return
+                setSession({
+                    plan: data.session.plan,
+                    day: data.session.day,
+                    startedAt: data.session.startedAt,
+                })
             })
             .catch(console.error)
-            .finally(() => setLoading(false))
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+
+        const loadSummary = stored
+            ? Promise.resolve()
+            : fetch(`/api/sessions/${sessionId}/summary`)
+                .then(r => (r.ok ? r.json() : null))
+                .then(d => { if (!cancelled && d && d.durationMin !== undefined) setSummary(d) })
+                .catch(console.error)
+
+        Promise.all([loadSession, loadSummary]).finally(() => { if (!cancelled) setLoading(false) })
+        return () => { cancelled = true }
     }, [sessionId])
 
     if (loading) {
