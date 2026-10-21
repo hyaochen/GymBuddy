@@ -149,8 +149,28 @@ describe('generateOverloadSuggestion', () => {
                 { setNumber: 1, repsPerformed: 12, weightKg: 40 },
             ]
             const result = generateOverloadSuggestion('ex1', '臥推', defaultPlan, sets)
-            // 1 completed set < 3 target sets → deload
+            // 提早收工但每組都達標 → 維持重量，不降重
+            expect(result.method).toBe('MAINTAIN')
+            expect(result.suggestedSets[0].suggestedWeightKg).toBe(40)
+        })
+
+        it('組數不足且有組未達下限 → 降重', () => {
+            const sets = [
+                { setNumber: 1, repsPerformed: 8, weightKg: 40 },
+                { setNumber: 2, repsPerformed: 5, weightKg: 40 },
+            ]
+            const result = generateOverloadSuggestion('ex1', '臥推', defaultPlan, sets)
             expect(result.method).toBe('DELOAD')
+        })
+
+        it('金字塔組以最重的工作組為基準', () => {
+            const sets = [
+                { setNumber: 1, repsPerformed: 12, weightKg: 30 },
+                { setNumber: 2, repsPerformed: 12, weightKg: 40 },
+                { setNumber: 3, repsPerformed: 12, weightKg: 40 },
+            ]
+            const result = generateOverloadSuggestion('ex1', '臥推', defaultPlan, sets)
+            expect(result.suggestedSets[0].suggestedWeightKg).toBeGreaterThan(40)
         })
 
         it('weightKg 為 0', () => {

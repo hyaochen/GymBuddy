@@ -71,9 +71,11 @@ export function generateOverloadSuggestion(
         }
     }
 
-    const currentWeight = Number(lastSessionSets[0].weightKg)
+    // Working weight = heaviest set, so warm-up or pyramid sets don't drag the baseline down.
+    const currentWeight = Math.max(...lastSessionSets.map(s => Number(s.weightKg) || 0))
     const completedSets = lastSessionSets.filter(s => s.repsPerformed >= targetRepsMin)
     const allSetsCompleted = completedSets.length >= targetSets
+    const anySetFailed = completedSets.length < lastSessionSets.length
     const avgReps = lastSessionSets.reduce((sum, s) => sum + s.repsPerformed, 0) / lastSessionSets.length
 
     if (allSetsCompleted && avgReps >= targetRepsMax) {
@@ -94,6 +96,17 @@ export function generateOverloadSuggestion(
             exerciseName,
             method: 'MAINTAIN',
             reasoning: `完成所有 ${targetSets} 組，平均次數 ${avgReps.toFixed(1)}。繼續使用相同重量，目標達到 ${targetRepsMax} 下`,
+            suggestedSets: buildUniformSets(targetSets, currentWeight, targetRepsMin, targetRepsMax),
+        }
+    }
+
+    // Stopping early (fewer sets, every logged set on target) is not a failure: keep the weight.
+    if (!anySetFailed) {
+        return {
+            exerciseId,
+            exerciseName,
+            method: 'MAINTAIN',
+            reasoning: `上次完成 ${completedSets.length}/${targetSets} 組且每組都達標，維持相同重量，先把組數做滿`,
             suggestedSets: buildUniformSets(targetSets, currentWeight, targetRepsMin, targetRepsMax),
         }
     }
@@ -125,8 +138,8 @@ export function suggestNextWeight(
     lastSessionSets: SessionSetData[],
 ): NextWeightSuggestion | null {
     if (lastSessionSets.length === 0) return null
-    const lastWeight = Number(lastSessionSets[0].weightKg)
-    if (!Number.isFinite(lastWeight) || lastWeight <= 0) return null
+    const lastWeight = Math.max(...lastSessionSets.map(s => Number(s.weightKg) || 0))
+    if (lastWeight <= 0) return null
     const result = generateOverloadSuggestion('', '', planDefaults, lastSessionSets)
     const weightKg = result.suggestedSets[0]?.suggestedWeightKg
     if (weightKg === undefined) return null
