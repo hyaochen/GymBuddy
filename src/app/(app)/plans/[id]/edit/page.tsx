@@ -22,6 +22,7 @@ import {
     verticalListSortingStrategy,
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
+import { toast } from '@/components/ui/use-toast'
 
 type PlanExercise = {
     id: string
@@ -31,7 +32,44 @@ type PlanExercise = {
     defaultRepsMax: number
     restSeconds: number
     defaultWeightKg: number | null
-    exercise: { id: string; name: string }
+    defaultDurationMin: number | null
+    defaultDurationMax: number | null
+    exercise: { id: string; name: string; isTimeBased?: boolean }
+}
+
+// 限時動作沒設秒數時的預設範圍（與計畫詳情頁顯示一致）
+const DEFAULT_DURATION_MIN = 20
+const DEFAULT_DURATION_MAX = 30
+
+const toNum = (v: unknown): number | null => {
+    if (v === null || v === undefined || v === '') return null
+    const n = Number(v)
+    return Number.isFinite(n) ? n : null
+}
+
+// API 的 Decimal 欄位（defaultWeightKg）會以字串送來，載入時一律轉成 number
+const normalizePlanExercise = (e: PlanExercise): PlanExercise => ({
+    ...e,
+    defaultSets: toNum(e.defaultSets) ?? 3,
+    defaultRepsMin: toNum(e.defaultRepsMin) ?? 8,
+    defaultRepsMax: toNum(e.defaultRepsMax) ?? 12,
+    restSeconds: toNum(e.restSeconds) ?? 90,
+    defaultWeightKg: toNum(e.defaultWeightKg),
+    defaultDurationMin: toNum(e.defaultDurationMin),
+    defaultDurationMax: toNum(e.defaultDurationMax),
+})
+
+const normalizePlan = (p: Plan): Plan => ({
+    ...p,
+    days: p.days.map(d => ({ ...d, exercises: d.exercises.map(normalizePlanExercise) })),
+})
+
+const readError = async (res: Response, fallback: string) => {
+    try {
+        const d = await res.json()
+        if (typeof d?.error === 'string' && d.error) return d.error
+    } catch { }
+    return fallback
 }
 
 type PlanDay = {
@@ -60,20 +98,31 @@ export default function PlanEditPage({ params }: { params: Promise<{ id: string 
     const [saved, setSaved] = useState(false)
     const [planName, setPlanName] = useState('')
     const [deleteMsg, setDeleteMsg] = useState('')
-    const [errMsg, setErrMsg] = useState('')
+    const [loadError, setLoadError] = useState('')
+    const [busy, setBusy] = useState<string | null>(null)
     const [dayNames, setDayNames] = useState<Record<string, string>>({})
     const [addingTo, setAddingTo] = useState<string | null>(null)
     const [searchQ, setSearchQ] = useState('')
-    const [searchResults, setSearchResults] = useState<{ id: string; name: string }[]>([])
+    const [searchResults, setSearchResults] = useState<{ id: string; name: string; isTimeBased?: boolean }[]>([])
     const [searching, setSearching] = useState(false)
 
     useEffect(() => {
+        let cancelled = false
         fetch(`/api/plans/${id}`)
-            .then(r => r.json())
-            .then(d => {
-                setPlan(d.plan)
-                setPlanName(d.plan.name)
+            .then(async r => {
+                if (!r.ok) throw new Error(await readError(r, r.status === 404 ? '找不到這個計畫' : '載入計畫失敗'))
+                return r.json()
             })
+            .then(d => {
+                if (cancelled) return
+                const p = normalizePlan(d.plan as Plan)
+                setPlan(p)
+                setPlanName(p.name)
+            })
+            .catch(e => {
+                if (!cancelled) setLoadError(e instanceof Error ? e.message : '載入計畫失敗')
+            })
+        return () => { cancelled = true }
     }, [id])
 
     const hasUnsaved = !!plan && (
@@ -98,27 +147,36 @@ export default function PlanEditPage({ params }: { params: Promise<{ id: string 
     }, [])
 
     const getVal = (pe: PlanExercise, field: keyof PlanExercise) => {
-        return (dirty[pe.id]?.[field] ?? pe[field]) as number
+        const raw = dirty[pe.id]?.[field] ?? pe[field]
+        const n = toNum(raw)
+        if (n !== null) return n
+        if (field === 'defaultDurationMin') return DEFAULT_DURATION_MIN
+        if (field === 'defaultDurationMax') return DEFAULT_DURATION_MAX
+        return 0
     }
 
     const showError = (msg: string) => {
-        setErrMsg(msg)
-        setTimeout(() => setErrMsg(''), 3500)
+        toast({ title: msg, variant: 'destructive' })
     }
 
     const saveAll = async () => {
         if (!plan) return
+        const trimmedName = planName.trim()
+        if (!trimmedName) {
+            showError('計畫名稱不可為空')
+            return
+        }
         setSaving(true)
         const ensureOk = async (res: Response) => {
-            if (!res.ok) throw new Error(`${res.status} ${res.statusText}`)
+            if (!res.ok) throw new Error(await readError(res, `${res.status} ${res.statusText}`))
             return res
         }
         try {
-            if (planName !== plan.name) {
+            if (trimmedName !== plan.name) {
                 await ensureOk(await fetch(`/api/plans/${id}`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ name: planName, description: plan.description, daysPerWeek: plan.days.length }),
+                    body: JSON.stringify({ name: trimmedName, description: plan.description, daysPerWeek: Math.max(1, plan.days.length) }),
                 }))
             }
             await Promise.all(
@@ -152,12 +210,17 @@ export default function PlanEditPage({ params }: { params: Promise<{ id: string 
                     })
                 )
             }
-            if (Object.keys(dayNames).length > 0) {
-                setPlan(prev => prev ? {
-                    ...prev,
-                    days: prev.days.map(d => dayNames[d.id] ? { ...d, dayName: dayNames[d.id] } : d)
-                } : prev)
-            }
+            // 把已存的修改合併回 plan（含名稱），再清掉 dirty，畫面才不會跳回舊值
+            setPlan(prev => prev ? {
+                ...prev,
+                name: trimmedName,
+                days: prev.days.map(d => ({
+                    ...d,
+                    dayName: dayNames[d.id] ?? d.dayName,
+                    exercises: d.exercises.map(e => dirty[e.id] ? { ...e, ...dirty[e.id] } : e),
+                })),
+            } : prev)
+            setPlanName(trimmedName)
             setDayNames({})
             setDirty({})
             setOrderDirty(new Set())
@@ -165,7 +228,7 @@ export default function PlanEditPage({ params }: { params: Promise<{ id: string 
             setTimeout(() => setSaved(false), 2000)
         } catch (e) {
             const msg = e instanceof Error ? e.message : String(e)
-            showError(`儲存失敗：${msg}，請重試`)
+            showError(`儲存失敗：${msg}`)
         } finally {
             setSaving(false)
         }
@@ -178,28 +241,50 @@ export default function PlanEditPage({ params }: { params: Promise<{ id: string 
 
     const deleteDay = async (dayId: string) => {
         if (!plan) return
+        if (busy) return
         const dayName = plan.days.find(d => d.id === dayId)?.dayName
-        const res = await fetch(`/api/plan-days/${dayId}`, { method: 'DELETE' })
-        if (res.ok) {
-            setPlan({ ...plan, days: plan.days.filter(d => d.id !== dayId) })
+        setBusy(`day:${dayId}`)
+        try {
+            const res = await fetch(`/api/plan-days/${dayId}`, { method: 'DELETE' })
+            if (!res.ok) {
+                showError(await readError(res, '刪除訓練日失敗，請重試'))
+                return
+            }
+            setPlan(prev => prev ? { ...prev, days: prev.days.filter(d => d.id !== dayId) } : prev)
             showDeleted(`已刪除「${dayName}」`)
+        } catch {
+            showError('刪除訓練日失敗，請檢查網路後重試')
+        } finally {
+            setBusy(null)
         }
     }
 
     const deleteExercise = async (dayId: string, peId: string) => {
         if (!plan) return
-        const res = await fetch(`/api/plan-exercises/${peId}`, { method: 'DELETE' })
-        if (res.ok) {
-            setPlan({
-                ...plan,
-                days: plan.days.map(d =>
+        if (busy) return
+        setBusy(`ex:${peId}`)
+        try {
+            const res = await fetch(`/api/plan-exercises/${peId}`, { method: 'DELETE' })
+            if (!res.ok) {
+                showError(await readError(res, '刪除動作失敗，請重試'))
+                return
+            }
+            setPlan(prev => prev ? {
+                ...prev,
+                days: prev.days.map(d =>
                     d.id === dayId ? { ...d, exercises: d.exercises.filter(e => e.id !== peId) } : d
                 ),
+            } : prev)
+            setDirty(prev => {
+                const next = { ...prev }
+                delete next[peId]
+                return next
             })
-            const newDirty = { ...dirty }
-            delete newDirty[peId]
-            setDirty(newDirty)
             showDeleted('動作已刪除')
+        } catch {
+            showError('刪除動作失敗，請檢查網路後重試')
+        } finally {
+            setBusy(null)
         }
     }
 
@@ -209,9 +294,12 @@ export default function PlanEditPage({ params }: { params: Promise<{ id: string 
         setSearching(true)
         try {
             const res = await fetch(`/api/exercises?q=${encodeURIComponent(q)}&limit=10`)
+            if (!res.ok) throw new Error('search failed')
             const data = await res.json()
             setSearchResults(data.exercises || [])
-        } catch { } finally { setSearching(false) }
+        } catch {
+            showError('搜尋動作失敗，請重試')
+        } finally { setSearching(false) }
     }
 
     const reorderExercises = useCallback((dayId: string, fromId: string, toId: string) => {
@@ -242,40 +330,92 @@ export default function PlanEditPage({ params }: { params: Promise<{ id: string 
         }
     }, [])
 
-    const addExercise = async (dayId: string, exercise: { id: string; name: string }) => {
-        if (!plan) return
-        const res = await fetch('/api/plan-exercises', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ dayId, exerciseId: exercise.id }),
-        })
-        if (res.ok) {
-            const data = await res.json()
-            setPlan({
-                ...plan,
-                days: plan.days.map(d =>
-                    d.id !== dayId ? d : {
-                        ...d,
-                        exercises: [...d.exercises, {
-                            id: data.exercise.id,
-                            orderIndex: data.exercise.orderIndex,
-                            defaultSets: data.exercise.defaultSets,
-                            defaultRepsMin: data.exercise.defaultRepsMin,
-                            defaultRepsMax: data.exercise.defaultRepsMax,
-                            restSeconds: data.exercise.restSeconds,
-                            defaultWeightKg: data.exercise.defaultWeightKg,
-                            exercise: { id: exercise.id, name: exercise.name },
-                        }],
-                    }
-                ),
+    const addExercise = async (dayId: string, exercise: { id: string; name: string; isTimeBased?: boolean }) => {
+        if (!plan || busy) return
+        setBusy(`add:${dayId}`)
+        try {
+            const res = await fetch('/api/plan-exercises', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    dayId,
+                    exerciseId: exercise.id,
+                    ...(exercise.isTimeBased && {
+                        defaultDurationMin: DEFAULT_DURATION_MIN,
+                        defaultDurationMax: DEFAULT_DURATION_MAX,
+                    }),
+                }),
             })
+            if (!res.ok) {
+                showError(await readError(res, '新增動作失敗，請重試'))
+                return
+            }
+            const data = await res.json()
+            const added = normalizePlanExercise({
+                id: data.exercise.id,
+                orderIndex: data.exercise.orderIndex,
+                defaultSets: data.exercise.defaultSets,
+                defaultRepsMin: data.exercise.defaultRepsMin,
+                defaultRepsMax: data.exercise.defaultRepsMax,
+                restSeconds: data.exercise.restSeconds,
+                defaultWeightKg: data.exercise.defaultWeightKg,
+                defaultDurationMin: data.exercise.defaultDurationMin,
+                defaultDurationMax: data.exercise.defaultDurationMax,
+                exercise: {
+                    id: exercise.id,
+                    name: exercise.name,
+                    isTimeBased: data.exercise.exercise?.isTimeBased ?? exercise.isTimeBased,
+                },
+            })
+            setPlan(prev => prev ? {
+                ...prev,
+                days: prev.days.map(d => d.id !== dayId ? d : { ...d, exercises: [...d.exercises, added] }),
+            } : prev)
             setAddingTo(null)
             setSearchQ('')
             setSearchResults([])
             showDeleted('動作已新增')
+        } catch {
+            showError('新增動作失敗，請檢查網路後重試')
+        } finally {
+            setBusy(null)
         }
     }
 
+    const addDay = async () => {
+        if (busy) return
+        setBusy('addDay')
+        try {
+            const res = await fetch('/api/plan-days', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ planId: id }),
+            })
+            if (!res.ok) {
+                showError(await readError(res, '新增訓練日失敗，請重試'))
+                return
+            }
+            const data = await res.json()
+            setPlan(prev => prev ? {
+                ...prev,
+                days: [...prev.days, { ...data.day, exercises: [] }],
+            } : prev)
+            showDeleted('訓練日已新增')
+        } catch {
+            showError('新增訓練日失敗，請檢查網路後重試')
+        } finally {
+            setBusy(null)
+        }
+    }
+
+    if (loadError) {
+        return (
+            <div className="text-center py-20 space-y-3">
+                <p className="text-destructive text-sm">{loadError}</p>
+                <Link href="/plans" className="text-sm text-primary hover:underline">返回計畫列表</Link>
+            </div>
+        )
+    }
     if (!plan) return <div className="text-center py-20 text-muted-foreground">載入中...</div>
 
     const hasDirty = hasUnsaved
@@ -312,12 +452,6 @@ export default function PlanEditPage({ params }: { params: Promise<{ id: string 
                 </div>
             )}
 
-            {errMsg && (
-                <div className="bg-destructive/15 border border-destructive/40 text-destructive text-sm rounded-lg px-3 py-2 text-center">
-                    {errMsg}
-                </div>
-            )}
-
             {/* Days */}
             {plan.days.map(day => (
                 <div key={day.id} className="bg-card border border-border rounded-xl overflow-hidden">
@@ -338,7 +472,8 @@ export default function PlanEditPage({ params }: { params: Promise<{ id: string 
                         )}
                         <button
                             onClick={() => { if (confirm(`確定刪除「${day.dayName}」？此操作無法復原。`)) deleteDay(day.id) }}
-                            className="text-muted-foreground hover:text-destructive transition-colors p-1"
+                            disabled={busy !== null}
+                            className="text-muted-foreground hover:text-destructive transition-colors p-1 disabled:opacity-50"
                         >
                             <Trash2 className="h-3.5 w-3.5" />
                         </button>
@@ -349,6 +484,7 @@ export default function PlanEditPage({ params }: { params: Promise<{ id: string 
                         getVal={getVal}
                         update={update}
                         deleteExercise={deleteExercise}
+                        busy={busy !== null}
                         reorderExercises={reorderExercises}
                     />
                     {/* Add exercise */}
@@ -374,7 +510,8 @@ export default function PlanEditPage({ params }: { params: Promise<{ id: string 
                                         <button
                                             key={ex.id}
                                             onClick={() => addExercise(day.id, ex)}
-                                            className="w-full text-left text-sm px-2 py-1.5 rounded-md hover:bg-muted transition-colors truncate"
+                                            disabled={busy !== null}
+                                            className="w-full text-left text-sm px-2 py-1.5 rounded-md hover:bg-muted transition-colors truncate disabled:opacity-50"
                                         >
                                             {ex.name}
                                         </button>
@@ -395,24 +532,11 @@ export default function PlanEditPage({ params }: { params: Promise<{ id: string 
 
             {/* Add day */}
             <button
-                onClick={async () => {
-                    const res = await fetch('/api/plan-days', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ planId: id }),
-                    })
-                    if (res.ok) {
-                        const data = await res.json()
-                        setPlan(prev => prev ? {
-                            ...prev,
-                            days: [...prev.days, { ...data.day, exercises: [] }],
-                        } : prev)
-                        showDeleted('訓練日已新增')
-                    }
-                }}
-                className="w-full py-3 rounded-xl border border-dashed border-border text-sm text-primary hover:bg-muted/50 transition-colors flex items-center justify-center gap-1.5"
+                onClick={addDay}
+                disabled={busy !== null}
+                className="w-full py-3 rounded-xl border border-dashed border-border text-sm text-primary hover:bg-muted/50 transition-colors flex items-center justify-center gap-1.5 disabled:opacity-50"
             >
-                <Plus className="h-4 w-4" /> 新增訓練日
+                <Plus className="h-4 w-4" /> {busy === 'addDay' ? '新增中...' : '新增訓練日'}
             </button>
         </div>
     )
@@ -424,10 +548,11 @@ type DayExerciseListProps = {
     getVal: (pe: PlanExercise, field: keyof PlanExercise) => number
     update: (peId: string, field: keyof PlanExercise, value: number) => void
     deleteExercise: (dayId: string, peId: string) => void
+    busy: boolean
     reorderExercises: (dayId: string, fromId: string, toId: string) => void
 }
 
-function DayExerciseList({ day, dirty, getVal, update, deleteExercise, reorderExercises }: DayExerciseListProps) {
+function DayExerciseList({ day, dirty, getVal, update, deleteExercise, busy, reorderExercises }: DayExerciseListProps) {
     const sensors = useSensors(
         useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
         useSensor(TouchSensor, { activationConstraint: { delay: 150, tolerance: 8 } }),
@@ -457,6 +582,7 @@ function DayExerciseList({ day, dirty, getVal, update, deleteExercise, reorderEx
                             getVal={getVal}
                             update={update}
                             deleteExercise={deleteExercise}
+                            busy={busy}
                         />
                     ))}
                 </SortableContext>
@@ -473,15 +599,19 @@ type SortableExerciseRowProps = {
     getVal: (pe: PlanExercise, field: keyof PlanExercise) => number
     update: (peId: string, field: keyof PlanExercise, value: number) => void
     deleteExercise: (dayId: string, peId: string) => void
+    busy: boolean
 }
 
-function SortableExerciseRow({ pe, idx, dayId, isDirty, getVal, update, deleteExercise }: SortableExerciseRowProps) {
+function SortableExerciseRow({ pe, idx, dayId, isDirty, getVal, update, deleteExercise, busy }: SortableExerciseRowProps) {
     const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: pe.id })
     const sets = getVal(pe, 'defaultSets')
     const repsMin = getVal(pe, 'defaultRepsMin')
     const repsMax = getVal(pe, 'defaultRepsMax')
     const rest = getVal(pe, 'restSeconds')
     const weight = getVal(pe, 'defaultWeightKg')
+    const isTimed = !!pe.exercise.isTimeBased
+    const durMin = getVal(pe, 'defaultDurationMin')
+    const durMax = getVal(pe, 'defaultDurationMax')
 
     const style: React.CSSProperties = {
         transform: CSS.Transform.toString(transform),
@@ -512,7 +642,8 @@ function SortableExerciseRow({ pe, idx, dayId, isDirty, getVal, update, deleteEx
                 {isDirty && <span className="text-xs text-primary">●</span>}
                 <button
                     onClick={() => { if (confirm('確定刪除此動作？')) deleteExercise(dayId, pe.id) }}
-                    className="text-muted-foreground hover:text-destructive transition-colors p-1"
+                    disabled={busy}
+                    className="text-muted-foreground hover:text-destructive transition-colors p-1 disabled:opacity-50"
                 >
                     <Trash2 className="h-3.5 w-3.5" />
                 </button>
@@ -525,10 +656,26 @@ function SortableExerciseRow({ pe, idx, dayId, isDirty, getVal, update, deleteEx
                     <div className="flex items-center gap-2">
                         <button onClick={() => update(pe.id, 'defaultSets', Math.max(1, sets - 1))} className="w-7 h-7 rounded-md bg-muted flex items-center justify-center hover:bg-muted/80"><Minus className="h-3 w-3" /></button>
                         <span className="w-6 text-center text-sm font-medium">{sets}</span>
-                        <button onClick={() => update(pe.id, 'defaultSets', Math.min(10, sets + 1))} className="w-7 h-7 rounded-md bg-muted flex items-center justify-center hover:bg-muted/80"><Plus className="h-3 w-3" /></button>
+                        <button onClick={() => update(pe.id, 'defaultSets', Math.min(20, sets + 1))} className="w-7 h-7 rounded-md bg-muted flex items-center justify-center hover:bg-muted/80"><Plus className="h-3 w-3" /></button>
                     </div>
                 </div>
 
+                {/* 限時動作顯示秒數範圍，取代次數與重量 */}
+                {isTimed ? (
+                <div className="space-y-1 col-span-2">
+                    <label className="text-xs text-muted-foreground">秒數範圍</label>
+                    <div className="flex items-center gap-1 text-sm">
+                        <button onClick={() => update(pe.id, 'defaultDurationMin', Math.max(1, durMin - 5))} aria-label="下限減 5 秒" className="w-8 h-7 rounded-md bg-muted flex items-center justify-center text-[10px] hover:bg-muted/80">-5</button>
+                        <span className="w-9 text-center font-medium">{durMin}s</span>
+                        <button onClick={() => update(pe.id, 'defaultDurationMin', Math.min(durMax, durMin + 5))} aria-label="下限加 5 秒" className="w-8 h-7 rounded-md bg-muted flex items-center justify-center text-[10px] hover:bg-muted/80">+5</button>
+                        <span className="text-muted-foreground">–</span>
+                        <button onClick={() => update(pe.id, 'defaultDurationMax', Math.max(durMin, durMax - 5))} aria-label="上限減 5 秒" className="w-8 h-7 rounded-md bg-muted flex items-center justify-center text-[10px] hover:bg-muted/80">-5</button>
+                        <span className="w-9 text-center font-medium">{durMax}s</span>
+                        <button onClick={() => update(pe.id, 'defaultDurationMax', Math.min(3600, durMax + 5))} aria-label="上限加 5 秒" className="w-8 h-7 rounded-md bg-muted flex items-center justify-center text-[10px] hover:bg-muted/80">+5</button>
+                    </div>
+                </div>
+                ) : (
+                    <>
                 {/* Weight */}
                 <div className="space-y-1">
                     <label className="text-xs text-muted-foreground">重量 (kg)</label>
@@ -541,34 +688,38 @@ function SortableExerciseRow({ pe, idx, dayId, isDirty, getVal, update, deleteEx
                             value={weight}
                             step={0.1}
                             min={0}
-                            onChange={e => update(pe.id, 'defaultWeightKg', parseFloat(e.target.value) || 0)}
+                            onChange={e => update(pe.id, 'defaultWeightKg', Math.min(1000, Math.max(0, parseFloat(e.target.value) || 0)))}
                             className="w-16 text-center text-sm font-medium bg-muted rounded-md py-1 outline-none focus:ring-1 focus:ring-primary tabular-nums"
                             title="可直接輸入精確重量（0.1 kg 精度）"
                         />
-                        <button onClick={() => update(pe.id, 'defaultWeightKg', weight + 2.5)} className="w-7 h-7 rounded-md bg-muted flex items-center justify-center text-[10px] hover:bg-muted/80">+2.5</button>
-                        <button onClick={() => update(pe.id, 'defaultWeightKg', weight + 5)} className="w-7 h-7 rounded-md bg-muted flex items-center justify-center text-[10px] hover:bg-muted/80">+5</button>
+                        <button onClick={() => update(pe.id, 'defaultWeightKg', Math.min(1000, weight + 2.5))} className="w-7 h-7 rounded-md bg-muted flex items-center justify-center text-[10px] hover:bg-muted/80">+2.5</button>
+                        <button onClick={() => update(pe.id, 'defaultWeightKg', Math.min(1000, weight + 5))} className="w-7 h-7 rounded-md bg-muted flex items-center justify-center text-[10px] hover:bg-muted/80">+5</button>
                     </div>
                 </div>
 
-                {/* Reps */}
+                {/* Reps（次數範圍：上下限都可加減，維持 min <= max） */}
                 <div className="space-y-1">
                     <label className="text-xs text-muted-foreground">次數範圍</label>
                     <div className="flex items-center gap-1 text-sm">
-                        <button onClick={() => update(pe.id, 'defaultRepsMin', Math.max(1, repsMin - 1))} className="w-7 h-7 rounded-md bg-muted flex items-center justify-center hover:bg-muted/80"><Minus className="h-3 w-3" /></button>
+                        <button onClick={() => update(pe.id, 'defaultRepsMin', Math.max(1, repsMin - 1))} aria-label="下限減 1" className="w-6 h-7 rounded-md bg-muted flex items-center justify-center hover:bg-muted/80"><Minus className="h-3 w-3" /></button>
                         <span className="w-5 text-center font-medium">{repsMin}</span>
+                        <button onClick={() => update(pe.id, 'defaultRepsMin', Math.min(repsMax, repsMin + 1))} aria-label="下限加 1" className="w-6 h-7 rounded-md bg-muted flex items-center justify-center hover:bg-muted/80"><Plus className="h-3 w-3" /></button>
                         <span className="text-muted-foreground">–</span>
+                        <button onClick={() => update(pe.id, 'defaultRepsMax', Math.max(repsMin, repsMax - 1))} aria-label="上限減 1" className="w-6 h-7 rounded-md bg-muted flex items-center justify-center hover:bg-muted/80"><Minus className="h-3 w-3" /></button>
                         <span className="w-5 text-center font-medium">{repsMax}</span>
-                        <button onClick={() => update(pe.id, 'defaultRepsMax', Math.min(30, repsMax + 1))} className="w-7 h-7 rounded-md bg-muted flex items-center justify-center hover:bg-muted/80"><Plus className="h-3 w-3" /></button>
+                        <button onClick={() => update(pe.id, 'defaultRepsMax', Math.min(100, repsMax + 1))} aria-label="上限加 1" className="w-6 h-7 rounded-md bg-muted flex items-center justify-center hover:bg-muted/80"><Plus className="h-3 w-3" /></button>
                     </div>
                 </div>
+                    </>
+                )}
 
                 {/* Rest */}
                 <div className="space-y-1">
                     <label className="text-xs text-muted-foreground">休息 (秒)</label>
                     <div className="flex items-center gap-1">
-                        <button onClick={() => update(pe.id, 'restSeconds', Math.max(30, rest - 15))} className="w-7 h-7 rounded-md bg-muted flex items-center justify-center text-xs hover:bg-muted/80">-15</button>
+                        <button onClick={() => update(pe.id, 'restSeconds', Math.max(0, rest - 15))} className="w-7 h-7 rounded-md bg-muted flex items-center justify-center text-xs hover:bg-muted/80">-15</button>
                         <span className="w-10 text-center text-sm font-medium">{rest}s</span>
-                        <button onClick={() => update(pe.id, 'restSeconds', Math.min(300, rest + 15))} className="w-7 h-7 rounded-md bg-muted flex items-center justify-center text-xs hover:bg-muted/80">+15</button>
+                        <button onClick={() => update(pe.id, 'restSeconds', Math.min(600, rest + 15))} className="w-7 h-7 rounded-md bg-muted flex items-center justify-center text-xs hover:bg-muted/80">+15</button>
                     </div>
                 </div>
             </div>
