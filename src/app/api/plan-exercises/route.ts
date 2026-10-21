@@ -1,13 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
 import { getCurrentUser } from '@/lib/auth'
+import { parseJsonBodyZh, createPlanExerciseSchema } from '@/lib/validation'
 
 export async function POST(req: NextRequest) {
     const user = await getCurrentUser()
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-    const body = await req.json()
-    const { dayId, exerciseId, defaultSets, defaultRepsMin, defaultRepsMax, restSeconds } = body
+    const parsed = await parseJsonBodyZh(req, createPlanExerciseSchema)
+    if ('response' in parsed) return parsed.response
+    const { dayId, exerciseId, defaultSets, defaultRepsMin, defaultRepsMax, defaultWeightKg, defaultDurationMin, defaultDurationMax, restSeconds } = parsed.data
 
     const day = await prisma.workoutPlanDay.findUnique({
         where: { id: dayId },
@@ -27,6 +29,9 @@ export async function POST(req: NextRequest) {
             defaultSets: defaultSets ?? 3,
             defaultRepsMin: defaultRepsMin ?? 8,
             defaultRepsMax: defaultRepsMax ?? 12,
+            defaultWeightKg,
+            defaultDurationMin,
+            defaultDurationMax,
             restSeconds: restSeconds ?? 90,
         },
         include: { exercise: true },

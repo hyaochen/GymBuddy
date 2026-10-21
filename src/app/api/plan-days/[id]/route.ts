@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
 import { getCurrentUser } from '@/lib/auth'
+import { parseJsonBodyZh, updatePlanDaySchema } from '@/lib/validation'
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
     const user = await getCurrentUser()
@@ -15,7 +16,9 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
         return NextResponse.json({ error: 'Not found' }, { status: 404 })
     }
 
-    const body = await req.json()
+    const parsed = await parseJsonBodyZh(req, updatePlanDaySchema)
+    if ('response' in parsed) return parsed.response
+    const body = parsed.data
     const updated = await prisma.workoutPlanDay.update({
         where: { id },
         data: { ...(body.dayName !== undefined && { dayName: body.dayName }) },

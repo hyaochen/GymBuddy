@@ -1,13 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
 import { getCurrentUser } from '@/lib/auth'
+import { parseJsonBodyZh, createPlanDaySchema } from '@/lib/validation'
 
 export async function POST(req: NextRequest) {
     const user = await getCurrentUser()
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-    const body = await req.json()
-    const { planId, dayName } = body
+    const parsed = await parseJsonBodyZh(req, createPlanDaySchema)
+    if ('response' in parsed) return parsed.response
+    const { planId, dayName } = parsed.data
 
     const plan = await prisma.workoutPlan.findUnique({ where: { id: planId } })
     if (!plan || plan.userId !== user.id) {
