@@ -3,6 +3,15 @@
 import { useRouter } from "next/navigation"
 import { useState } from "react"
 import { Play, Loader2, RotateCcw } from "lucide-react"
+import { toast } from "@/components/ui/use-toast"
+
+function failToast(status: number, message?: string) {
+    toast({
+        variant: "destructive",
+        title: "無法開始訓練",
+        description: status === 401 ? "登入已過期，請重新登入後再試" : (message ?? "請稍後再試一次"),
+    })
+}
 
 export default function StartSessionButton({
     planId,
@@ -25,6 +34,11 @@ export default function StartSessionButton({
             if (!checked) {
                 // First click: check for existing incomplete session
                 const checkRes = await fetch(`/api/sessions/active?dayId=${dayId}`)
+                if (!checkRes.ok) {
+                    failToast(checkRes.status)
+                    setLoading(false)
+                    return
+                }
                 const checkData = await checkRes.json()
                 setChecked(true)
                 if (checkData.sessionId) {
@@ -39,6 +53,7 @@ export default function StartSessionButton({
             await createNewSession()
         } catch (e) {
             console.error(e)
+            failToast(0, "網路連線失敗，請檢查網路後再試")
             setLoading(false)
         }
     }
@@ -55,12 +70,16 @@ export default function StartSessionButton({
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ planId, dayId }),
             })
-            const data = await res.json()
-            if (data.session?.id) {
+            const data = await res.json().catch(() => null)
+            if (res.ok && data?.session?.id) {
                 router.push(`/session/${data.session.id}`)
+                return
             }
+            failToast(res.status, data?.message)
+            setLoading(false)
         } catch (e) {
             console.error(e)
+            failToast(0, "網路連線失敗，請檢查網路後再試")
             setLoading(false)
         }
     }
