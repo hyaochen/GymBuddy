@@ -3,6 +3,8 @@ import prisma from '@/lib/prisma'
 import { getCurrentUser } from '@/lib/auth'
 import { z } from 'zod'
 import { parseJsonBody, parseRouteId } from '@/lib/validation'
+import { epley1rm } from '@/lib/utils'
+import { isNewPersonalRecord } from '@/lib/session-logic'
 
 const createSetSchema = z.object({
     sessionExerciseId: z.string().min(8).max(64),
@@ -29,7 +31,10 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     // to the user, and the session is still active (not completed).
     const sessionExercise = await prisma.sessionExercise.findFirst({
         where: { id: sessionExerciseId, sessionId: validSessionId },
-        include: { session: { select: { id: true, userId: true, completedAt: true } } },
+        include: {
+            session: { select: { id: true, userId: true, completedAt: true } },
+            exercise: { select: { isTimeBased: true } },
+        },
     })
 
     if (
@@ -59,6 +64,38 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         },
     })
 
-    // Check for personal record (skip for time-based exercises — no weight-based PR)
-    return NextResponse.json({ set, isNewPR: false }, { status: 201 })
+    // Personal record: strictly above everything before this set — the best of
+    // previously completed sessions plus earlier sets of this same session.
+    // Time-based sets have no weight-based PR.
+    const isTimeBased = sessionExercise.exercise.isTimeBased || durationSeconds != null
+    let isNewPR = false
+    if (!isTimeBased && weightKg > 0) {
+        const [summary, earlierSets] = await Promise.all([
+            prisma.userExerciseSummary.findUnique({
+                where: { userId_exerciseId: { userId: user.id, exerciseId: sessionExercise.exerciseId } },
+                select: { estimated1rm: true },
+            }),
+            prisma.sessionSet.findMany({
+                where: {
+                    sessionExercise: { sessionId: validSessionId, exerciseId: sessionExercise.exerciseId },
+                    durationSeconds: null,
+                    id: { not: set.id },
+                },
+                select: { weightKg: true, repsPerformed: true },
+            }),
+        ])
+        const sessionBest1rm = earlierSets.reduce(
+            (best, s) => Math.max(best, epley1rm(Number(s.weightKg), s.repsPerformed)),
+            0,
+        )
+        isNewPR = isNewPersonalRecord({
+            isTimeBased,
+            weightKg,
+            reps: repsPerformed,
+            historicalBest1rm: summary ? Number(summary.estimated1rm) : null,
+            sessionBest1rm,
+        })
+    }
+
+    return NextResponse.json({ set, isNewPR }, { status: 201 })
 }
