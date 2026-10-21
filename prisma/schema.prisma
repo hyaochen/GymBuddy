@@ -65,6 +65,8 @@ model User {
   name         String   @unique
   passwordHash String?
   googleId     String?  @unique
+  // 改密碼／登出所有裝置時 +1，舊 session cookie 的版本不符即失效
+  tokenVersion Int      @default(0)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 

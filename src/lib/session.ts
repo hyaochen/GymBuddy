@@ -3,6 +3,8 @@
 export type SessionPayload = {
     userId: string;
     issuedAt: number;
+    /** 對應 User.tokenVersion；舊 cookie 沒有此欄位，視為 0 */
+    tokenVersion?: number;
 };
 
 const SECRET = process.env.SESSION_SECRET;
