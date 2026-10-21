@@ -1,8 +1,10 @@
 "use client"
 
 import { useEffect, useState, useCallback } from "react"
+import { useRouter } from "next/navigation"
 import { BookTemplate, Search, Heart, Download, Calendar, ChevronDown } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { toast } from "@/components/ui/use-toast"
 
 const DIFFICULTY_LABELS: Record<string, string> = {
     BEGINNER: "初學者",
@@ -26,6 +28,7 @@ interface TemplateData {
     likes: number
     downloads: number
     isLiked: boolean
+    isOwn?: boolean
     creator: { id: string; name: string }
     createdAt: string
 }
@@ -42,40 +45,97 @@ function timeAgo(dateStr: string): string {
     return new Date(dateStr).toLocaleDateString("zh-TW", { month: "short", day: "numeric" })
 }
 
+async function errorOf(res: Response, fallback: string) {
+    try {
+        const d = await res.json()
+        if (typeof d?.error === "string" && d.error) return d.error
+    } catch { }
+    return fallback
+}
+
 export default function CommunityTemplates() {
+    const router = useRouter()
     const [templates, setTemplates] = useState<TemplateData[]>([])
     const [loading, setLoading] = useState(true)
     const [sort, setSort] = useState<"recent" | "likes" | "downloads">("recent")
     const [search, setSearch] = useState("")
     const [expanded, setExpanded] = useState(false)
+    const [mineOnly, setMineOnly] = useState(false)
+    const [pendingId, setPendingId] = useState<string | null>(null)
 
     const fetchTemplates = useCallback(async () => {
         setLoading(true)
         const params = new URLSearchParams({ sort })
         if (search) params.set("search", search)
-        const res = await fetch(`/api/templates?${params}`)
-        if (res.ok) {
-            const data = await res.json()
-            setTemplates(data.templates)
+        if (mineOnly) params.set("mine", "1")
+        try {
+            const res = await fetch(`/api/templates?${params}`)
+            if (res.ok) {
+                const data = await res.json()
+                setTemplates(data.templates)
+            } else {
+                toast({ title: await errorOf(res, "載入社群模板失敗"), variant: "destructive" })
+            }
+        } catch {
+            toast({ title: "載入社群模板失敗，請檢查網路", variant: "destructive" })
         }
         setLoading(false)
-    }, [sort, search])
+    }, [sort, search, mineOnly])
 
     useEffect(() => {
         fetchTemplates()
     }, [fetchTemplates])
 
     async function toggleLike(templateId: string) {
-        await fetch(`/api/templates/${templateId}/like`, { method: "POST" })
+        try {
+            const res = await fetch(`/api/templates/${templateId}/like`, { method: "POST" })
+            if (!res.ok) {
+                toast({ title: await errorOf(res, "操作失敗，請重試"), variant: "destructive" })
+                return
+            }
+        } catch {
+            toast({ title: "操作失敗，請檢查網路", variant: "destructive" })
+            return
+        }
         fetchTemplates()
     }
 
     async function importTemplate(templateId: string) {
         if (!confirm("確定要匯入此模板為新的訓練計畫？")) return
-        const res = await fetch(`/api/templates/${templateId}/import`, { method: "POST" })
-        if (res.ok) {
-            alert("模板已成功匯入為新計畫！")
+        if (pendingId) return
+        setPendingId(templateId)
+        try {
+            const res = await fetch(`/api/templates/${templateId}/import`, { method: "POST" })
+            if (!res.ok) {
+                toast({ title: await errorOf(res, "匯入失敗，請重試"), variant: "destructive" })
+                return
+            }
+            toast({ title: "模板已成功匯入為新計畫", variant: "success" })
+            router.refresh() // 伺服器端渲染的「我的計畫」清單才會出現新計畫
             fetchTemplates()
+        } catch {
+            toast({ title: "匯入失敗，請檢查網路後重試", variant: "destructive" })
+        } finally {
+            setPendingId(null)
+        }
+    }
+
+    async function unshareTemplate(templateId: string) {
+        if (!confirm("確定要下架這個模板？下架後其他人將看不到，也無法再匯入。")) return
+        if (pendingId) return
+        setPendingId(templateId)
+        try {
+            const res = await fetch(`/api/templates/${templateId}`, { method: "DELETE" })
+            if (!res.ok) {
+                toast({ title: await errorOf(res, "下架失敗，請重試"), variant: "destructive" })
+                return
+            }
+            toast({ title: "模板已下架", variant: "success" })
+            fetchTemplates()
+        } catch {
+            toast({ title: "下架失敗，請檢查網路後重試", variant: "destructive" })
+        } finally {
+            setPendingId(null)
         }
     }
 
@@ -122,6 +182,15 @@ export default function CommunityTemplates() {
                             <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
                         </div>
                     </div>
+
+                    <label className="flex items-center gap-2 text-xs text-muted-foreground">
+                        <input
+                            type="checkbox"
+                            checked={mineOnly}
+                            onChange={e => setMineOnly(e.target.checked)}
+                        />
+                        只看我分享的
+                    </label>
 
                     {loading && (
                         <div className="text-center py-6 text-muted-foreground text-sm">載入中...</div>
@@ -187,12 +256,24 @@ export default function CommunityTemplates() {
                                         {t.downloads}
                                     </span>
                                 </div>
-                                <button
-                                    onClick={() => importTemplate(t.id)}
-                                    className="text-xs text-primary font-medium hover:text-primary/80 transition-colors"
-                                >
-                                    匯入計畫
-                                </button>
+                                <div className="flex items-center gap-3">
+                                    {t.isOwn && (
+                                        <button
+                                            onClick={() => unshareTemplate(t.id)}
+                                            disabled={pendingId !== null}
+                                            className="text-xs text-destructive font-medium hover:text-destructive/80 transition-colors disabled:opacity-50"
+                                        >
+                                            下架
+                                        </button>
+                                    )}
+                                    <button
+                                        onClick={() => importTemplate(t.id)}
+                                        disabled={pendingId !== null}
+                                        className="text-xs text-primary font-medium hover:text-primary/80 transition-colors disabled:opacity-50"
+                                    >
+                                        {pendingId === t.id ? "處理中..." : "匯入計畫"}
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     ))}

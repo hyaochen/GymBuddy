@@ -13,7 +13,10 @@ export async function GET(req: NextRequest) {
     const page = Math.max(1, Number(url.searchParams.get('page') || '1'))
     const limit = 20
 
+    const mine = url.searchParams.get('mine') === '1'
+
     const where: Record<string, unknown> = { isPublic: true }
+    if (mine) where.creatorId = user.id
     if (difficulty) where.difficulty = difficulty
     if (search) {
         where.OR = [
@@ -56,6 +59,7 @@ export async function GET(req: NextRequest) {
         downloads: t.downloads,
         isLiked: t.templateLikes.length > 0,
         creator: t.creator,
+        isOwn: t.creator.id === user.id,
         createdAt: t.createdAt,
     }))
 
