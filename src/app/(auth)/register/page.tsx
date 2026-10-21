@@ -39,6 +39,7 @@ export default function RegisterPage({
                             <input
                                 id="name"
                                 name="name"
+                                defaultValue={registerState.values?.name}
                                 type="text"
                                 autoComplete="name"
                                 required
@@ -54,6 +55,7 @@ export default function RegisterPage({
                             <input
                                 id="email"
                                 name="email"
+                                defaultValue={registerState.values?.email}
                                 type="email"
                                 autoComplete="email"
                                 required
