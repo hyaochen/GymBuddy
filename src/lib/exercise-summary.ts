@@ -22,7 +22,12 @@ export async function updateExerciseSummary(userId: string, exerciseId: string) 
         },
     })
 
-    if (sessionExercises.length === 0) return
+    // Nothing left (e.g. the last session / set was deleted): drop the stale
+    // summary instead of leaving old maxima behind.
+    if (sessionExercises.every(se => se.sets.length === 0)) {
+        await prisma.userExerciseSummary.deleteMany({ where: { userId, exerciseId } })
+        return
+    }
 
     let maxWeight = 0
     let maxWeightDate = new Date()

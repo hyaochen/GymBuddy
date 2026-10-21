@@ -46,6 +46,15 @@ export async function POST(req: NextRequest) {
         }))
     }
 
+    // An empty session would open straight onto "workout complete" and could be
+    // finished as a zero-set workout, so refuse it up front.
+    if (sessionExercisesData.length === 0) {
+        return NextResponse.json(
+            { error: 'NO_EXERCISES', message: '這個訓練日還沒有任何動作，請先到計畫新增動作' },
+            { status: 400 },
+        )
+    }
+
     const session = await prisma.workoutSession.create({
         data: {
             userId: user.id,

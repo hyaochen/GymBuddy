@@ -107,3 +107,32 @@ export function generateOverloadSuggestion(
         suggestedSets: buildUniformSets(targetSets, deloadWeight, targetRepsMin, targetRepsMax),
     }
 }
+
+export type NextWeightSuggestion = {
+    weightKg: number
+    /** Change vs. the weight used last time (negative = deload). */
+    deltaKg: number
+    method: TrainingMethod
+}
+
+/**
+ * Default weight for the next session of a (non time-based) exercise, derived
+ * from the last completed session's sets. Returns null when there is no usable
+ * history (or the last weight was 0, e.g. bodyweight), so the plan default stays.
+ */
+export function suggestNextWeight(
+    planDefaults: PlanExerciseDefaults,
+    lastSessionSets: SessionSetData[],
+): NextWeightSuggestion | null {
+    if (lastSessionSets.length === 0) return null
+    const lastWeight = Number(lastSessionSets[0].weightKg)
+    if (!Number.isFinite(lastWeight) || lastWeight <= 0) return null
+    const result = generateOverloadSuggestion('', '', planDefaults, lastSessionSets)
+    const weightKg = result.suggestedSets[0]?.suggestedWeightKg
+    if (weightKg === undefined) return null
+    return {
+        weightKg,
+        deltaKg: Math.round((weightKg - lastWeight) * 100) / 100,
+        method: result.method,
+    }
+}

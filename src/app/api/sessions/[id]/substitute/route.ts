@@ -62,12 +62,10 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
             substituteForId: originalSessionExerciseId,
         },
         include: {
+            // Same shape as GET /api/sessions/[id] (incl. isTimeBased) so the
+            // client can render the substitute exactly like a loaded exercise.
             exercise: {
-                select: {
-                    id: true,
-                    name: true,
-                    gifUrl: true,
-                    stepInstructions: true,
+                include: {
                     muscles: { include: { muscleGroup: true }, orderBy: { isPrimary: 'desc' } },
                     equipment: { include: { equipment: true } },
                 },

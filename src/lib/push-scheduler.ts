@@ -16,6 +16,7 @@ import https from 'https'
 import { URL } from 'url'
 import webpush from 'web-push'
 import prisma from '@/lib/prisma'
+import { planPushRecovery } from '@/lib/push-recovery'
 
 // In-memory timer store for active rest timers. The DB is the source of truth.
 const timers = new Map<string, ReturnType<typeof setTimeout>>()
@@ -26,6 +27,7 @@ const PUSH_JOB_STATUS = {
     SENT: 'SENT',
     FAILED: 'FAILED',
     CANCELLED: 'CANCELLED',
+    EXPIRED: 'EXPIRED',
 } as const
 
 function pushTimerKey(userId: string, tag: string) {
@@ -263,6 +265,15 @@ export async function schedulePush(
 
     addPushLog('SCHEDULED', userId, `delay=${Math.round(delay/1000)}s fire=${expectedFireAt} tag=${tag}`)
     console.log(`[push] Scheduled — user=${userId} delay=${Math.round(delay/1000)}s scheduledAt=${scheduledAt} expectedFireAt=${expectedFireAt} tag=${tag}`)
+    armTimer(userId, tag, delay, scheduledAt)
+}
+
+// Arms the in-memory timer that fires a PENDING PushJob. Shared by schedulePush
+// and startup recovery.
+function armTimer(userId: string, tag: string, delay: number, scheduledAt: string) {
+    const serverEndTime = Date.now() + delay
+    const existing = timers.get(pushTimerKey(userId, tag))
+    if (existing) clearTimeout(existing)
     const timer = setTimeout(async () => {
         const actualFireAt = new Date().toISOString()
         const drift = Date.now() - serverEndTime
@@ -272,6 +283,41 @@ export async function schedulePush(
         await firePushJob(userId, tag)
     }, delay)
     timers.set(pushTimerKey(userId, tag), timer)
+}
+
+/**
+ * Called once when the server starts (src/instrumentation.ts). Timers are in
+ * memory, so a restart / redeploy loses them while the PushJob rows stay
+ * PENDING forever. Re-arm jobs that are still due; jobs that fired more than
+ * PUSH_RECOVERY_GRACE_MS ago are marked EXPIRED instead of being sent late.
+ * A job stuck in SENDING from a crash is closed as FAILED (not re-sent: it may
+ * already have been delivered).
+ */
+export async function recoverPendingPushJobs() {
+    const now = Date.now()
+    const pending = await prisma.pushJob.findMany({
+        where: { status: PUSH_JOB_STATUS.PENDING },
+        select: { id: true, userId: true, tag: true, fireAt: true },
+    })
+    const { rearm, expireIds } = planPushRecovery(pending, now)
+
+    if (expireIds.length > 0) {
+        await prisma.pushJob.updateMany({
+            where: { id: { in: expireIds }, status: PUSH_JOB_STATUS.PENDING },
+            data: { status: PUSH_JOB_STATUS.EXPIRED },
+        })
+    }
+    const scheduledAt = new Date(now).toISOString()
+    for (const job of rearm) {
+        armTimer(job.userId, job.tag, job.delayMs, scheduledAt)
+    }
+
+    const stuck = await prisma.pushJob.updateMany({
+        where: { status: PUSH_JOB_STATUS.SENDING, updatedAt: { lt: new Date(now - 5 * 60 * 1000) } },
+        data: { status: PUSH_JOB_STATUS.FAILED },
+    })
+
+    console.log(`[push] Recovery — rearmed=${rearm.length} expired=${expireIds.length} stuckSending=${stuck.count}`)
 }
 
 /**
