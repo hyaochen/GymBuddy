@@ -3,6 +3,30 @@ import { getStreakInfo, STREAK_MILESTONES } from '@/lib/streak'
 import { sendPushToMany } from '@/lib/push-scheduler'
 import { getFriendIds } from '@/lib/friends'
 import { exName } from '@/lib/utils'
+import { filterNotifiable, getPrivacyMap } from '@/lib/social-privacy'
+
+interface PRRow {
+    id: string
+    exerciseId: string
+    estimated1rm: unknown
+    achievedAt: Date
+}
+
+/**
+ * Pick the PRs that belong to one session: achievedAt is the completion time of
+ * the set that set the record, so it falls inside [startedAt, completedAt].
+ * Several PRs on the same exercise in one session collapse to the best one.
+ */
+export function selectSessionPRs<T extends PRRow>(prs: T[], windowStart: Date, windowEnd: Date): T[] {
+    const best = new Map<string, T>()
+    for (const pr of prs) {
+        const t = pr.achievedAt.getTime()
+        if (t < windowStart.getTime() || t > windowEnd.getTime()) continue
+        const cur = best.get(pr.exerciseId)
+        if (!cur || Number(pr.estimated1rm) > Number(cur.estimated1rm)) best.set(pr.exerciseId, pr)
+    }
+    return [...best.values()]
+}
 
 /**
  * Auto-generate feed items after session completion.
@@ -50,33 +74,40 @@ export async function generateSessionFeedItems(
         },
     })
 
-    // 2. PR_ACHIEVED — check for PRs created around this session
-    const recentPRs = await prisma.personalRecord.findMany({
-        where: {
-            userId,
-            achievedAt: {
-                gte: new Date(Date.now() - 5 * 60 * 1000), // within last 5 min
-            },
-        },
+    // 2. PR_ACHIEVED — PRs whose record-setting set belongs to this session.
+    const windowStart = session.startedAt
+    const windowEnd = session.completedAt ?? new Date()
+    const sessionPRs = await prisma.personalRecord.findMany({
+        where: { userId, achievedAt: { gte: windowStart, lte: windowEnd } },
         include: { exercise: { select: { name: true } } },
     })
+    // Guard against double generation for the same session (e.g. a retried complete call).
+    const alreadyGenerated = await prisma.activityFeedItem.findFirst({
+        where: {
+            userId,
+            type: 'PR_ACHIEVED',
+            data: { contains: `"sessionId":"${sessionId}"` },
+        },
+        select: { id: true },
+    })
 
-    for (const pr of recentPRs) {
-        const exerciseName = exName(pr.exercise.name)
-
-        await prisma.activityFeedItem.create({
-            data: {
-                userId,
-                type: 'PR_ACHIEVED',
-                data: JSON.stringify({
-                    exerciseName,
-                    weightKg: Number(pr.weightKg),
-                    reps: pr.reps,
-                    estimated1rm: Number(pr.estimated1rm),
-                }),
-                isPublic: false, // PRs private by default
-            },
-        })
+    if (!alreadyGenerated) {
+        for (const pr of selectSessionPRs(sessionPRs, windowStart, windowEnd)) {
+            await prisma.activityFeedItem.create({
+                data: {
+                    userId,
+                    type: 'PR_ACHIEVED',
+                    data: JSON.stringify({
+                        sessionId,
+                        exerciseName: exName(pr.exercise.name),
+                        weightKg: Number(pr.weightKg),
+                        reps: pr.reps,
+                        estimated1rm: Number(pr.estimated1rm),
+                    }),
+                    isPublic: false, // PRs private by default
+                },
+            })
+        }
     }
 
     // 3. STREAK_MILESTONE
@@ -114,7 +145,11 @@ async function notifyFriendsOfActivity(
     totalSets: number,
     currentStreak: number,
 ) {
-    const friendIds = await getFriendIds(userId)
+    // The owner hid their workouts: friends get neither the feed item nor a push.
+    const privacy = (await getPrivacyMap([userId])).get(userId)
+    if (privacy && !privacy.showWorkouts) return
+
+    const friendIds = await filterNotifiable(await getFriendIds(userId))
     if (friendIds.length === 0) return
 
     // Get user display name

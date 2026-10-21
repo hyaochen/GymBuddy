@@ -3,6 +3,8 @@ import prisma from '@/lib/prisma'
 import { getCurrentUser } from '@/lib/auth'
 import { sendPushNow } from '@/lib/push-scheduler'
 import { createRateLimiter } from '@/lib/rate-limiter'
+import { rejectCooldownDaysLeft } from '@/lib/friends'
+import { canNotify } from '@/lib/social-privacy'
 
 // 20 friend-requests per user per hour — stops push-spam abuse.
 const friendRequestLimiter = createRateLimiter({ namespace: 'friends:request', maxAttempts: 20, windowMs: 60 * 60 * 1000 })
@@ -19,18 +21,32 @@ export async function POST(req: NextRequest) {
         )
     }
 
-    const { username } = await req.json()
-    if (!username || typeof username !== 'string') {
+    let body: { username?: unknown }
+    try {
+        body = await req.json()
+    } catch {
+        return NextResponse.json({ error: '請求內容格式錯誤' }, { status: 400 })
+    }
+    const username = typeof body.username === 'string' ? body.username.trim() : ''
+    if (!username) {
         return NextResponse.json({ error: '請提供使用者名稱' }, { status: 400 })
     }
 
-    if (username === user.name) {
+    // Names are unique case-insensitively (see register), so look them up the same way.
+    if (username.toLowerCase() === user.name.toLowerCase()) {
         return NextResponse.json({ error: '不能加自己為好友' }, { status: 400 })
     }
 
-    const target = await prisma.user.findUnique({ where: { name: username } })
+    const candidates = await prisma.user.findMany({
+        where: { name: { equals: username, mode: 'insensitive' } },
+        take: 5,
+    })
+    const target = candidates.find(u => u.name === username) ?? candidates[0]
     if (!target) {
         return NextResponse.json({ error: '找不到該使用者' }, { status: 404 })
+    }
+    if (target.id === user.id) {
+        return NextResponse.json({ error: '不能加自己為好友' }, { status: 400 })
     }
 
     // Check existing friendship in either direction
@@ -53,6 +69,18 @@ export async function POST(req: NextRequest) {
         if (existing.status === 'BLOCKED') {
             return NextResponse.json({ error: '無法發送好友邀請' }, { status: 400 })
         }
+        if (existing.status === 'REJECTED') {
+            // Only the person who was rejected is throttled; the rejecter may invite freely.
+            const daysLeft = existing.requesterId === user.id ? rejectCooldownDaysLeft(existing.rejectedAt) : 0
+            if (daysLeft > 0) {
+                return NextResponse.json(
+                    { error: `對方先前拒絕了你的邀請，請於 ${daysLeft} 天後再試` },
+                    { status: 400 }
+                )
+            }
+            // Cool-down over (or reversed direction): drop the old row so a fresh invite can be stored.
+            await prisma.friendship.delete({ where: { id: existing.id } })
+        }
     }
 
     const friendship = await prisma.friendship.create({
@@ -63,8 +91,10 @@ export async function POST(req: NextRequest) {
 
     // Notify the receiver via push
     const displayName = user.name
-    sendPushNow(target.id, `${displayName} 想加你為好友`, '點擊查看並回覆', 'friend-request')
-        .catch(console.error)
+    if (await canNotify(target.id)) {
+        sendPushNow(target.id, `${displayName} 想加你為好友`, '點擊查看並回覆', 'friend-request')
+            .catch(console.error)
+    }
 
     return NextResponse.json({ success: true, id: friendship.id })
 }

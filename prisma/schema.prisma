@@ -48,6 +48,7 @@ enum FriendshipStatus {
   PENDING
   ACCEPTED
   BLOCKED
+  REJECTED
 }
 
 enum ChallengeType {
@@ -362,6 +363,8 @@ model Friendship {
   receiverId  String
   status      FriendshipStatus @default(PENDING)
   createdAt   DateTime         @default(now())
+  // Set when the receiver rejects; the requester cannot re-invite for 7 days.
+  rejectedAt  DateTime?
 
   requester User @relation("FriendRequestsSent", fields: [requesterId], references: [id], onDelete: Cascade)
   receiver  User @relation("FriendRequestsReceived", fields: [receiverId], references: [id], onDelete: Cascade)
@@ -421,6 +424,8 @@ model UserProfile {
   showPRs         Boolean @default(false)
   showWeight      Boolean @default(false)
   publicAnalytics Boolean @default(false)
+  // Receive push notifications for friend activity / invitations / shares.
+  notifySocial    Boolean @default(true)
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 

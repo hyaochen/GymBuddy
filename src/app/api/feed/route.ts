@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
 import { getCurrentUser } from '@/lib/auth'
 import { getFriendIds } from '@/lib/friends'
+import { DEFAULT_SOCIAL_PRIVACY, friendFeedWhere, getPrivacyMap, redactFeedData } from '@/lib/social-privacy'
 
 export async function GET(req: NextRequest) {
     const user = await getCurrentUser()
@@ -11,13 +12,17 @@ export async function GET(req: NextRequest) {
     const limit = 20
 
     const friendIds = await getFriendIds(user.id)
+    const [friendWhere, privacyMap] = await Promise.all([
+        friendFeedWhere(friendIds),
+        getPrivacyMap(friendIds),
+    ])
 
-    // Get feed: own items (all) + friends' public items
+    // Get feed: own items (all) + friends' public items (honouring their privacy toggles)
     const items = await prisma.activityFeedItem.findMany({
         where: {
             OR: [
                 { userId: user.id },
-                { userId: { in: friendIds }, isPublic: true },
+                friendWhere,
             ],
             ...(cursor ? { createdAt: { lt: new Date(cursor) } } : {}),
         },
@@ -42,7 +47,14 @@ export async function GET(req: NextRequest) {
         userId: item.user.id,
         userName: item.user.name,
         type: item.type,
-        data: item.data ? JSON.parse(item.data) : null,
+        data: item.data
+            ? redactFeedData(
+                item.type,
+                JSON.parse(item.data),
+                privacyMap.get(item.userId) ?? DEFAULT_SOCIAL_PRIVACY,
+                item.userId === user.id,
+            )
+            : null,
         isPublic: item.isPublic,
         isOwn: item.userId === user.id,
         createdAt: item.createdAt.toISOString(),
