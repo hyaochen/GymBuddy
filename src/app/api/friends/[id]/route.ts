@@ -17,6 +17,15 @@ export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ 
         return NextResponse.json({ error: '無權限' }, { status: 403 })
     }
 
+    // A rejection record only exists to throttle re-invites; it is not user-removable.
+    if (friendship.status === 'REJECTED') {
+        return NextResponse.json({ error: '找不到該好友關係' }, { status: 404 })
+    }
+    // Pending invitations are cancelled by the sender; the receiver answers via /respond.
+    if (friendship.status === 'PENDING' && friendship.requesterId !== user.id) {
+        return NextResponse.json({ error: '無權限' }, { status: 403 })
+    }
+
     await prisma.friendship.delete({ where: { id } })
     return NextResponse.json({ success: true })
 }

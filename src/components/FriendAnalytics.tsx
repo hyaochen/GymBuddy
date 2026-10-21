@@ -16,8 +16,10 @@ const TABS = [
 
 type TabId = (typeof TABS)[number]['id']
 
-export default function FriendAnalytics({ userId }: { userId: string }) {
+export default function FriendAnalytics({ userId, showWeight = true }: { userId: string; showWeight?: boolean }) {
     const [tab, setTab] = useState<TabId>('overview')
+    // Progress and equipment charts expose kg numbers; hide them when the owner keeps weights private.
+    const visibleTabs = showWeight ? TABS : TABS.filter(t => t.id === 'overview')
 
     return (
         <div className="space-y-4">
@@ -27,7 +29,7 @@ export default function FriendAnalytics({ userId }: { userId: string }) {
             </div>
 
             <div className="flex gap-1 bg-secondary/50 rounded-xl p-1">
-                {TABS.map(t => (
+                {visibleTabs.map(t => (
                     <button key={t.id} onClick={() => setTab(t.id)}
                         className={`flex-1 py-2 rounded-lg text-sm font-medium transition-colors ${
                             tab === t.id ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'
@@ -41,7 +43,7 @@ export default function FriendAnalytics({ userId }: { userId: string }) {
                 <div className="space-y-4">
                     <TrainingHeatmap compact userId={userId} />
                     <MuscleRadar userId={userId} />
-                    <VolumeStackedChart userId={userId} />
+                    {showWeight && <VolumeStackedChart userId={userId} />}
                 </div>
             )}
 

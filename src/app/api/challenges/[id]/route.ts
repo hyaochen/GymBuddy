@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
 import { getCurrentUser } from '@/lib/auth'
 import { parseRouteId } from '@/lib/validation'
+import { visibleChallengeWhere } from '@/lib/challenges'
 
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
     const user = await getCurrentUser()
@@ -14,11 +15,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
     const challenge = await prisma.challenge.findFirst({
         where: {
             id: challengeId,
-            OR: [
-                { isPublic: true },
-                { creatorId: user.id },
-                { participants: { some: { userId: user.id } } },
-            ],
+            ...(await visibleChallengeWhere(user.id)),
         },
         include: {
             creator: { select: { id: true, name: true } },

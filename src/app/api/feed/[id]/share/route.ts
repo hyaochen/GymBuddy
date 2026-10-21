@@ -3,6 +3,15 @@ import prisma from '@/lib/prisma'
 import { getCurrentUser } from '@/lib/auth'
 import { sendPushToMany } from '@/lib/push-scheduler'
 import { getFriendIds } from '@/lib/friends'
+import { createRateLimiter } from '@/lib/rate-limiter'
+import { filterNotifiable, getPrivacyMap, isFeedTypeVisibleToFriend } from '@/lib/social-privacy'
+
+// One push per feed item, ever: flipping public/private repeatedly must not re-notify friends.
+const shareNotifyLimiter = createRateLimiter({
+    namespace: 'feed:share-notify',
+    maxAttempts: 1,
+    windowMs: 10 * 365 * 24 * 60 * 60 * 1000,
+})
 
 export async function POST(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
     const user = await getCurrentUser()
@@ -20,8 +29,9 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ id
         data: { isPublic: !item.isPublic },
     })
 
-    // If just made public, notify friends
-    if (updated.isPublic) {
+    // If just made public for the first time, notify friends
+    if (updated.isPublic && !(await shareNotifyLimiter.isBlocked(item.id))) {
+        await shareNotifyLimiter.record(item.id)
         notifyFriendsOfShare(user.id, user.name, item.type, item.data).catch(console.error)
     }
 
@@ -29,7 +39,11 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ id
 }
 
 async function notifyFriendsOfShare(userId: string, userName: string, type: string, data: string | null) {
-    const friendIds = await getFriendIds(userId)
+    const privacy = (await getPrivacyMap([userId])).get(userId)!
+    // Friends cannot see this kind of item, so do not push it either.
+    if (!isFeedTypeVisibleToFriend(type, privacy)) return
+
+    const friendIds = await filterNotifiable(await getFriendIds(userId))
     if (friendIds.length === 0) return
 
     const profile = await prisma.userProfile.findUnique({
@@ -44,7 +58,9 @@ async function notifyFriendsOfShare(userId: string, userName: string, type: stri
     if (type === 'PR_ACHIEVED' && data) {
         const parsed = JSON.parse(data)
         title = `${displayName} 破了個人紀錄！`
-        body = `${parsed.exerciseName} — ${parsed.weightKg}kg × ${parsed.reps} 下`
+        body = privacy.showWeight
+            ? `${parsed.exerciseName} — ${parsed.weightKg}kg × ${parsed.reps} 下`
+            : String(parsed.exerciseName)
     } else if (type === 'STREAK_MILESTONE' && data) {
         const parsed = JSON.parse(data)
         title = `${displayName} 達成連續訓練里程碑！`

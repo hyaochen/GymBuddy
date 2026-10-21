@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
 import { getCurrentUser } from '@/lib/auth'
-import { checkSocialBadge } from '@/lib/badges'
+import { checkSocialBadge, syncParticipantProgress } from '@/lib/badges'
+import { visibleChallengeWhere } from '@/lib/challenges'
 import { parseRouteId } from '@/lib/validation'
 
 export async function POST(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -15,11 +16,7 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ id
     const challenge = await prisma.challenge.findFirst({
         where: {
             id: challengeId,
-            OR: [
-                { isPublic: true },
-                { creatorId: user.id },
-                { participants: { some: { userId: user.id } } },
-            ],
+            ...(await visibleChallengeWhere(user.id)),
         },
     })
     if (!challenge) {
@@ -42,6 +39,9 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ id
     const participant = await prisma.challengeParticipant.create({
         data: { challengeId, userId: user.id },
     })
+
+    // Count what the user already trained inside the challenge window.
+    await syncParticipantProgress(participant, challenge).catch(console.error)
 
     // Badge: first challenge joined
     const badge = await checkSocialBadge(user.id, 'challenge_joined')

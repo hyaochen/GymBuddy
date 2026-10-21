@@ -20,6 +20,7 @@ interface ProfileData {
         showPRs: boolean
         showWeight: boolean
         publicAnalytics: boolean
+        notifySocial?: boolean
     }
     stats: {
         totalSessions: number
@@ -63,6 +64,7 @@ export default function ProfilePage() {
     const [showPRs, setShowPRs] = useState(false)
     const [showWeight, setShowWeight] = useState(false)
     const [publicAnalytics, setPublicAnalytics] = useState(false)
+    const [notifySocial, setNotifySocial] = useState(true)
 
     const fetchProfile = useCallback(async () => {
         const [profileRes, badgeRes] = await Promise.all([
@@ -79,6 +81,7 @@ export default function ProfilePage() {
             setShowPRs(d.profile.showPRs)
             setShowWeight(d.profile.showWeight)
             setPublicAnalytics(d.profile.publicAnalytics ?? false)
+            setNotifySocial(d.profile.notifySocial ?? true)
         }
         if (badgeRes.ok) {
             const b = await badgeRes.json()
@@ -89,6 +92,20 @@ export default function ProfilePage() {
     }, [])
 
     useEffect(() => { fetchProfile() }, [fetchProfile])
+
+    // Avatar and save results are shown separately and fade out on their own.
+    const [saveMessageVisible, setSaveMessageVisible] = useState(false)
+    useEffect(() => {
+        if (profileState.status === "idle") return
+        setSaveMessageVisible(true)
+        const t = setTimeout(() => setSaveMessageVisible(false), 4000)
+        return () => clearTimeout(t)
+    }, [profileState])
+    useEffect(() => {
+        if (!message) return
+        const t = setTimeout(() => setMessage(null), 4000)
+        return () => clearTimeout(t)
+    }, [message])
 
     function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
         const file = e.target.files?.[0]
@@ -168,11 +185,9 @@ export default function ProfilePage() {
         strength: "力量",
         social: "社交",
     }
-    const profileMessage = message ?? (
-        profileState.status === "idle"
-            ? null
-            : { type: profileState.status, text: profileState.message }
-    )
+    const profileMessage = profileState.status === "idle" || !saveMessageVisible
+        ? null
+        : { type: profileState.status, text: profileState.message }
 
     return (
         <div className="space-y-5">
@@ -217,6 +232,17 @@ export default function ProfilePage() {
                         </p>
                     </div>
                 </div>
+
+                {message && (
+                    <div className={cn(
+                        "mt-3 rounded-lg px-3 py-2 text-sm",
+                        message.type === "success"
+                            ? "bg-green-500/15 text-green-400 border border-green-500/30"
+                            : "bg-destructive/15 text-destructive border border-destructive/30"
+                    )}>
+                        {message.text}
+                    </div>
+                )}
 
                 {/* Avatar upload actions */}
                 {selectedFile && (
@@ -371,14 +397,18 @@ export default function ProfilePage() {
                     <input type="hidden" name="showPRs" value={String(showPRs)} />
                     <input type="hidden" name="showWeight" value={String(showWeight)} />
                     <input type="hidden" name="publicAnalytics" value={String(publicAnalytics)} />
+                    <input type="hidden" name="notifySocial" value={String(notifySocial)} />
 
                     <div className="space-y-3">
                         <PrivacyToggle label="顯示連續訓練天數" checked={showStreak} onChange={setShowStreak} />
                         <PrivacyToggle label="顯示訓練紀錄" checked={showWorkouts} onChange={setShowWorkouts} />
                         <PrivacyToggle label="顯示個人最佳紀錄" checked={showPRs} onChange={setShowPRs} description="啟用後好友可與你比較紀錄" />
-                        <PrivacyToggle label="顯示重量數據" checked={showWeight} onChange={setShowWeight} />
+                        <PrivacyToggle label="顯示重量數據" checked={showWeight} onChange={setShowWeight} description="關閉後好友看不到你的重量與訓練量數字" />
                         <div className="border-t border-border pt-3 mt-3">
                             <PrivacyToggle label="公開訓練分析" checked={publicAnalytics} onChange={setPublicAnalytics} description="啟用後好友可查看你的詳細訓練統計" />
+                        </div>
+                        <div className="border-t border-border pt-3 mt-3">
+                            <PrivacyToggle label="接收社交推播" checked={notifySocial} onChange={setNotifySocial} description="好友動態、好友邀請、邀請被接受、動態分享的通知" />
                         </div>
                     </div>
                 </div>
