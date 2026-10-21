@@ -1,9 +1,12 @@
 "use client"
 
-import { useEffect, useState, useCallback } from "react"
+import { useEffect, useState, useCallback, useActionState, useTransition } from "react"
 import Link from "next/link"
 import { startRegistration } from "@simplewebauthn/browser"
-import { KeyRound, Plus, Trash2, Smartphone, Bell, ExternalLink } from "lucide-react"
+import { KeyRound, Plus, Trash2, Smartphone, Bell, ExternalLink, Lock, LogOut } from "lucide-react"
+import { changePassword, getPasswordStatus, logoutAllDevices } from "@/app/actions/account"
+import { toast } from "@/components/ui/use-toast"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 
 interface PasskeyInfo {
     id: string
@@ -24,6 +27,22 @@ export default function SettingsPage() {
     }, [])
 
     useEffect(() => { fetchPasskeys() }, [fetchPasskeys])
+
+    const [hasPassword, setHasPassword] = useState(true)
+    const [pwState, pwAction, pwPending] = useActionState(changePassword, {})
+    const [confirmLogoutAll, setConfirmLogoutAll] = useState(false)
+    const [loggingOut, startLogout] = useTransition()
+
+    useEffect(() => {
+        getPasswordStatus().then(r => setHasPassword(r.hasPassword)).catch(() => {})
+    }, [])
+
+    useEffect(() => {
+        if (pwState.success) {
+            toast({ title: "密碼已變更", description: "其他裝置已登出", variant: "success" })
+            setHasPassword(true)
+        }
+    }, [pwState])
 
     async function handleRegister() {
         setRegistering(true)
@@ -135,6 +154,105 @@ export default function SettingsPage() {
                     </div>
                 )}
             </div>
+
+            <div className="bg-card rounded-xl border border-border p-5 space-y-4">
+                <div className="flex items-center gap-2">
+                    <Lock className="h-5 w-5 text-primary" />
+                    <h2 className="font-semibold">{hasPassword ? "變更密碼" : "設定密碼"}</h2>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                    {hasPassword
+                        ? "變更後其他裝置會自動登出，目前這台維持登入。"
+                        : "你目前只用 Google 登入，設定密碼後也可用帳號密碼登入。其他裝置會自動登出。"}
+                </p>
+                {pwState.error && (
+                    <div className="rounded-lg px-3 py-2 text-sm bg-destructive/15 text-destructive border border-destructive/30">
+                        {pwState.error}
+                    </div>
+                )}
+                <form action={pwAction} className="space-y-3">
+                    {hasPassword && (
+                        <input
+                            name="currentPassword"
+                            type="password"
+                            autoComplete="current-password"
+                            required
+                            placeholder="目前密碼"
+                            aria-label="目前密碼"
+                            className="w-full h-11 px-3 rounded-lg bg-input border border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                        />
+                    )}
+                    <input
+                        name="newPassword"
+                        type="password"
+                        autoComplete="new-password"
+                        required
+                        minLength={8}
+                        placeholder="新密碼（至少 8 個字元）"
+                        aria-label="新密碼"
+                        className="w-full h-11 px-3 rounded-lg bg-input border border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                    />
+                    <input
+                        name="confirmPassword"
+                        type="password"
+                        autoComplete="new-password"
+                        required
+                        minLength={8}
+                        placeholder="再次輸入新密碼"
+                        aria-label="確認新密碼"
+                        className="w-full h-11 px-3 rounded-lg bg-input border border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                    />
+                    <button
+                        type="submit"
+                        disabled={pwPending}
+                        className="w-full h-11 rounded-lg bg-primary text-primary-foreground font-semibold text-sm hover:bg-primary/90 transition-colors disabled:opacity-60"
+                    >
+                        {pwPending ? "處理中..." : hasPassword ? "變更密碼" : "設定密碼"}
+                    </button>
+                </form>
+            </div>
+
+            <div className="bg-card rounded-xl border border-border p-5 space-y-3">
+                <div className="flex items-center gap-2">
+                    <LogOut className="h-5 w-5 text-primary" />
+                    <h2 className="font-semibold">登出所有裝置</h2>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                    手機遺失或在別人的裝置登入過時使用。所有裝置（包含這台）都會登出。
+                </p>
+                <button
+                    onClick={() => setConfirmLogoutAll(true)}
+                    className="text-sm font-medium text-destructive hover:text-destructive/80"
+                >
+                    登出所有裝置
+                </button>
+            </div>
+
+            <Dialog open={confirmLogoutAll} onOpenChange={setConfirmLogoutAll}>
+                <DialogContent className="max-w-sm mx-auto">
+                    <DialogHeader>
+                        <DialogTitle>登出所有裝置？</DialogTitle>
+                        <DialogDescription>
+                            所有裝置（包含這台）都會登出，需要重新登入。
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="flex gap-2 justify-end">
+                        <button
+                            onClick={() => setConfirmLogoutAll(false)}
+                            className="h-10 px-4 rounded-lg border border-border text-sm"
+                        >
+                            取消
+                        </button>
+                        <button
+                            onClick={() => startLogout(async () => { await logoutAllDevices() })}
+                            disabled={loggingOut}
+                            className="h-10 px-4 rounded-lg bg-destructive text-destructive-foreground text-sm font-semibold disabled:opacity-60"
+                        >
+                            {loggingOut ? "處理中..." : "確認登出"}
+                        </button>
+                    </div>
+                </DialogContent>
+            </Dialog>
 
             {/* Push notification debug */}
             <div className="bg-card rounded-xl border border-border p-5 space-y-3">
