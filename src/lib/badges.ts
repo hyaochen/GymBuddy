@@ -1,5 +1,6 @@
 import prisma from '@/lib/prisma'
 import { getStreakInfo } from '@/lib/streak'
+import { diffTaipeiDateKeys, taipeiDateKey } from '@/lib/timezone'
 import { sumSetsVolume } from '@/lib/utils'
 
 export interface BadgeDefinition {
@@ -144,11 +145,110 @@ export async function checkSocialBadge(userId: string, event: 'friend_added' | '
     return awardBadge(userId, key)
 }
 
+/** Longest run of consecutive calendar days in a list of YYYY-MM-DD keys (duplicates allowed). */
+export function longestConsecutiveRun(dateKeys: string[]): number {
+    const days = Array.from(new Set(dateKeys)).sort()
+    if (days.length === 0) return 0
+    let longest = 1
+    let run = 1
+    for (let i = 1; i < days.length; i++) {
+        if (diffTaipeiDateKeys(days[i], days[i - 1]) === 1) {
+            run++
+            if (run > longest) longest = run
+        } else {
+            run = 1
+        }
+    }
+    return longest
+}
+
+interface ChallengeForProgress {
+    type: string
+    exerciseId: string | null
+    startDate: Date
+    endDate: Date
+}
+
+/**
+ * Progress of one user in one challenge. Every type is measured only on data
+ * inside the challenge window [startDate, endDate] (completed sessions, by start time):
+ *   STREAK         longest run of consecutive training days
+ *   TOTAL_SESSIONS number of completed sessions
+ *   WEIGHT_PR      heaviest single non-timed set of the target exercise (kg)
+ *   VOLUME         total volume in kg (timed sets are not counted)
+ */
+export async function computeChallengeProgress(userId: string, challenge: ChallengeForProgress): Promise<number> {
+    const inWindow = {
+        userId,
+        completedAt: { not: null },
+        startedAt: { gte: challenge.startDate, lte: challenge.endDate },
+    }
+    switch (challenge.type) {
+        case 'STREAK': {
+            const sessions = await prisma.workoutSession.findMany({
+                where: inWindow,
+                select: { startedAt: true },
+            })
+            return longestConsecutiveRun(sessions.map(s => taipeiDateKey(s.startedAt)))
+        }
+        case 'TOTAL_SESSIONS':
+            return prisma.workoutSession.count({ where: inWindow })
+        case 'WEIGHT_PR': {
+            if (!challenge.exerciseId) return 0
+            const agg = await prisma.sessionSet.aggregate({
+                where: {
+                    durationSeconds: null,
+                    sessionExercise: { exerciseId: challenge.exerciseId, session: inWindow },
+                },
+                _max: { weightKg: true },
+            })
+            return agg._max.weightKg ? Math.floor(Number(agg._max.weightKg)) : 0
+        }
+        case 'VOLUME': {
+            const sessions = await prisma.workoutSession.findMany({
+                where: inWindow,
+                include: { exercises: { include: { sets: true } } },
+            })
+            return Math.round(
+                sessions.reduce((total, s) =>
+                    total + s.exercises.reduce((eTotal, e) => eTotal + sumSetsVolume(e.sets), 0), 0
+                )
+            )
+        }
+        default:
+            return 0
+    }
+}
+
+/** Recompute one participant row and award the completion badge the first time the target is met. */
+export async function syncParticipantProgress(
+    participant: { id: string; userId: string; completed: boolean; completedAt: Date | null },
+    challenge: ChallengeForProgress & { targetValue: number },
+): Promise<string | null> {
+    const currentValue = await computeChallengeProgress(participant.userId, challenge)
+    const completed = currentValue >= challenge.targetValue
+
+    await prisma.challengeParticipant.update({
+        where: { id: participant.id },
+        data: {
+            currentValue,
+            completed,
+            completedAt: completed && !participant.completed ? new Date() : participant.completedAt,
+        },
+    })
+
+    if (completed && !participant.completed) {
+        return checkSocialBadge(participant.userId, 'challenge_completed')
+    }
+    return null
+}
+
 /**
  * Update challenge progress after session completion.
  */
 export async function updateChallengeProgress(userId: string): Promise<string[]> {
     const awarded: string[] = []
+    const now = new Date()
 
     // Find all active challenges the user is participating in and hasn't completed
     const participations = await prisma.challengeParticipant.findMany({
@@ -156,8 +256,8 @@ export async function updateChallengeProgress(userId: string): Promise<string[]>
             userId,
             completed: false,
             challenge: {
-                endDate: { gte: new Date() },
-                startDate: { lte: new Date() },
+                endDate: { gte: now },
+                startDate: { lte: now },
             },
         },
         include: {
@@ -166,82 +266,8 @@ export async function updateChallengeProgress(userId: string): Promise<string[]>
     })
 
     for (const p of participations) {
-        const challenge = p.challenge
-        let currentValue = 0
-
-        switch (challenge.type) {
-            case 'STREAK': {
-                const info = await getStreakInfo(userId)
-                currentValue = info.currentStreak
-                break
-            }
-            case 'TOTAL_SESSIONS': {
-                currentValue = await prisma.workoutSession.count({
-                    where: {
-                        userId,
-                        completedAt: { not: null },
-                        startedAt: {
-                            gte: challenge.startDate,
-                            lte: challenge.endDate,
-                        },
-                    },
-                })
-                break
-            }
-            case 'WEIGHT_PR': {
-                if (challenge.exerciseId) {
-                    const pr = await prisma.personalRecord.findFirst({
-                        where: {
-                            userId,
-                            exerciseId: challenge.exerciseId,
-                            achievedAt: { gte: challenge.startDate },
-                        },
-                        orderBy: { weightKg: 'desc' },
-                    })
-                    currentValue = pr ? Number(pr.weightKg) : 0
-                }
-                break
-            }
-            case 'VOLUME': {
-                const sessions = await prisma.workoutSession.findMany({
-                    where: {
-                        userId,
-                        completedAt: { not: null },
-                        startedAt: {
-                            gte: challenge.startDate,
-                            lte: challenge.endDate,
-                        },
-                    },
-                    include: {
-                        exercises: {
-                            include: { sets: true },
-                        },
-                    },
-                })
-                currentValue = Math.round(
-                    sessions.reduce((total, s) =>
-                        total + s.exercises.reduce((eTotal, e) => eTotal + sumSetsVolume(e.sets), 0), 0
-                    )
-                )
-                break
-            }
-        }
-
-        const completed = currentValue >= challenge.targetValue
-
-        await prisma.challengeParticipant.update({
-            where: { id: p.id },
-            data: {
-                currentValue,
-                completed,
-                completedAt: completed && !p.completed ? new Date() : p.completedAt,
-            },
-        })
-
-        if (completed && !p.completed) {
-            const badge = await checkSocialBadge(userId, 'challenge_completed')
-            if (badge) awarded.push(badge)
-        }
+        const badge = await syncParticipantProgress(p, p.challenge)
+        if (badge) awarded.push(badge)
     }
 
     return awarded

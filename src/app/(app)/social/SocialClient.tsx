@@ -1,28 +1,16 @@
 "use client"
 
 import { useEffect, useState, useCallback, useOptimistic, useTransition } from "react"
-import { Users, Activity, Trophy, UserPlus, Check, X, Search, Trash2, Eye, EyeOff, Flame, Dumbbell, Calendar, Swords, Plus, Clock, Target, TrendingUp, ArrowRight, ChevronDown, Medal } from "lucide-react"
+import { Users, Activity, Trophy, UserPlus, Check, X, Search, Trash2, Eye, EyeOff, Flame, Dumbbell, Calendar, Swords, Plus, Medal, AlertCircle, RefreshCw, Loader2 } from "lucide-react"
 import { cn } from "@/lib/utils"
-import { addTaipeiDays, parseTaipeiDateInput, taipeiDateKey } from "@/lib/timezone"
+import { toast } from "@/components/ui/use-toast"
+import { profileHref } from "@/lib/profile-safety"
+import { ChallengeGroups, CreateChallengeForm, type ChallengeData } from "./ChallengeParts"
 import PRShareCard from "@/components/PRShareCard"
 import KudoIcon from "@/components/KudoIcon"
 import { DEFAULT_KUDO, KUDO_KEYS, KUDO_LABELS } from "@/lib/kudos"
 
 type Tab = "feed" | "friends" | "leaderboard"
-
-const CHALLENGE_TYPE_LABELS: Record<string, string> = {
-    STREAK: "連續訓練天數",
-    TOTAL_SESSIONS: "訓練次數",
-    WEIGHT_PR: "重量目標",
-    VOLUME: "總訓練量",
-}
-
-const CHALLENGE_TYPE_UNITS: Record<string, string> = {
-    STREAK: "天",
-    TOTAL_SESSIONS: "次",
-    WEIGHT_PR: "kg",
-    VOLUME: "kg",
-}
 
 interface FeedItem {
     id: string
@@ -51,23 +39,6 @@ interface LeaderboardData {
     monthlySessions: { userId: string; name: string; sessions: number }[]
 }
 
-interface ChallengeData {
-    id: string
-    title: string
-    description: string | null
-    type: string
-    targetValue: number
-    startDate: string
-    endDate: string
-    exerciseId: string | null
-    exercise: { id: string; name: string } | null
-    creator: { id: string; name: string }
-    participants: { userId: string; currentValue: number; completed: boolean; user: { name: string } }[]
-    participantCount: number
-    isJoined: boolean
-    myProgress: { currentValue: number; completed: boolean } | null
-}
-
 type FeedOptimisticAction = {
     type: "kudo"
     feedItemId: string
@@ -91,14 +62,6 @@ function timeAgo(dateStr: string): string {
     return new Date(dateStr).toLocaleDateString("zh-TW", { month: "short", day: "numeric" })
 }
 
-function daysLeft(endDate: string): string {
-    const diff = new Date(endDate).getTime() - Date.now()
-    if (diff <= 0) return "已結束"
-    const days = Math.ceil(diff / 86400000)
-    if (days === 1) return "剩餘 1 天"
-    return `剩餘 ${days} 天`
-}
-
 function getActivityDescription(type: string, data: Record<string, unknown> | null): string {
     if (!data) return "完成了活動"
     switch (type) {
@@ -116,6 +79,8 @@ function getActivityDescription(type: string, data: Record<string, unknown> | nu
             return `完成了 ${parts.join(" · ")}`
         }
         case "PR_ACHIEVED":
+            // Friends who keep their weights private only send the exercise name.
+            if (data.weightKg === undefined || data.weightKg === null) return `新 PR！${String(data.exerciseName)}`
             return `新 PR！${String(data.exerciseName)} ${String(data.weightKg)} kg × ${String(data.reps)} 下 (1RM ≈ ${Number(data.estimated1rm).toFixed(1)} kg)`
         case "STREAK_MILESTONE":
             return `連續訓練 ${String(data.streakDays)} 天！`
@@ -152,6 +117,33 @@ function ActivityExerciseList({ value }: { value: unknown }) {
     )
 }
 
+/** Pull a readable message out of a failed response (our APIs answer { error } in Chinese). */
+async function responseError(res: Response, fallback: string): Promise<string> {
+    try {
+        const data = await res.json()
+        if (typeof data?.error === "string" && /[\u4e00-\u9fff]/.test(data.error)) return data.error
+    } catch {
+        // non-JSON body (e.g. a 500 HTML page)
+    }
+    return fallback
+}
+
+function ErrorState({ text, onRetry }: { text: string; onRetry: () => void }) {
+    return (
+        <div className="text-center py-10 text-muted-foreground space-y-3">
+            <AlertCircle className="h-8 w-8 mx-auto text-destructive opacity-80" />
+            <p className="text-sm">{text}</p>
+            <button
+                onClick={onRetry}
+                className="inline-flex items-center gap-1.5 bg-secondary text-foreground rounded-xl px-4 py-2 text-sm font-medium hover:bg-secondary/80 transition-colors"
+            >
+                <RefreshCw className="h-4 w-4" />
+                重試
+            </button>
+        </div>
+    )
+}
+
 export default function SocialPage() {
     const [tab, setTab] = useState<Tab>("feed")
     const [feed, setFeed] = useState<FeedItem[]>([])
@@ -159,6 +151,12 @@ export default function SocialPage() {
     const [leaderboard, setLeaderboard] = useState<LeaderboardData | null>(null)
     const [challenges, setChallenges] = useState<ChallengeData[]>([])
     const [loading, setLoading] = useState(true)
+    const [feedCursor, setFeedCursor] = useState<string | null>(null)
+    const [loadingMore, setLoadingMore] = useState(false)
+    const [sendingRequest, setSendingRequest] = useState(false)
+    const [errors, setErrors] = useState<{ feed: boolean; friends: boolean; leaderboard: boolean; challenges: boolean }>({
+        feed: false, friends: false, leaderboard: false, challenges: false,
+    })
     const [searchName, setSearchName] = useState("")
     const [searchMsg, setSearchMsg] = useState<{ type: "success" | "error"; text: string } | null>(null)
     const [emojiPickerFor, setEmojiPickerFor] = useState<string | null>(null)
@@ -190,35 +188,81 @@ export default function SocialPage() {
             }
         }),
     )
+    const markError = useCallback((key: "feed" | "friends" | "leaderboard" | "challenges", failed: boolean, message?: string) => {
+        setErrors(prev => ({ ...prev, [key]: failed }))
+        if (failed && message) toast({ variant: "destructive", title: message })
+    }, [])
+
     const fetchFeed = useCallback(async () => {
-        const res = await fetch("/api/feed")
-        if (res.ok) {
+        try {
+            const res = await fetch("/api/feed")
+            if (!res.ok) throw new Error(String(res.status))
             const data = await res.json()
             setFeed(data.items)
+            setFeedCursor(data.nextCursor ?? null)
+            markError("feed", false)
+        } catch {
+            markError("feed", true, "動態載入失敗")
         }
         setLoading(false)
-    }, [])
+    }, [markError])
+
+    async function loadMoreFeed() {
+        if (!feedCursor || loadingMore) return
+        setLoadingMore(true)
+        try {
+            const res = await fetch(`/api/feed?cursor=${encodeURIComponent(feedCursor)}`)
+            if (!res.ok) throw new Error(String(res.status))
+            const data = await res.json()
+            // Skip anything already on screen (a refetch may have shifted the page boundary).
+            setFeed(prev => {
+                const seen = new Set(prev.map(i => i.id))
+                return [...prev, ...data.items.filter((i: FeedItem) => !seen.has(i.id))]
+            })
+            setFeedCursor(data.nextCursor ?? null)
+        } catch {
+            toast({ variant: "destructive", title: "載入更多失敗", description: "請稍後再試" })
+        }
+        setLoadingMore(false)
+    }
 
     const fetchFriends = useCallback(async () => {
-        const res = await fetch("/api/friends")
-        if (res.ok) setFriendData(await res.json())
-        setLoading(false)
-    }, [])
-
-    const fetchLeaderboard = useCallback(async () => {
-        const res = await fetch("/api/leaderboard")
-        if (res.ok) setLeaderboard(await res.json())
-        setLoading(false)
-    }, [])
-
-    const fetchChallenges = useCallback(async () => {
-        const res = await fetch("/api/challenges")
-        if (res.ok) {
-            const data = await res.json()
-            setChallenges(data.challenges)
+        try {
+            const res = await fetch("/api/friends")
+            if (!res.ok) throw new Error(String(res.status))
+            setFriendData(await res.json())
+            markError("friends", false)
+        } catch {
+            markError("friends", true, "好友資料載入失敗")
         }
         setLoading(false)
-    }, [])
+    }, [markError])
+
+    const fetchLeaderboard = useCallback(async () => {
+        try {
+            const res = await fetch("/api/leaderboard")
+            if (!res.ok) throw new Error(String(res.status))
+            setLeaderboard(await res.json())
+            markError("leaderboard", false)
+        } catch {
+            markError("leaderboard", true, "排行榜載入失敗")
+        }
+        setLoading(false)
+    }, [markError])
+
+    const fetchChallenges = useCallback(async () => {
+        try {
+            // "visible" = in progress, upcoming and ended within the last 30 days
+            const res = await fetch("/api/challenges?status=visible")
+            if (!res.ok) throw new Error(String(res.status))
+            const data = await res.json()
+            setChallenges(data.challenges)
+            markError("challenges", false)
+        } catch {
+            markError("challenges", true, "挑戰載入失敗")
+        }
+        setLoading(false)
+    }, [markError])
 
     useEffect(() => {
         setLoading(true)
@@ -238,61 +282,102 @@ export default function SocialPage() {
         setEmojiPickerFor(null)
         startOptimisticTransition(async () => {
             applyOptimisticFeed({ type: "kudo", feedItemId, emoji })
-            if (item.hasKudoed) {
-                await fetch(`/api/feed/${feedItemId}/kudos`, { method: "DELETE" })
-            } else {
-                await fetch(`/api/feed/${feedItemId}/kudos`, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ emoji }),
-                })
+            try {
+                const res = item.hasKudoed
+                    ? await fetch(`/api/feed/${feedItemId}/kudos`, { method: "DELETE" })
+                    : await fetch(`/api/feed/${feedItemId}/kudos`, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ emoji }),
+                    })
+                if (!res.ok) toast({ variant: "destructive", title: "操作失敗", description: await responseError(res, "請稍後再試") })
+            } catch {
+                toast({ variant: "destructive", title: "操作失敗", description: "網路錯誤，請稍後再試" })
             }
             await fetchFeed()
         })
     }
 
     async function handleShare(feedItemId: string) {
-        await fetch(`/api/feed/${feedItemId}/share`, { method: "POST" })
+        try {
+            const res = await fetch(`/api/feed/${feedItemId}/share`, { method: "POST" })
+            if (!res.ok) toast({ variant: "destructive", title: "切換失敗", description: await responseError(res, "請稍後再試") })
+        } catch {
+            toast({ variant: "destructive", title: "切換失敗", description: "網路錯誤，請稍後再試" })
+        }
         fetchFeed()
     }
 
     async function sendFriendRequest() {
-        if (!searchName.trim()) return
+        if (!searchName.trim() || sendingRequest) return
+        setSendingRequest(true)
         setSearchMsg(null)
-        const res = await fetch("/api/friends/request", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ username: searchName.trim() }),
-        })
-        const data = await res.json()
-        if (res.ok) {
-            setSearchMsg({ type: "success", text: "好友邀請已送出！" })
-            setSearchName("")
-            fetchFriends()
-        } else {
-            setSearchMsg({ type: "error", text: data.error || "發送失敗" })
+        try {
+            const res = await fetch("/api/friends/request", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ username: searchName.trim() }),
+            })
+            if (res.ok) {
+                setSearchMsg({ type: "success", text: "好友邀請已送出！" })
+                setSearchName("")
+                fetchFriends()
+            } else {
+                setSearchMsg({ type: "error", text: await responseError(res, "發送失敗") })
+            }
+        } catch {
+            setSearchMsg({ type: "error", text: "網路錯誤，請稍後再試" })
+        } finally {
+            setSendingRequest(false)
         }
     }
 
     async function respondRequest(friendshipId: string, action: "accept" | "reject") {
-        await fetch("/api/friends/respond", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ friendshipId, action }),
-        })
+        try {
+            const res = await fetch("/api/friends/respond", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ friendshipId, action }),
+            })
+            if (!res.ok) toast({ variant: "destructive", title: "回覆邀請失敗", description: await responseError(res, "請稍後再試") })
+        } catch {
+            toast({ variant: "destructive", title: "回覆邀請失敗", description: "網路錯誤，請稍後再試" })
+        }
         fetchFriends()
     }
 
     async function removeFriend(friendshipId: string) {
         if (!confirm("確定要移除這位好友？")) return
-        await fetch(`/api/friends/${friendshipId}`, { method: "DELETE" })
+        try {
+            const res = await fetch(`/api/friends/${friendshipId}`, { method: "DELETE" })
+            if (!res.ok) toast({ variant: "destructive", title: "移除好友失敗", description: await responseError(res, "請稍後再試") })
+        } catch {
+            toast({ variant: "destructive", title: "移除好友失敗", description: "網路錯誤，請稍後再試" })
+        }
+        fetchFriends()
+    }
+
+    async function cancelInvite(friendshipId: string) {
+        if (!confirm("要取消這個好友邀請嗎？")) return
+        try {
+            const res = await fetch(`/api/friends/${friendshipId}`, { method: "DELETE" })
+            if (res.ok) toast({ variant: "success", title: "已取消邀請" })
+            else toast({ variant: "destructive", title: "取消邀請失敗", description: await responseError(res, "請稍後再試") })
+        } catch {
+            toast({ variant: "destructive", title: "取消邀請失敗", description: "網路錯誤，請稍後再試" })
+        }
         fetchFriends()
     }
 
     async function joinChallenge(challengeId: string) {
         startOptimisticTransition(async () => {
             applyOptimisticChallenge({ type: "join", challengeId })
-            await fetch(`/api/challenges/${challengeId}/join`, { method: "POST" })
+            try {
+                const res = await fetch(`/api/challenges/${challengeId}/join`, { method: "POST" })
+                if (!res.ok) toast({ variant: "destructive", title: "加入挑戰失敗", description: await responseError(res, "請稍後再試") })
+            } catch {
+                toast({ variant: "destructive", title: "加入挑戰失敗", description: "網路錯誤，請稍後再試" })
+            }
             await fetchChallenges()
         })
     }
@@ -332,9 +417,12 @@ export default function SocialPage() {
             )}
 
             {/* Feed Tab */}
-            {!loading && tab === "feed" && (
+            {!loading && tab === "feed" && errors.feed && feed.length === 0 && (
+                <ErrorState text="動態載入失敗" onRetry={() => { setLoading(true); fetchFeed() }} />
+            )}
+            {!loading && tab === "feed" && !(errors.feed && feed.length === 0) && (
                 <div className="space-y-3">
-                    {optimisticFeed.length === 0 && (
+                    {optimisticFeed.length === 0 && !errors.feed && (
                         <div className="text-center py-10 text-muted-foreground">
                             <Activity className="h-8 w-8 mx-auto mb-2 opacity-50" />
                             <p className="text-sm">還沒有動態</p>
@@ -346,11 +434,11 @@ export default function SocialPage() {
                             {/* Header */}
                             <div className="flex items-start justify-between">
                                 <div className="flex items-center gap-2.5">
-                                    <a href={`/profile/${item.userName}`} className="h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center text-xs font-bold text-primary hover:ring-2 hover:ring-primary/50 transition-all">
+                                    <a href={profileHref(item.userName)} className="h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center text-xs font-bold text-primary hover:ring-2 hover:ring-primary/50 transition-all">
                                         {item.userName.charAt(0).toUpperCase()}
                                     </a>
                                     <div>
-                                        <a href={`/profile/${item.userName}`} className="text-sm font-medium hover:text-primary transition-colors">{item.userName}</a>
+                                        <a href={profileHref(item.userName)} className="text-sm font-medium hover:text-primary transition-colors">{item.userName}</a>
                                         <p className="text-xs text-muted-foreground">{timeAgo(item.createdAt)}</p>
                                     </div>
                                 </div>
@@ -436,10 +524,23 @@ export default function SocialPage() {
                             </div>
                         </div>
                     ))}
+
+                    {feedCursor && (
+                        <button
+                            onClick={loadMoreFeed}
+                            disabled={loadingMore}
+                            className="w-full flex items-center justify-center gap-1.5 bg-secondary text-foreground rounded-xl py-2.5 text-sm font-medium hover:bg-secondary/80 disabled:opacity-50 transition-colors"
+                        >
+                            {loadingMore ? <><Loader2 className="h-4 w-4 animate-spin" />載入中...</> : "載入更多"}
+                        </button>
+                    )}
                 </div>
             )}
 
             {/* Friends Tab */}
+            {!loading && tab === "friends" && !friendData && errors.friends && (
+                <ErrorState text="好友資料載入失敗" onRetry={() => { setLoading(true); Promise.all([fetchFriends(), fetchChallenges()]).then(() => setLoading(false)) }} />
+            )}
             {!loading && tab === "friends" && friendData && (
                 <div className="space-y-5">
                     {/* Search */}
@@ -452,15 +553,17 @@ export default function SocialPage() {
                                     placeholder="輸入使用者名稱加好友..."
                                     value={searchName}
                                     onChange={e => setSearchName(e.target.value)}
-                                    onKeyDown={e => e.key === "Enter" && sendFriendRequest()}
+                                    onKeyDown={e => e.key === "Enter" && !sendingRequest && sendFriendRequest()}
                                     className="w-full bg-secondary/50 border border-border rounded-xl pl-9 pr-3 py-2.5 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
                                 />
                             </div>
                             <button
                                 onClick={sendFriendRequest}
-                                className="bg-primary text-primary-foreground rounded-xl px-4 text-sm font-medium hover:bg-primary/90 transition-colors"
+                                disabled={sendingRequest || !searchName.trim()}
+                                aria-label="送出好友邀請"
+                                className="bg-primary text-primary-foreground rounded-xl px-4 text-sm font-medium hover:bg-primary/90 disabled:opacity-50 transition-colors"
                             >
-                                <UserPlus className="h-4 w-4" />
+                                {sendingRequest ? <Loader2 className="h-4 w-4 animate-spin" /> : <UserPlus className="h-4 w-4" />}
                             </button>
                         </div>
                         {searchMsg && (
@@ -516,6 +619,12 @@ export default function SocialPage() {
                                             <p className="text-xs text-muted-foreground">等待回應中</p>
                                         </div>
                                     </div>
+                                    <button
+                                        onClick={() => cancelInvite(p.friendshipId)}
+                                        className="text-xs text-muted-foreground hover:text-destructive transition-colors px-2 py-1"
+                                    >
+                                        取消邀請
+                                    </button>
                                 </div>
                             ))}
                         </div>
@@ -535,7 +644,7 @@ export default function SocialPage() {
                         )}
                         {friendData.friends.map(f => (
                             <div key={f.friendshipId} className="bg-card rounded-xl border border-border p-3 flex items-center justify-between">
-                                <a href={`/profile/${f.name}`} className="flex items-center gap-2.5 flex-1 hover:opacity-80 transition-opacity">
+                                <a href={profileHref(f.name)} className="flex items-center gap-2.5 flex-1 hover:opacity-80 transition-opacity">
                                     <div className="h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center text-xs font-bold text-primary">
                                         {f.name.charAt(0).toUpperCase()}
                                     </div>
@@ -574,20 +683,18 @@ export default function SocialPage() {
                             />
                         )}
 
-                        {optimisticChallenges.length === 0 && !showCreateChallenge && (
+                        {errors.challenges && (
+                            <ErrorState text="挑戰載入失敗" onRetry={fetchChallenges} />
+                        )}
+
+                        {optimisticChallenges.length === 0 && !showCreateChallenge && !errors.challenges && (
                             <div className="text-center py-6 text-muted-foreground">
                                 <Swords className="h-6 w-6 mx-auto mb-1.5 opacity-50" />
                                 <p className="text-xs">還沒有挑戰，建立一個邀請好友吧！</p>
                             </div>
                         )}
 
-                        {optimisticChallenges.map(c => (
-                            <ChallengeCard
-                                key={c.id}
-                                challenge={c}
-                                onJoin={() => joinChallenge(c.id)}
-                            />
-                        ))}
+                        <ChallengeGroups challenges={optimisticChallenges} onJoin={joinChallenge} />
                     </div>
                 </div>
             )}
@@ -595,6 +702,9 @@ export default function SocialPage() {
             {/* Templates section removed — moved to /plans */}
 
             {/* Leaderboard Tab */}
+            {!loading && tab === "leaderboard" && !leaderboard && errors.leaderboard && (
+                <ErrorState text="排行榜載入失敗" onRetry={() => { setLoading(true); fetchLeaderboard() }} />
+            )}
             {!loading && tab === "leaderboard" && leaderboard && (
                 <div className="space-y-5">
                     {/* Streak */}
@@ -658,286 +768,6 @@ export default function SocialPage() {
                 </div>
             )}
         </div>
-    )
-}
-
-// ─── Challenge Card ─────────────────────────────────────────────────────────
-
-function ChallengeCard({ challenge: c, onJoin }: { challenge: ChallengeData; onJoin: () => void }) {
-    const progressPct = c.myProgress
-        ? Math.min(100, (c.myProgress.currentValue / c.targetValue) * 100)
-        : 0
-    const isEnded = new Date(c.endDate) < new Date()
-
-    return (
-        <div className="bg-card rounded-xl border border-border p-4 space-y-3">
-            <div className="flex items-start justify-between">
-                <div className="space-y-1">
-                    <h3 className="text-sm font-bold">{c.title}</h3>
-                    {c.description && <p className="text-xs text-muted-foreground">{c.description}</p>}
-                </div>
-                <span className={cn(
-                    "text-xs px-2 py-0.5 rounded-full font-medium",
-                    isEnded ? "bg-secondary text-muted-foreground" : "bg-primary/15 text-primary"
-                )}>
-                    {isEnded ? "已結束" : daysLeft(c.endDate)}
-                </span>
-            </div>
-
-            <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                <span className="flex items-center gap-1">
-                    <Target className="h-3.5 w-3.5" />
-                    {CHALLENGE_TYPE_LABELS[c.type] || c.type}
-                </span>
-                <span className="flex items-center gap-1">
-                    <TrendingUp className="h-3.5 w-3.5" />
-                    目標 {c.targetValue} {CHALLENGE_TYPE_UNITS[c.type]}
-                </span>
-                <span className="flex items-center gap-1">
-                    <Users className="h-3.5 w-3.5" />
-                    {c.participantCount} 人
-                </span>
-            </div>
-
-            {c.exercise && (
-                <div className="text-xs text-muted-foreground">
-                    動作：<span className="text-foreground font-medium">{c.exercise.name}</span>
-                </div>
-            )}
-
-            {/* Participants progress */}
-            {c.participants.length > 0 && (
-                <div className="space-y-1.5">
-                    {c.participants.slice(0, 5).map(p => {
-                        const pct = Math.min(100, (p.currentValue / c.targetValue) * 100)
-                        return (
-                            <div key={p.userId} className="flex items-center gap-2">
-                                <span className="text-xs w-20 truncate font-medium">
-                                    {p.completed && <Check className="mr-0.5 inline h-3 w-3 text-green-400" aria-label="已完成" />}{p.user.name}
-                                </span>
-                                <div className="flex-1 h-2 bg-secondary rounded-full overflow-hidden">
-                                    <div
-                                        className={cn(
-                                            "h-full rounded-full transition-all",
-                                            p.completed ? "bg-green-500" : "bg-primary"
-                                        )}
-                                        style={{ width: `${pct}%` }}
-                                    />
-                                </div>
-                                <span className="text-xs tabular-nums text-muted-foreground w-16 text-right">
-                                    {p.currentValue}/{c.targetValue}
-                                </span>
-                            </div>
-                        )
-                    })}
-                </div>
-            )}
-
-            {/* My progress highlight */}
-            {c.isJoined && c.myProgress && (
-                <div className="bg-primary/10 rounded-lg p-2.5 flex items-center justify-between">
-                    <span className="text-xs font-medium">你的進度</span>
-                    <span className="text-sm font-bold text-primary tabular-nums">
-                        {c.myProgress.currentValue} / {c.targetValue} {CHALLENGE_TYPE_UNITS[c.type]}
-                        {c.myProgress.completed && <Check className="ml-1 inline h-3.5 w-3.5" aria-label="已完成" />}
-                    </span>
-                </div>
-            )}
-
-            {/* Join button */}
-            {!c.isJoined && !isEnded && (
-                <button
-                    onClick={onJoin}
-                    className="w-full flex items-center justify-center gap-1.5 bg-primary text-primary-foreground rounded-xl py-2 text-sm font-medium hover:bg-primary/90 transition-colors"
-                >
-                    <ArrowRight className="h-4 w-4" />
-                    加入挑戰
-                </button>
-            )}
-        </div>
-    )
-}
-
-// ─── Create Challenge Form ──────────────────────────────────────────────────
-
-function CreateChallengeForm({ onCreated, onCancel }: { onCreated: () => void; onCancel: () => void }) {
-    const [title, setTitle] = useState("")
-    const [description, setDescription] = useState("")
-    const [type, setType] = useState("TOTAL_SESSIONS")
-    const [targetValue, setTargetValue] = useState("")
-    const [startDate, setStartDate] = useState(taipeiDateKey(new Date()))
-    const [endDate, setEndDate] = useState("")
-    const [submitting, setSubmitting] = useState(false)
-    const [exerciseId, setExerciseId] = useState("")
-    const [exercises, setExercises] = useState<{ id: string; name: string }[]>([])
-    const [error, setError] = useState("")
-
-    // Default end date: 30 days from now
-    useEffect(() => {
-        setEndDate(taipeiDateKey(addTaipeiDays(new Date(), 30)))
-    }, [])
-
-    // Fetch exercises when WEIGHT_PR is selected
-    useEffect(() => {
-        if (type === "WEIGHT_PR" && exercises.length === 0) {
-            fetch("/api/exercises?limit=200")
-                .then(r => r.ok ? r.json() : { exercises: [] })
-                .then(data => {
-                    const list = (data.exercises || [])
-                        .filter((e: { isTimeBased?: boolean }) => !e.isTimeBased)
-                        .map((e: { id: string; name: string }) => ({ id: e.id, name: e.name }))
-                    setExercises(list)
-                })
-                .catch(() => {})
-        }
-    }, [type, exercises.length])
-
-    async function handleSubmit(e: React.FormEvent) {
-        e.preventDefault()
-        if (!title || !targetValue) {
-            setError("請填寫標題和目標值")
-            return
-        }
-        if (type === "WEIGHT_PR" && !exerciseId) {
-            setError("重量目標挑戰需選擇動作")
-            return
-        }
-        setSubmitting(true)
-        setError("")
-
-        const res = await fetch("/api/challenges", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                title,
-                description: description || null,
-                type,
-                targetValue: Number(targetValue),
-                exerciseId: type === "WEIGHT_PR" ? exerciseId : undefined,
-                startDate: parseTaipeiDateInput(startDate).toISOString(),
-                endDate: parseTaipeiDateInput(endDate).toISOString(),
-            }),
-        })
-
-        if (res.ok) {
-            onCreated()
-        } else {
-            const data = await res.json()
-            setError(data.error || "建立失敗")
-        }
-        setSubmitting(false)
-    }
-
-    return (
-        <form onSubmit={handleSubmit} className="bg-card rounded-xl border border-border p-4 space-y-3">
-            <h3 className="text-sm font-bold">建立新挑戰</h3>
-
-            <div>
-                <label className="text-xs text-muted-foreground block mb-1">挑戰名稱</label>
-                <input
-                    type="text"
-                    value={title}
-                    onChange={e => setTitle(e.target.value)}
-                    placeholder="例：30天深蹲挑戰"
-                    className="w-full bg-secondary/50 border border-border rounded-xl px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
-                />
-            </div>
-
-            <div>
-                <label className="text-xs text-muted-foreground block mb-1">說明（選填）</label>
-                <input
-                    type="text"
-                    value={description}
-                    onChange={e => setDescription(e.target.value)}
-                    placeholder="挑戰說明..."
-                    className="w-full bg-secondary/50 border border-border rounded-xl px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
-                />
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
-                <div>
-                    <label className="text-xs text-muted-foreground block mb-1">挑戰類型</label>
-                    <select
-                        value={type}
-                        onChange={e => setType(e.target.value)}
-                        className="w-full bg-secondary/50 border border-border rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
-                    >
-                        <option value="TOTAL_SESSIONS">訓練次數</option>
-                        <option value="STREAK">連續天數</option>
-                        <option value="VOLUME">總訓練量 (kg)</option>
-                        <option value="WEIGHT_PR">重量目標 (kg)</option>
-                    </select>
-                </div>
-                <div>
-                    <label className="text-xs text-muted-foreground block mb-1">
-                        目標值 ({CHALLENGE_TYPE_UNITS[type]})
-                    </label>
-                    <input
-                        type="number"
-                        value={targetValue}
-                        onChange={e => setTargetValue(e.target.value)}
-                        placeholder="例：30"
-                        className="w-full bg-secondary/50 border border-border rounded-xl px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
-                    />
-                </div>
-            </div>
-
-            {type === "WEIGHT_PR" && (
-                <div>
-                    <label className="text-xs text-muted-foreground block mb-1">目標動作</label>
-                    <select
-                        value={exerciseId}
-                        onChange={e => setExerciseId(e.target.value)}
-                        className="w-full bg-secondary/50 border border-border rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
-                    >
-                        <option value="">選擇動作...</option>
-                        {exercises.map(ex => (
-                            <option key={ex.id} value={ex.id}>{ex.name}</option>
-                        ))}
-                    </select>
-                </div>
-            )}
-
-            <div className="grid grid-cols-2 gap-3">
-                <div>
-                    <label className="text-xs text-muted-foreground block mb-1">開始日期</label>
-                    <input
-                        type="date"
-                        value={startDate}
-                        onChange={e => setStartDate(e.target.value)}
-                        className="w-full bg-secondary/50 border border-border rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
-                    />
-                </div>
-                <div>
-                    <label className="text-xs text-muted-foreground block mb-1">結束日期</label>
-                    <input
-                        type="date"
-                        value={endDate}
-                        onChange={e => setEndDate(e.target.value)}
-                        className="w-full bg-secondary/50 border border-border rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
-                    />
-                </div>
-            </div>
-
-            {error && <p className="text-xs text-destructive">{error}</p>}
-
-            <div className="flex gap-2">
-                <button
-                    type="button"
-                    onClick={onCancel}
-                    className="flex-1 bg-secondary text-foreground rounded-xl py-2 text-sm font-medium hover:bg-secondary/80 transition-colors"
-                >
-                    取消
-                </button>
-                <button
-                    type="submit"
-                    disabled={submitting}
-                    className="flex-1 bg-primary text-primary-foreground rounded-xl py-2 text-sm font-medium hover:bg-primary/90 disabled:opacity-50 transition-colors"
-                >
-                    {submitting ? "建立中..." : "建立"}
-                </button>
-            </div>
-        </form>
     )
 }
 

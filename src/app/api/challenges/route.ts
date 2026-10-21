@@ -5,8 +5,10 @@ import { z } from 'zod'
 import { parseJsonBody } from '@/lib/validation'
 import { parseTaipeiDateInput } from '@/lib/timezone'
 import type { Prisma } from '@prisma/client'
+import { challengeStatusWhere, visibleChallengeWhere } from '@/lib/challenges'
+import { syncParticipantProgress } from '@/lib/badges'
 
-const challengeStatusSchema = z.enum(['active', 'past', 'all']).default('active')
+const challengeStatusSchema = z.enum(['active', 'upcoming', 'past', 'visible', 'all']).default('active')
 const createChallengeSchema = z.object({
     title: z.string().trim().min(1).max(120),
     description: z.string().trim().max(500).nullable().optional(),
@@ -31,18 +33,7 @@ export async function GET(req: NextRequest) {
 
     const now = new Date()
     const where: Prisma.ChallengeWhereInput = {
-        OR: [
-            { isPublic: true },
-            { creatorId: user.id },
-            { participants: { some: { userId: user.id } } },
-        ],
-    }
-
-    if (status === 'active') {
-        where.endDate = { gte: now }
-        where.startDate = { lte: now }
-    } else if (status === 'past') {
-        where.endDate = { lt: now }
+        AND: [await visibleChallengeWhere(user.id), challengeStatusWhere(status, now)],
     }
 
     const challenges = await prisma.challenge.findMany({
@@ -97,6 +88,8 @@ export async function POST(req: NextRequest) {
     if (end <= start) {
         return NextResponse.json({ error: '結束日期必須在開始日期之後' }, { status: 400 })
     }
+    // The end date is inclusive: the challenge runs until the end of that day.
+    end = new Date(end.getTime() + 24 * 60 * 60 * 1000 - 1)
 
     if (type === 'WEIGHT_PR' && !exerciseId) {
         return NextResponse.json({ error: 'exerciseId required for WEIGHT_PR challenges' }, { status: 400 })
@@ -122,6 +115,10 @@ export async function POST(req: NextRequest) {
             participants: true,
         },
     })
+
+    // Count what the creator already trained inside the window.
+    const mine = challenge.participants[0]
+    if (mine) await syncParticipantProgress(mine, challenge).catch(console.error)
 
     return NextResponse.json({ challenge }, { status: 201 })
 }
