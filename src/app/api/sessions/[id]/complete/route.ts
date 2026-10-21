@@ -1,19 +1,24 @@
 import { NextRequest, NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
 import { getCurrentUser } from '@/lib/auth'
-import { generateOverloadSuggestion } from '@/lib/progressive-overload'
 import { updateExerciseSummary, recomputePersonalRecords } from '@/lib/exercise-summary'
 import { generateSessionFeedItems } from '@/lib/feed'
 import { checkSessionBadges, updateChallengeProgress } from '@/lib/badges'
-import { sumSetsVolume } from '@/lib/utils'
+import { computeSessionDurationMin, summarizeSession } from '@/lib/session-logic'
+import { badgesEarnedAround, loadPlanDefaults } from '@/lib/session-summary'
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
     const user = await getCurrentUser()
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     const { id: sessionId } = await params
-    const body = await req.json()
-    const { notes } = body
+    let notes: string | undefined
+    try {
+        const body = await req.json()
+        if (typeof body?.notes === 'string') notes = body.notes.slice(0, 2000)
+    } catch {
+        // body is optional
+    }
 
     const session = await prisma.workoutSession.findUnique({
         where: { id: sessionId },
@@ -32,102 +37,66 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         return NextResponse.json({ error: 'Not found' }, { status: 404 })
     }
 
+    const planDefaults = await loadPlanDefaults(
+        session.dayId,
+        [...new Set(session.exercises.map(se => se.exerciseId))],
+    )
+
+    // Safe to re-run: an already completed session just returns its summary
+    // rebuilt from the stored sets (no duplicate feed items / badges).
     if (session.completedAt) {
-        return NextResponse.json({ error: 'Session already completed' }, { status: 400 })
+        const summary = summarizeSession(session.exercises, planDefaults, session.durationMin ?? 0)
+        const newBadges = await badgesEarnedAround(user.id, session.completedAt)
+        return NextResponse.json({ success: true, alreadyCompleted: true, ...summary, newBadges })
     }
 
-    const now = new Date()
-    const durationMin = Math.round((now.getTime() - session.startedAt.getTime()) / 60000)
-
-    await prisma.workoutSession.update({
-        where: { id: sessionId },
-        data: { completedAt: now, durationMin, notes },
-    })
-
-    const planDefaultsByExercise = new Map<string, {
-        defaultSets: number
-        defaultRepsMin: number
-        defaultRepsMax: number
-        defaultWeightKg: number | null
-    }>()
-
-    if (session.dayId) {
-        const exerciseIds = [...new Set(session.exercises.map(se => se.exerciseId))]
-        const planExercises = await prisma.workoutPlanExercise.findMany({
-            where: { dayId: session.dayId, exerciseId: { in: exerciseIds } },
-        })
-        for (const planEx of planExercises) {
-            planDefaultsByExercise.set(planEx.exerciseId, {
-                defaultSets: planEx.defaultSets,
-                defaultRepsMin: planEx.defaultRepsMin,
-                defaultRepsMax: planEx.defaultRepsMax,
-                defaultWeightKg: planEx.defaultWeightKg ? Number(planEx.defaultWeightKg) : null,
-            })
-        }
-    }
-
-    // Generate overload suggestions for each exercise (skip time-based)
-    const suggestions = []
-    for (const se of session.exercises) {
-        if (se.sets.length === 0) continue
-        if (se.exercise.isTimeBased) continue
-
-        // Get plan exercise defaults
-        let planDefaults = {
-            defaultSets: 3,
-            defaultRepsMin: 8,
-            defaultRepsMax: 12,
-            defaultWeightKg: null as number | null,
-        }
-
-        const planEx = planDefaultsByExercise.get(se.exerciseId)
-        if (planEx) {
-            planDefaults = planEx
-        }
-
-        const suggestion = generateOverloadSuggestion(
-            se.exerciseId,
-            se.exercise.name,
-            planDefaults,
-            se.sets.map(s => ({
-                setNumber: s.setNumber,
-                repsPerformed: s.repsPerformed,
-                weightKg: Number(s.weightKg),
-            })),
+    const setTimes = session.exercises.flatMap(se => se.sets.map(s => s.completedAt))
+    if (setTimes.length === 0) {
+        return NextResponse.json(
+            { error: 'EMPTY_SESSION', message: '這次訓練沒有記錄任何一組，無法完成' },
+            { status: 400 },
         )
-
-        suggestions.push(suggestion)
     }
 
-    // Rebuild PRs and summaries only after the session is committed complete.
-    const exerciseIds = session.exercises
-        .filter(se => se.sets.length > 0)
-        .map(se => se.exerciseId)
-    await Promise.all(exerciseIds.flatMap(eid => [
-        recomputePersonalRecords(user.id, eid),
-        updateExerciseSummary(user.id, eid),
-    ]))
+    const durationMin = computeSessionDurationMin(session.startedAt, setTimes)
+    const summary = summarizeSession(session.exercises, planDefaults, durationMin)
 
-    // Calculate session summary (skip time-based sets for volume)
-    const totalSets = session.exercises.reduce((sum, se) => sum + se.sets.length, 0)
-    const totalVolume = session.exercises.reduce((sum, se) => sum + sumSetsVolume(se.sets), 0)
+    // Single conditional write: when two tabs complete at once only one wins,
+    // and only the winner generates feed items / badges.
+    const claim = await prisma.workoutSession.updateMany({
+        where: { id: sessionId, userId: user.id, completedAt: null },
+        data: { completedAt: new Date(), durationMin, notes },
+    })
+    if (claim.count === 0) {
+        return NextResponse.json({ success: true, alreadyCompleted: true, ...summary, newBadges: [] })
+    }
 
-    // Generate social feed items (fire-and-forget)
-    generateSessionFeedItems(user.id, sessionId, durationMin, totalSets, totalVolume)
+    // Everything below is derived data. A failure must not turn a completed
+    // session into a 500: PRs/summaries are rebuilt from all sets on the next
+    // completion (or any set edit), so they self-heal.
+    const exerciseIds = [...new Set(
+        session.exercises.filter(se => se.sets.length > 0).map(se => se.exerciseId),
+    )]
+    try {
+        await Promise.all(exerciseIds.flatMap(eid => [
+            recomputePersonalRecords(user.id, eid),
+            updateExerciseSummary(user.id, eid),
+        ]))
+    } catch (e) {
+        console.error('[complete] PR/summary rebuild failed', sessionId, e)
+    }
+
+    generateSessionFeedItems(user.id, sessionId, durationMin, summary.totalSets, summary.totalVolume)
         .catch(console.error)
 
-    // Check badges and update challenge progress (fire-and-forget)
-    const badgePromise = checkSessionBadges(user.id).catch(() => [] as string[])
-    const challengePromise = updateChallengeProgress(user.id).catch(() => [] as string[])
-    const [newBadges, challengeBadges] = await Promise.all([badgePromise, challengePromise])
-    const allNewBadges = [...newBadges, ...challengeBadges]
+    const [newBadges, challengeBadges] = await Promise.all([
+        checkSessionBadges(user.id).catch(() => [] as string[]),
+        updateChallengeProgress(user.id).catch(() => [] as string[]),
+    ])
 
     return NextResponse.json({
         success: true,
-        durationMin,
-        totalSets,
-        totalVolume: Math.round(totalVolume),
-        suggestions,
-        newBadges: allNewBadges,
+        ...summary,
+        newBadges: [...newBadges, ...challengeBadges],
     })
 }
