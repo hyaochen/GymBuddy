@@ -35,6 +35,7 @@ export async function updateProfileSettings(
                 showPRs: readBoolean(formData, "showPRs"),
                 showWeight: readBoolean(formData, "showWeight"),
                 publicAnalytics: readBoolean(formData, "publicAnalytics"),
+                notifySocial: readBoolean(formData, "notifySocial"),
             },
             update: {
                 displayName: displayName || null,
@@ -44,6 +45,7 @@ export async function updateProfileSettings(
                 showPRs: readBoolean(formData, "showPRs"),
                 showWeight: readBoolean(formData, "showWeight"),
                 publicAnalytics: readBoolean(formData, "publicAnalytics"),
+                notifySocial: readBoolean(formData, "notifySocial"),
             },
         })
 

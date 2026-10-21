@@ -6,11 +6,16 @@ import { User, Shield, Activity, Trophy, ArrowLeft, Flame, Dumbbell, Award, Cloc
 import Link from "next/link";
 import FriendAnalytics from "@/components/FriendAnalytics";
 import BadgeIcon from "@/components/BadgeIcon";
+import CompareRecords from "./CompareRecords";
+import { notFound } from "next/navigation";
+import { isLocalAvatarUrl, safeDecodeURIComponent } from "@/lib/profile-safety";
+import { friendFeedWhere, redactFeedData, resolvePrivacy } from "@/lib/social-privacy";
 
 export default async function UserProfilePage({ params }: { params: Promise<{ username: string }> }) {
     const user = await requireAuth();
     const { username: rawUsername } = await params;
-    const username = decodeURIComponent(rawUsername);
+    const username = safeDecodeURIComponent(rawUsername);
+    if (!username) notFound();
 
     const target = await prisma.user.findUnique({
         where: { name: username },
@@ -69,11 +74,13 @@ export default async function UserProfilePage({ params }: { params: Promise<{ us
 
     // Recent feed
     const recentFeed = (isFriend || isSelf) ? await prisma.activityFeedItem.findMany({
-        where: { userId: target.id, ...(isSelf ? {} : { isPublic: true }) },
+        where: isSelf ? { userId: target.id } : await friendFeedWhere([target.id]),
         orderBy: { createdAt: "desc" },
         take: 5,
     }) : [];
 
+    const privacy = resolvePrivacy(profile);
+    const avatarUrl = isLocalAvatarUrl(profile?.avatarUrl) ? profile.avatarUrl : null;
     const hasStats = currentStreak !== null || totalSessions !== null;
 
     return (
@@ -84,8 +91,8 @@ export default async function UserProfilePage({ params }: { params: Promise<{ us
 
             {/* Avatar + Name */}
             <div className="bg-card rounded-xl border border-border p-6 text-center">
-                {profile?.avatarUrl ? (
-                    <img src={profile.avatarUrl} alt={target.name} className="h-20 w-20 rounded-full mx-auto mb-3 object-cover border-2 border-primary/30" />
+                {avatarUrl ? (
+                    <img src={avatarUrl} alt={target.name} className="h-20 w-20 rounded-full mx-auto mb-3 object-cover border-2 border-primary/30" />
                 ) : (
                     <div className="h-20 w-20 rounded-full bg-primary/20 flex items-center justify-center text-2xl font-bold text-primary mx-auto mb-3">
                         {target.name?.charAt(0)?.toUpperCase()}
@@ -144,8 +151,11 @@ export default async function UserProfilePage({ params }: { params: Promise<{ us
 
             {/* Analytics Charts */}
             {canViewAnalytics && (
-                <FriendAnalytics userId={target.id} />
+                <FriendAnalytics userId={target.id} showWeight={isSelf || privacy.showWeight} />
             )}
+
+            {/* Compare records (friends only) */}
+            {isFriend && !isSelf && <CompareRecords friendName={target.name} />}
 
             {/* Badges */}
             {badges.length > 0 && (
@@ -177,12 +187,12 @@ export default async function UserProfilePage({ params }: { params: Promise<{ us
                     </div>
                     <div className="space-y-2">
                         {recentFeed.map((item) => {
-                            const data = JSON.parse(item.data ?? "{}");
+                            const data = redactFeedData(item.type, JSON.parse(item.data ?? "{}"), privacy, isSelf);
                             return (
                                 <div key={item.id} className="bg-muted/30 rounded-lg p-3 text-sm">
                                     <span className="font-medium">
                                         {item.type === "WORKOUT_COMPLETED" && `完成訓練 — ${data.planName || ""} ${data.dayName || ""}`}
-                                        {item.type === "PR_ACHIEVED" && `新紀錄 — ${data.exerciseName} ${data.weightKg}kg × ${data.reps}下`}
+                                        {item.type === "PR_ACHIEVED" && `新紀錄 — ${data.exerciseName}${data.weightKg !== undefined ? ` ${data.weightKg}kg × ${data.reps}下` : ""}`}
                                         {item.type === "STREAK_MILESTONE" && `連續訓練 ${data.streakDays} 天！`}
                                     </span>
                                     {item.type === "WORKOUT_COMPLETED" && data.durationMin && (

@@ -1,13 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
 import { getCurrentUser } from '@/lib/auth'
+import { safeDecodeURIComponent } from '@/lib/profile-safety'
 import { addTaipeiDays, startOfTaipeiDayUtc } from '@/lib/timezone'
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ username: string }> }) {
     const user = await getCurrentUser()
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-    const { username } = await params
+    const { username: rawUsername } = await params
+    const username = safeDecodeURIComponent(rawUsername)
+    if (!username) {
+        return NextResponse.json({ error: '使用者不存在' }, { status: 404 })
+    }
     const url = new URL(req.url)
     const exerciseId = url.searchParams.get('exerciseId')
 
@@ -42,12 +47,13 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ user
 
     // Check privacy: both must have showPRs enabled
     const myProfile = await prisma.userProfile.findUnique({ where: { userId: user.id } })
-    const myShowPRs = myProfile?.showPRs ?? false
-    const friendShowPRs = friend.profile?.showPRs ?? false
+    // Comparing shows kg numbers, so both sides need showPRs and showWeight.
+    const myShowPRs = (myProfile?.showPRs ?? false) && (myProfile?.showWeight ?? false)
+    const friendShowPRs = (friend.profile?.showPRs ?? false) && (friend.profile?.showWeight ?? false)
 
     if (!myShowPRs || !friendShowPRs) {
         return NextResponse.json({
-            error: '雙方都必須啟用「顯示個人最佳紀錄」才能比較',
+            error: '雙方都必須啟用「顯示個人最佳紀錄」與「顯示重量數據」才能比較',
             myShowPRs,
             friendShowPRs,
         }, { status: 403 })

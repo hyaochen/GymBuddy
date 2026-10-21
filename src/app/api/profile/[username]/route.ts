@@ -3,13 +3,18 @@ import prisma from '@/lib/prisma'
 import { getCurrentUser } from '@/lib/auth'
 import { getStreakInfo } from '@/lib/streak'
 import { BADGE_MAP } from '@/lib/badges'
+import { isLocalAvatarUrl, safeDecodeURIComponent } from '@/lib/profile-safety'
+import { friendFeedWhere, redactFeedData, resolvePrivacy } from '@/lib/social-privacy'
 
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ username: string }> }) {
     const user = await getCurrentUser()
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     const { username: rawUsername } = await params
-    const username = decodeURIComponent(rawUsername)
+    const username = safeDecodeURIComponent(rawUsername)
+    if (!username) {
+        return NextResponse.json({ error: '找不到該使用者' }, { status: 404 })
+    }
     const target = await prisma.user.findUnique({
         where: { name: username },
         select: { id: true, name: true, createdAt: true },
@@ -38,7 +43,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ use
         name: target.name,
         displayName: profile?.displayName || null,
         bio: profile?.bio || null,
-        avatarUrl: profile?.avatarUrl || null,
+        avatarUrl: isLocalAvatarUrl(profile?.avatarUrl) ? profile?.avatarUrl : null,
         isFriend,
         isSelf,
         memberSince: target.createdAt,
@@ -73,17 +78,14 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ use
     // Recent feed items (if friend or self)
     if (isFriend || isSelf) {
         const recentFeed = await prisma.activityFeedItem.findMany({
-            where: {
-                userId: target.id,
-                ...(isSelf ? {} : { isPublic: true }),
-            },
+            where: isSelf ? { userId: target.id } : await friendFeedWhere([target.id]),
             orderBy: { createdAt: 'desc' },
             take: 5,
         })
         result.recentFeed = recentFeed.map(f => ({
             id: f.id,
             type: f.type,
-            data: JSON.parse(f.data ?? '{}'),
+            data: redactFeedData(f.type, JSON.parse(f.data ?? '{}'), resolvePrivacy(profile), isSelf),
             isPublic: f.isPublic,
             createdAt: f.createdAt,
         }))
