@@ -3,6 +3,7 @@ import { cookies } from "next/headers"
 import prisma from "@/lib/prisma"
 import { signSession } from "@/lib/session"
 import { sessionCookieSecure } from "@/lib/cookie-security"
+import { sanitizeNickname } from "@/lib/account-rules"
 
 export const runtime = "nodejs"
 
@@ -105,11 +106,14 @@ export async function GET(req: NextRequest) {
             }
         } else {
             // Create new user with Google account
-            // Generate a unique name if needed
-            let name = googleUser.name || verifiedEmail.split("@")[0]
-            const existingName = await prisma.user.findUnique({ where: { name } })
-            if (existingName) {
-                name = `${name}_${googleUser.sub.slice(-4)}`
+            // 產生符合暱稱規則（2-20 字、不含 @ 等字元）且不重複（不分大小寫）的名稱
+            const base = sanitizeNickname(googleUser.name, `user_${googleUser.sub.slice(-6)}`)
+            let name = base
+            for (let i = 0; i < 5; i++) {
+                const taken = await prisma.user.findFirst({ where: { name: { equals: name, mode: "insensitive" } } })
+                if (!taken) break
+                const suffix = `_${googleUser.sub.slice(-4 - i)}`
+                name = base.slice(0, 20 - suffix.length) + suffix
             }
 
             user = await prisma.user.create({
@@ -127,7 +131,7 @@ export async function GET(req: NextRequest) {
         }
 
         // Create session
-        const token = await signSession({ userId: user.id, issuedAt: Date.now() })
+        const token = await signSession({ userId: user.id, issuedAt: Date.now(), tokenVersion: user.tokenVersion })
         cookieStore.set(SESSION_COOKIE, token, {
             httpOnly: true,
             secure: sessionCookieSecure(),

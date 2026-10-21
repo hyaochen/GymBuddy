@@ -56,8 +56,12 @@ export async function POST(req: NextRequest) {
             data: { counter: verification.authenticationInfo.newCounter },
         })
 
-        // Create session
-        const token = await signSession({ userId: passkey.userId, issuedAt: Date.now() })
+        // Create session (帶上 tokenVersion，登出所有裝置後舊 cookie 才會失效)
+        const owner = await prisma.user.findUnique({
+            where: { id: passkey.userId },
+            select: { tokenVersion: true },
+        })
+        const token = await signSession({ userId: passkey.userId, issuedAt: Date.now(), tokenVersion: owner?.tokenVersion ?? 0 })
         cookieStore.set(SESSION_COOKIE, token, {
             httpOnly: true,
             secure: sessionCookieSecure(),

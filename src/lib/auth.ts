@@ -17,11 +17,13 @@ export async function getCurrentUser(): Promise<CurrentUser | null> {
 
     const user = await prisma.user.findUnique({
         where: { id: payload.userId },
-        select: { id: true, email: true, name: true },
+        select: { id: true, email: true, name: true, tokenVersion: true },
     });
 
     if (!user) return null;
-    return user;
+    // 改密碼／登出所有裝置後版本會遞增，舊 cookie 視為未登入（舊 cookie 無欄位 = 0）
+    if ((payload.tokenVersion ?? 0) !== user.tokenVersion) return null;
+    return { id: user.id, email: user.email, name: user.name };
 }
 
 export async function requireAuth(): Promise<CurrentUser> {

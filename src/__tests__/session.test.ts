@@ -19,6 +19,29 @@ describe('Session Token (HMAC-SHA256)', () => {
         expect(token).not.toMatch(/[+/=]/)
     })
 
+    // ─── tokenVersion ───
+    it('tokenVersion 隨 payload 簽入並可取回', async () => {
+        const token = await signSession({ userId: 'u1', issuedAt: Date.now(), tokenVersion: 3 })
+        const result = await verifySession(token)
+        expect(result!.tokenVersion).toBe(3)
+    })
+
+    it('舊格式 cookie（無 tokenVersion）仍可驗證，欄位為 undefined（視為 0）', async () => {
+        const token = await signSession({ userId: 'u1', issuedAt: Date.now() })
+        const result = await verifySession(token)
+        expect(result).not.toBeNull()
+        expect(result!.tokenVersion).toBeUndefined()
+        expect(result!.tokenVersion ?? 0).toBe(0)
+    })
+
+    it('篡改 tokenVersion → 驗證失敗', async () => {
+        const token = await signSession({ userId: 'u1', issuedAt: 1, tokenVersion: 0 })
+        const [, sig] = token.split('.')
+        const fake = btoa(JSON.stringify({ userId: 'u1', issuedAt: 1, tokenVersion: 99 }))
+            .replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '')
+        expect(await verifySession(`${fake}.${sig}`)).toBeNull()
+    })
+
     // ─── 篡改偵測 ───
     it('篡改 payload → 驗證失敗', async () => {
         const token = await signSession({ userId: 'user123', issuedAt: Date.now() })

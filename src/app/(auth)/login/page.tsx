@@ -87,6 +87,7 @@ export default function LoginPage({
                             <input
                                 id="email"
                                 name="email"
+                                defaultValue={loginState.values?.email}
                                 type="text"
                                 autoComplete="username email"
                                 required
