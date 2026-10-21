@@ -4,6 +4,9 @@ import { use, useEffect, useReducer, useRef, useCallback, useState } from 'react
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { ChevronLeft, X, SkipForward, CheckCircle2, Dumbbell, PartyPopper, Play, Square, Timer, Trophy, List } from 'lucide-react'
+import { toast } from '@/components/ui/use-toast'
+import { ensurePushSubscription, requestPushPermissionAndSubscribe } from '@/lib/push-client'
+import { describeSetSaveFailure, formatWeightSuggestion } from '@/lib/session-logic'
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -32,6 +35,12 @@ type SessionExercise = {
     sets: Array<{ id: string; setNumber: number; repsPerformed: number; weightKg: string; durationSeconds: number | null; restAfterSeconds: number | null }>
 }
 
+type WeightSuggestion = {
+    weightKg: number
+    deltaKg: number
+    method: 'PROGRESSIVE_OVERLOAD' | 'MAINTAIN' | 'DELOAD' | 'REVERSE_PYRAMID'
+}
+
 type Session = {
     id: string
     plan: { id: string; name: string } | null
@@ -57,6 +66,7 @@ type State = {
     phase: 'loading' | 'exercise' | 'resting' | 'done' | 'error'
     session: Session | null
     defaults: Record<string, PlanDefaults>
+    suggestions: Record<string, WeightSuggestion>  // auto-applied overload weight, keyed by exerciseId
     exIdx: number
     setNum: number        // 1-based, current set to log
     reps: number
@@ -77,7 +87,7 @@ type State = {
 }
 
 type Action =
-    | { type: 'LOADED'; session: Session; defaults: Record<string, PlanDefaults> }
+    | { type: 'LOADED'; session: Session; defaults: Record<string, PlanDefaults>; suggestions: Record<string, WeightSuggestion> }
     | { type: 'ADJ_WEIGHT'; delta: number }
     | { type: 'SET_WEIGHT_EXACT'; value: number }
     | { type: 'ADJ_REPS'; delta: number }
@@ -100,9 +110,17 @@ type Action =
     | { type: 'CLEAR_PR' }
     | { type: 'ERROR' }
 
-function getInitWeight(session: Session, idx: number, defaults: Record<string, PlanDefaults>): number {
+function getInitWeight(
+    session: Session,
+    idx: number,
+    defaults: Record<string, PlanDefaults>,
+    suggestions: Record<string, WeightSuggestion>,
+): number {
     const ex = session.exercises[idx]
     if (!ex) return 20
+    // Progressive-overload suggestion (from the last session) wins over the static plan default
+    const suggested = suggestions[ex.exerciseId]?.weightKg
+    if (suggested) return suggested
     return Number(defaults[ex.exerciseId]?.defaultWeightKg ?? 20) || 20
 }
 
@@ -142,7 +160,7 @@ function navigateTo(state: State, nextIdx: number): State {
         phase: 'exercise',
         exIdx: nextIdx,
         setNum: dbSets.length + 1,
-        weight: lastSet ? Number(lastSet.weightKg) || 20 : getInitWeight(state.session, nextIdx, state.defaults),
+        weight: lastSet ? Number(lastSet.weightKg) || 20 : getInitWeight(state.session, nextIdx, state.defaults, state.suggestions),
         reps: getInitReps(state.session, nextIdx, state.defaults),
         duration: getInitDuration(state.session, nextIdx, state.defaults),
         isTiming: false, timingStart: 0, timingElapsed: 0,
@@ -158,6 +176,7 @@ const initState: State = {
     phase: 'loading',
     session: null,
     defaults: {},
+    suggestions: {},
     exIdx: 0,
     setNum: 1,
     reps: 10,
@@ -181,11 +200,11 @@ function reducer(state: State, action: Action): State {
     switch (action.type) {
         case 'LOADED': {
             if (action.session.completedAt) {
-                return { ...state, phase: 'done', session: action.session, defaults: action.defaults }
+                return { ...state, phase: 'done', session: action.session, defaults: action.defaults, suggestions: action.suggestions }
             }
             const exercises = action.session.exercises
             if (exercises.length === 0) {
-                return { ...state, phase: 'done', session: action.session, defaults: action.defaults }
+                return { ...state, phase: 'done', session: action.session, defaults: action.defaults, suggestions: action.suggestions }
             }
             // Scan DB sets to find first incomplete exercise → resume from there
             let startIdx = 0
@@ -203,7 +222,7 @@ function reducer(state: State, action: Action): State {
                 }
             }
             if (allDone) {
-                return { ...state, phase: 'done', session: action.session, defaults: action.defaults }
+                return { ...state, phase: 'done', session: action.session, defaults: action.defaults, suggestions: action.suggestions }
             }
             const lastSet = startSets[startSets.length - 1]
             return {
@@ -211,9 +230,10 @@ function reducer(state: State, action: Action): State {
                 phase: 'exercise',
                 session: action.session,
                 defaults: action.defaults,
+                suggestions: action.suggestions,
                 exIdx: startIdx,
                 setNum: startSets.length + 1,
-                weight: lastSet ? Number(lastSet.weightKg) || 20 : getInitWeight(action.session, startIdx, action.defaults),
+                weight: lastSet ? Number(lastSet.weightKg) || 20 : getInitWeight(action.session, startIdx, action.defaults, action.suggestions),
                 reps: getInitReps(action.session, startIdx, action.defaults),
                 duration: getInitDuration(action.session, startIdx, action.defaults),
                 isTiming: false, timingStart: 0, timingElapsed: 0,
@@ -292,11 +312,20 @@ function reducer(state: State, action: Action): State {
             return navigateTo(state, action.exIdx)
         case 'SUBSTITUTE_EXERCISE': {
             if (!state.session) return state
-            // Replace the current sessionExercise with the substitute one.
+            // The substitute takes the original's slot. If the original already has logged
+            // sets it must stay (those sets are in the DB) and the substitute goes right
+            // after it — same ordering the server returns on reload.
+            const orig = state.session.exercises[state.exIdx]
+            const keepOriginal = !!orig && orig.sets.length > 0
+            const newExercises = keepOriginal
+                ? [
+                    ...state.session.exercises.slice(0, state.exIdx + 1),
+                    action.newSessionExercise,
+                    ...state.session.exercises.slice(state.exIdx + 1),
+                ]
+                : state.session.exercises.map((ex, i) => i === state.exIdx ? action.newSessionExercise : ex)
+            const newIdx = keepOriginal ? state.exIdx + 1 : state.exIdx
             // Copy original exercise's plan defaults to the substitute so rest/reps remain correct.
-            const newExercises = state.session.exercises.map((ex, i) =>
-                i === state.exIdx ? action.newSessionExercise : ex
-            )
             const origExId = state.session.exercises[state.exIdx]?.exerciseId
             const origDefaults = origExId ? state.defaults[origExId] : undefined
             const newDefaults = origDefaults
@@ -306,10 +335,13 @@ function reducer(state: State, action: Action): State {
                 ...state,
                 session: { ...state.session, exercises: newExercises },
                 defaults: newDefaults,
+                exIdx: newIdx,
                 // Fresh start for the substitute — reset logged sets and set counter
                 loggedSets: [],
                 setNum: 1,
                 weight: origDefaults?.defaultWeightKg ? Number(origDefaults.defaultWeightKg) : state.weight,
+                reps: origDefaults?.defaultRepsMin ?? state.reps,
+                duration: origDefaults?.defaultDurationMax ?? state.duration,
                 showAlt: false,
             }
         }
@@ -408,41 +440,22 @@ export default function ActiveSessionPage({ params }: { params: Promise<{ id: st
     }, [getAudioCtx, cancelBeep])
 
     // ── Service worker + Web Push subscription ────────────────────────────────
+    // Registers the SW and, if permission is already granted, keeps the push
+    // subscription in sync. Permission itself is NOT requested here: iOS only
+    // honours it inside a user gesture, so logSet asks on the first tap.
     useEffect(() => {
         if (typeof navigator === 'undefined' || !('serviceWorker' in navigator)) return
-
-        function urlBase64ToUint8Array(base64String: string) {
-            const padding = '='.repeat((4 - (base64String.length % 4)) % 4)
-            const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/')
-            const rawData = atob(base64)
-            return Uint8Array.from([...rawData].map(c => c.charCodeAt(0)))
-        }
 
         navigator.serviceWorker.register('/sw.js').then(async reg => {
             swRegRef.current = reg
 
-            // Request notification permission if not yet granted
-            if (Notification.permission === 'default') {
-                await Notification.requestPermission().catch(() => {})
-            }
-            if (Notification.permission !== 'granted') return
+            if (typeof Notification === 'undefined' || Notification.permission !== 'granted') return
 
             const vapidKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY
             if (!vapidKey) return
 
             try {
-                // Subscribe to Web Push (creates or retrieves existing subscription)
-                const existing = await reg.pushManager.getSubscription()
-                const sub = existing ?? await reg.pushManager.subscribe({
-                    userVisibleOnly: true,
-                    applicationServerKey: urlBase64ToUint8Array(vapidKey),
-                })
-                // Send subscription to server so it can send pushes on our behalf
-                await fetch('/api/push/subscribe', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ subscription: sub.toJSON() }),
-                })
+                await ensurePushSubscription(reg, vapidKey)
             } catch (e) {
                 console.error('[Push] subscription failed:', e)
             }
@@ -493,7 +506,12 @@ export default function ActiveSessionPage({ params }: { params: Promise<{ id: st
             .then(r => r.json())
             .then(data => {
                 if (data.session) {
-                    dispatch({ type: 'LOADED', session: data.session, defaults: data.planExerciseDefaults ?? {} })
+                    dispatch({
+                        type: 'LOADED',
+                        session: data.session,
+                        defaults: data.planExerciseDefaults ?? {},
+                        suggestions: data.suggestedWeights ?? {},
+                    })
                 } else {
                     dispatch({ type: 'ERROR' })
                 }
@@ -558,8 +576,10 @@ export default function ActiveSessionPage({ params }: { params: Promise<{ id: st
         if (!state.session || submitting) return
         setSubmitting(true)
         getAudioCtx()  // unlock AudioContext on user gesture
+        // First tap of the first workout: ask for permission inside the gesture and
+        // subscribe to Web Push right after it is granted (fire-and-forget).
         if (typeof Notification !== 'undefined' && Notification.permission === 'default') {
-            Notification.requestPermission().catch(() => {})
+            void requestPushPermissionAndSubscribe()
         }
         const ex = state.session.exercises[state.exIdx]
         const isTimeBased = ex.exercise.isTimeBased
@@ -578,7 +598,14 @@ export default function ActiveSessionPage({ params }: { params: Promise<{ id: st
                     restAfterSeconds: restSeconds,
                 }),
             })
-            const data = await res.json()
+            const data = await res.json().catch(() => null)
+            if (!res.ok || !data?.set?.id) {
+                // Not saved: do not start the rest / schedule pushes / mark the set done.
+                // Inputs stay as they are so the user can just tap again.
+                const { title, description } = describeSetSaveFailure(res.status)
+                toast({ variant: 'destructive', title, description })
+                return
+            }
             // Unique tag per set — avoids iOS Safari's silent-push throttling on repeated same-tag notifications.
             // Includes exerciseId so cancelPush can prefix-match a single exercise (T-GB-005) without
             // also killing pending pushes belonging to other exercises in the same session.
@@ -609,7 +636,7 @@ export default function ActiveSessionPage({ params }: { params: Promise<{ id: st
             dispatch({
                 type: 'SET_DONE',
                 set: {
-                    id: data.set?.id,
+                    id: data.set.id,
                     setNumber: state.setNum,
                     repsPerformed: isTimeBased ? 1 : state.reps,
                     weightKg: isTimeBased ? 0 : state.weight,
@@ -622,6 +649,11 @@ export default function ActiveSessionPage({ params }: { params: Promise<{ id: st
             })
         } catch (e) {
             console.error(e)
+            toast({
+                variant: 'destructive',
+                title: '網路連線失敗',
+                description: '這一組沒有儲存，輸入已保留，連上網路後請再按一次',
+            })
         } finally {
             setSubmitting(false)
         }
@@ -637,14 +669,45 @@ export default function ActiveSessionPage({ params }: { params: Promise<{ id: st
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({}),
             })
-            const data = await res.json()
-            if (typeof window !== 'undefined') {
-                sessionStorage.setItem(`session-complete-${sessionId}`, JSON.stringify(data))
+            const data = await res.json().catch(() => null)
+            if (!res.ok || !data) {
+                if (res.status === 400 && data?.error === 'EMPTY_SESSION') {
+                    toast({ variant: 'destructive', title: '沒有記錄任何一組', description: '可以回去補記，或放棄這次訓練' })
+                } else if (res.status === 401) {
+                    toast({ variant: 'destructive', title: '登入已過期', description: '請重新登入後再按一次完成訓練' })
+                } else {
+                    toast({ variant: 'destructive', title: '無法完成訓練', description: '請稍後再按一次，資料不會遺失' })
+                }
+                return
             }
+            try {
+                sessionStorage.setItem(`session-complete-${sessionId}`, JSON.stringify(data))
+            } catch { /* private mode: the summary page rebuilds it from the server */ }
+            router.push(`/session/${sessionId}/complete`)
         } catch (e) {
             console.error(e)
+            toast({ variant: 'destructive', title: '網路連線失敗', description: '無法完成訓練，連上網路後請再按一次' })
         } finally {
-            router.push(`/session/${sessionId}/complete`)
+            setSubmitting(false)
+        }
+    }, [sessionId, router, submitting])
+
+    // ── Abandon a workout with zero logged sets ───────────────────────────────
+    const abandonSession = useCallback(async () => {
+        if (submitting) return
+        setSubmitting(true)
+        try {
+            const res = await fetch(`/api/sessions/${sessionId}`, { method: 'DELETE' })
+            if (!res.ok) {
+                toast({ variant: 'destructive', title: '無法放棄這次訓練', description: '請稍後再試' })
+                return
+            }
+            router.push('/session')
+        } catch (e) {
+            console.error(e)
+            toast({ variant: 'destructive', title: '網路連線失敗', description: '請稍後再試' })
+        } finally {
+            setSubmitting(false)
         }
     }, [sessionId, router, submitting])
 
@@ -674,6 +737,37 @@ export default function ActiveSessionPage({ params }: { params: Promise<{ id: st
     }
 
     if (state.phase === 'done') {
+        const loggedTotal = state.session.exercises.reduce((sum, e) => sum + e.sets.length, 0)
+        // A workout with zero logged sets can't be completed (the server refuses it):
+        // offer to go back or to throw it away instead.
+        if (loggedTotal === 0 && !state.session.completedAt) {
+            return (
+                <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-6 px-4">
+                    <Dumbbell className="h-16 w-16 text-muted-foreground" aria-hidden="true" />
+                    <div className="text-center">
+                        <h1 className="text-xl font-bold mb-1">這次沒有記錄任何一組</h1>
+                        <p className="text-muted-foreground text-sm">沒有完成任何組數的訓練不會被計入紀錄</p>
+                    </div>
+                    <div className="w-full space-y-3">
+                        {state.session.exercises.length > 0 && (
+                            <button
+                                onClick={() => dispatch({ type: 'JUMP_TO_EXERCISE', exIdx: 0 })}
+                                className="w-full h-14 rounded-xl bg-primary text-primary-foreground font-semibold text-base"
+                            >
+                                回到動作開始訓練
+                            </button>
+                        )}
+                        <button
+                            onClick={abandonSession}
+                            disabled={submitting}
+                            className="w-full h-12 rounded-xl bg-secondary text-secondary-foreground font-medium text-sm disabled:opacity-50"
+                        >
+                            {submitting ? '處理中...' : '放棄這次訓練'}
+                        </button>
+                    </div>
+                </div>
+            )
+        }
         return (
             <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-6 px-4">
                 <PartyPopper className="h-16 w-16 text-yellow-400" aria-hidden="true" />
@@ -712,6 +806,19 @@ export default function ActiveSessionPage({ params }: { params: Promise<{ id: st
     const allSetsDone = loggedSets.length >= targetSets
     const isLastEx = exIdx === session.exercises.length - 1
     const progressPct = ((exIdx + Math.min(loggedSets.length, targetSets) / targetSets) / exTotal) * 100
+
+    // Exercise jump drawer — shared by every branch that offers "choose another exercise"
+    const exListDrawer = state.showExList ? (
+        <ExerciseListDrawer
+            session={session}
+            defaults={defaults}
+            currentIdx={exIdx}
+            currentLoggedSets={loggedSets}
+            onJump={idx => dispatch({ type: 'JUMP_TO_EXERCISE', exIdx: idx })}
+            onClose={() => dispatch({ type: 'TOGGLE_EX_LIST' })}
+        />
+    ) : null
+    const weightSuggestion = state.suggestions[ex.exerciseId]
 
     // ── Resting phase ─────────────────────────────────────────────────────────
     if (phase === 'resting') {
@@ -837,6 +944,8 @@ export default function ActiveSessionPage({ params }: { params: Promise<{ id: st
                     />
                 )}
 
+                {exListDrawer}
+
                 {/* Progress header */}
                 <div className="flex items-center gap-3">
                     <Link href="/session" className="text-muted-foreground flex-shrink-0">
@@ -920,16 +1029,7 @@ export default function ActiveSessionPage({ params }: { params: Promise<{ id: st
             )}
 
             {/* Exercise list drawer */}
-            {state.showExList && (
-                <ExerciseListDrawer
-                    session={session}
-                    defaults={defaults}
-                    currentIdx={exIdx}
-                    currentLoggedSets={loggedSets}
-                    onJump={idx => dispatch({ type: 'JUMP_TO_EXERCISE', exIdx: idx })}
-                    onClose={() => dispatch({ type: 'TOGGLE_EX_LIST' })}
-                />
-            )}
+            {exListDrawer}
 
             {/* Header + progress */}
             <div className="flex items-center gap-3">
@@ -1114,7 +1214,12 @@ export default function ActiveSessionPage({ params }: { params: Promise<{ id: st
                     <>
                         {/* Weight adjuster */}
                         <div>
-                            <p className="text-xs text-muted-foreground text-center mb-2">重量 (kg)</p>
+                            <p className="text-xs text-muted-foreground text-center mb-2">
+                                重量 (kg)
+                                {weightSuggestion && loggedSets.length === 0 && (
+                                    <span className="ml-2 text-primary font-medium">{formatWeightSuggestion(weightSuggestion.deltaKg)}</span>
+                                )}
+                            </p>
                             <div className="flex items-center gap-1.5">
                                 {([-5, -2.5] as number[]).map(delta => (
                                     <button
