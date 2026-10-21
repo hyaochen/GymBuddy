@@ -35,7 +35,7 @@ export async function POST(req: NextRequest) {
     }
 
     const q = sanitizeInput(question)
-    const classification = classifyQuery(q)
+    const classification = classifyQuery(q, { bookFilter })
 
     try {
         // ── Direct: DB only, no LLM ─────────────────────────────────────────

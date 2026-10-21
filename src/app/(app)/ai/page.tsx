@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useRef, useEffect, Fragment } from "react"
-import { Send, BookOpen, AlertCircle, BrainCircuit, Database, TrendingUp, Lightbulb, Search } from "lucide-react"
+import { Send, BookOpen, AlertCircle, BrainCircuit, Database, TrendingUp, Lightbulb, Search, RefreshCw } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 // ── Minimal Markdown renderer ────────────────────────────────────────────────
@@ -233,12 +233,16 @@ export default function AIAssistantPage() {
             })
 
             if (!res.ok || !res.body) {
-                throw new Error(`伺服器錯誤 (${res.status})`)
+                // The API answers with a plain-text reason (e.g. the 429 hourly limit); show it.
+                const reason = (await res.text().catch(() => "")).trim()
+                const readable = reason && reason.length <= 200 && !reason.startsWith("<")
+                throw new Error(readable ? reason : `伺服器錯誤 (${res.status})`)
             }
 
             const reader = res.body.getReader()
             const decoder = new TextDecoder()
             let buffer = ""
+            let finished = false
 
             while (true) {
                 const { done, value } = await reader.read()
@@ -254,6 +258,7 @@ export default function AIAssistantPage() {
                     try { parsed = JSON.parse(part.slice(6)) } catch { continue }
 
                     if (parsed.error) {
+                        finished = true
                         setMessages(prev => prev.map(m =>
                             m.id === assistantId
                                 ? { ...m, content: String(parsed.error), error: true, streaming: false }
@@ -280,6 +285,7 @@ export default function AIAssistantPage() {
                     }
 
                     if (parsed.done) {
+                        finished = true
                         setMessages(prev => prev.map(m =>
                             m.id === assistantId
                                 ? {
@@ -293,6 +299,19 @@ export default function AIAssistantPage() {
                     }
                 }
             }
+
+            // The connection closed without a done/error event: stop the cursor and say so.
+            if (!finished) {
+                setMessages(prev => prev.map(m =>
+                    m.id === assistantId
+                        ? m.content === ""
+                            ? { ...m, content: "回覆中斷，請重試", error: true, streaming: false }
+                            : { ...m, content: `${m.content}
+
+（回覆不完整，可重新提問）`, streaming: false }
+                        : m
+                ))
+            }
         } catch (e) {
             setMessages(prev => prev.map(m =>
                 m.id === assistantId
@@ -303,6 +322,14 @@ export default function AIAssistantPage() {
             setLoading(false)
             setTimeout(() => inputRef.current?.focus(), 50)
         }
+    }
+
+    function retryMessage(assistantId: string) {
+        const idx = messages.findIndex(m => m.id === assistantId)
+        const userMsg = idx > 0 ? messages[idx - 1] : null
+        if (!userMsg || userMsg.role !== "user" || loading) return
+        setMessages(prev => prev.filter(m => m.id !== assistantId && m.id !== userMsg.id))
+        sendMessage(userMsg.content)
     }
 
     function handleKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
@@ -405,6 +432,14 @@ export default function AIAssistantPage() {
                                 <div className="flex items-center gap-1.5 mb-1.5">
                                     <AlertCircle className="h-4 w-4 flex-shrink-0" />
                                     <span className="text-xs font-medium">發生錯誤</span>
+                                    <button
+                                        onClick={() => retryMessage(msg.id)}
+                                        disabled={loading}
+                                        className="ml-auto inline-flex items-center gap-1 text-xs font-medium underline disabled:opacity-50"
+                                    >
+                                        <RefreshCw className="h-3 w-3" />
+                                        重試
+                                    </button>
                                 </div>
                             )}
 

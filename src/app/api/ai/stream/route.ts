@@ -38,7 +38,7 @@ export async function POST(req: NextRequest) {
     }
 
     const q = sanitizeInput(question)
-    const classification = classifyQuery(q)
+    const classification = classifyQuery(q, { bookFilter })
 
     const sseHeaders = {
         'Content-Type': 'text/event-stream',
@@ -110,6 +110,7 @@ export async function POST(req: NextRequest) {
 
                     const reader = ollamaBody.getReader()
                     let buffer = ''
+                    let finished = false
 
                     try {
                         while (true) {
@@ -128,6 +129,7 @@ export async function POST(req: NextRequest) {
                                         controller.enqueue(enc.encode(sseEvent({ token: parsed.message.content })))
                                     }
                                     if (parsed.done) {
+                                        finished = true
                                         const elapsed = (Date.now() - t0) / 1000
                                         controller.enqueue(enc.encode(sseEvent({ done: true, elapsed_seconds: elapsed })))
                                     }
@@ -138,8 +140,11 @@ export async function POST(req: NextRequest) {
                         }
                     } catch (e) {
                         const msg = e instanceof Error ? e.message : 'stream error'
+                        finished = true
                         controller.enqueue(enc.encode(sseEvent({ error: msg })))
                     } finally {
+                        // The model connection closed without a final event: tell the client instead of hanging.
+                        if (!finished) controller.enqueue(enc.encode(sseEvent({ error: '回覆中斷，請重試' })))
                         controller.close()
                     }
                 },
@@ -182,15 +187,20 @@ export async function POST(req: NextRequest) {
                 })))
 
                 const reader = ragBody.getReader()
+                const decoder = new TextDecoder()
+                let sawEnd = false
                 try {
                     while (true) {
                         const { done, value } = await reader.read()
                         if (done) break
+                        if (!sawEnd && /"(done|error)"\s*:/.test(decoder.decode(value, { stream: true }))) sawEnd = true
                         controller.enqueue(value)
                     }
                 } catch {
                     // stream ended
                 } finally {
+                    // Upstream closed (or broke) before a done/error event: surface it so the UI can stop streaming.
+                    if (!sawEnd) controller.enqueue(enc.encode(sseEvent({ error: '回覆中斷，請重試' })))
                     controller.close()
                 }
             },
