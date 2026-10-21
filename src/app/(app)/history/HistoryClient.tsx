@@ -7,6 +7,7 @@ import {
 } from 'recharts'
 import { Calendar, Clock, ClipboardList, Dumbbell, TrendingUp, ChevronDown, ChevronUp, Trash2, Pencil, Check, X } from 'lucide-react'
 import { sumSetsVolume, exName as extractExName } from '@/lib/utils'
+import { toast } from '@/components/ui/use-toast'
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -32,6 +33,22 @@ type SessionSummary = {
     plan: { name: string } | null
     day: { dayName: string } | null
     exercises: ExerciseRecord[]
+}
+
+type HistoryStats = {
+    completedCount: number
+    totalSets: number
+    totalVolume: number
+}
+
+const PAGE_SIZE = 30
+
+async function errorOf(res: Response, fallback: string) {
+    try {
+        const d = await res.json()
+        if (typeof d?.error === 'string' && d.error) return d.error
+    } catch { }
+    return fallback
 }
 
 type ChartPoint = {
@@ -69,8 +86,8 @@ function SetRow({
     onDelete,
 }: {
     set: SetRecord
-    onUpdate: (id: string, reps: number, weight: number, durationSeconds?: number | null) => Promise<void>
-    onDelete: (id: string) => Promise<void>
+    onUpdate: (id: string, reps: number, weight: number, durationSeconds?: number | null) => Promise<boolean>
+    onDelete: (id: string) => Promise<boolean>
 }) {
     const isTimeBased = !!set.durationSeconds
     const [editing, setEditing] = useState(false)
@@ -81,12 +98,16 @@ function SetRow({
 
     const save = async () => {
         setSaving(true)
-        if (isTimeBased) {
-            await onUpdate(set.id, 1, 0, dur)
-        } else {
-            await onUpdate(set.id, reps, weight)
-        }
+        const ok = isTimeBased
+            ? await onUpdate(set.id, 1, 0, dur)
+            : await onUpdate(set.id, reps, weight)
         setSaving(false)
+        if (!ok) {
+            // 儲存失敗：還原成伺服器上的值
+            setReps(set.repsPerformed)
+            setWeight(Number(set.weightKg))
+            setDur(set.durationSeconds ?? 0)
+        }
         setEditing(false)
     }
 
@@ -186,18 +207,38 @@ function SessionCard({
 
     const handleDeleteSession = async () => {
         setDeleting(true)
-        await fetch(`/api/sessions/${session.id}`, { method: 'DELETE' })
+        try {
+            const res = await fetch(`/api/sessions/${session.id}`, { method: 'DELETE' })
+            if (!res.ok) {
+                toast({ title: await errorOf(res, '刪除訓練記錄失敗，請重試'), variant: 'destructive' })
+                setDeleting(false)
+                return
+            }
+        } catch {
+            toast({ title: '刪除訓練記錄失敗，請檢查網路後重試', variant: 'destructive' })
+            setDeleting(false)
+            return
+        }
         onDelete(session.id)
     }
 
     const handleUpdateSet = async (setId: string, reps: number, weight: number, durationSeconds?: number | null) => {
         const payload: Record<string, unknown> = { repsPerformed: reps, weightKg: weight }
         if (durationSeconds !== undefined) payload.durationSeconds = durationSeconds
-        await fetch(`/api/sessions/sets/${setId}`, {
-            method: 'PATCH',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload),
-        })
+        try {
+            const res = await fetch(`/api/sessions/sets/${setId}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload),
+            })
+            if (!res.ok) {
+                toast({ title: await errorOf(res, '儲存失敗，已還原為原本的記錄'), variant: 'destructive' })
+                return false
+            }
+        } catch {
+            toast({ title: '儲存失敗，已還原為原本的記錄', variant: 'destructive' })
+            return false
+        }
         // Update local state
         setLocalExercises(prev => prev.map(ex => ({
             ...ex,
@@ -208,14 +249,27 @@ function SessionCard({
                 ...(durationSeconds !== undefined && { durationSeconds }),
             } : s),
         })))
+        onRefresh()
+        return true
     }
 
     const handleDeleteSet = async (setId: string) => {
-        await fetch(`/api/sessions/sets/${setId}`, { method: 'DELETE' })
+        try {
+            const res = await fetch(`/api/sessions/sets/${setId}`, { method: 'DELETE' })
+            if (!res.ok) {
+                toast({ title: await errorOf(res, '刪除失敗，請重試'), variant: 'destructive' })
+                return false
+            }
+        } catch {
+            toast({ title: '刪除失敗，請檢查網路後重試', variant: 'destructive' })
+            return false
+        }
         setLocalExercises(prev => prev.map(ex => ({
             ...ex,
             sets: ex.sets.filter(s => s.id !== setId),
         })).filter(ex => ex.sets.length > 0 || !expanded))
+        onRefresh()
+        return true
     }
 
     return (
@@ -324,23 +378,72 @@ function SessionCard({
 export default function HistoryPage() {
     const [chartData, setChartData] = useState<ChartPoint[]>([])
     const [sessions, setSessions] = useState<SessionSummary[]>([])
+    const [stats, setStats] = useState<HistoryStats | null>(null)
+    const [hasMore, setHasMore] = useState(false)
+    const [loadingMore, setLoadingMore] = useState(false)
+    const [loadError, setLoadError] = useState(false)
     const [loading, setLoading] = useState(true)
     const [days, setDays] = useState(30)
     const [activeMetric, setActiveMetric] = useState<'totalVolume' | 'totalSets' | 'durationMin'>('totalVolume')
 
     const load = useCallback(() => {
         setLoading(true)
+        setLoadError(false)
         Promise.all([
-            fetch(`/api/history/charts?days=${days}`).then(r => r.json()),
-            fetch('/api/history?limit=30').then(r => r.json()),
+            fetch(`/api/history/charts?days=${days}`),
+            fetch(`/api/history?limit=${PAGE_SIZE}&stats=1`),
         ])
-            .then(([charts, hist]) => {
+            .then(async ([chartsRes, histRes]) => {
+                if (!chartsRes.ok || !histRes.ok) throw new Error('load failed')
+                const [charts, hist] = await Promise.all([chartsRes.json(), histRes.json()])
                 setChartData(charts.chartData ?? [])
                 setSessions(hist.sessions ?? [])
+                setStats(hist.stats ?? null)
+                setHasMore(!!hist.hasMore)
             })
-            .catch(console.error)
+            .catch(() => {
+                setLoadError(true)
+                toast({ title: '載入訓練記錄失敗，請重試', variant: 'destructive' })
+            })
             .finally(() => setLoading(false))
     }, [days])
+
+    // 編輯 / 刪除後只重抓圖表與全期彙總，不動已載入的列表
+    const refreshSummary = useCallback(() => {
+        Promise.all([
+            fetch(`/api/history/charts?days=${days}`).then(r => r.ok ? r.json() : null),
+            fetch('/api/history?statsOnly=1').then(r => r.ok ? r.json() : null),
+        ])
+            .then(([charts, hist]) => {
+                if (charts) setChartData(charts.chartData ?? [])
+                if (hist?.stats) setStats(hist.stats)
+            })
+            .catch(console.error)
+    }, [days])
+
+    const loadMore = async () => {
+        if (loadingMore) return
+        setLoadingMore(true)
+        try {
+            const res = await fetch(`/api/history?limit=${PAGE_SIZE}&offset=${sessions.length}`)
+            if (!res.ok) throw new Error('load more failed')
+            const hist = await res.json()
+            setSessions(prev => {
+                const seen = new Set(prev.map(x => x.id))
+                return [...prev, ...(hist.sessions as SessionSummary[]).filter(x => !seen.has(x.id))]
+            })
+            setHasMore(!!hist.hasMore)
+        } catch {
+            toast({ title: '載入更多失敗，請重試', variant: 'destructive' })
+        } finally {
+            setLoadingMore(false)
+        }
+    }
+
+    const handleSessionDeleted = (id: string) => {
+        setSessions(prev => prev.filter(s => s.id !== id))
+        refreshSummary()
+    }
 
     useEffect(() => { load() }, [load])
 
@@ -425,25 +528,20 @@ export default function HistoryPage() {
                 <p className="text-xs text-muted-foreground text-center">{metricLabel[activeMetric]}</p>
             </div>
 
-            {/* Stats */}
-            {completedSessions.length > 0 && (
+            {/* Stats（全期彙總，不受列表載入筆數影響） */}
+            {stats && stats.completedCount > 0 && (
                 <div className="grid grid-cols-3 gap-3">
                     <div className="bg-card rounded-xl border border-border p-3 text-center">
-                        <p className="text-xl font-bold tabular-nums">{completedSessions.length}</p>
+                        <p className="text-xl font-bold tabular-nums">{stats.completedCount}</p>
                         <p className="text-xs text-muted-foreground">完成次數</p>
                     </div>
                     <div className="bg-card rounded-xl border border-border p-3 text-center">
-                        <p className="text-xl font-bold tabular-nums">
-                            {completedSessions.reduce((s, sess) => s + calcSets(sess), 0)}
-                        </p>
+                        <p className="text-xl font-bold tabular-nums">{stats.totalSets}</p>
                         <p className="text-xs text-muted-foreground">總組數</p>
                     </div>
                     <div className="bg-card rounded-xl border border-border p-3 text-center">
                         <p className="text-xl font-bold tabular-nums">
-                            {(() => {
-                                const v = completedSessions.reduce((s, sess) => s + calcVolume(sess), 0)
-                                return v >= 1000 ? `${(v / 1000).toFixed(0)}k` : v
-                            })()}
+                            {stats.totalVolume >= 1000 ? `${(stats.totalVolume / 1000).toFixed(0)}k` : stats.totalVolume}
                         </p>
                         <p className="text-xs text-muted-foreground">kg 總量</p>
                     </div>
@@ -462,8 +560,8 @@ export default function HistoryPage() {
                             <SessionCard
                                 key={sess.id}
                                 session={sess}
-                                onDelete={id => setSessions(prev => prev.filter(s => s.id !== id))}
-                                onRefresh={load}
+                                onDelete={handleSessionDeleted}
+                                onRefresh={refreshSummary}
                             />
                         ))}
                     </div>
@@ -473,7 +571,7 @@ export default function HistoryPage() {
             {/* Completed sessions */}
             <div>
                 <h2 className="font-semibold text-sm mb-3">已完成記錄
-                    <span className="text-muted-foreground font-normal text-xs ml-1">（點擊展開 / 長按可編輯）</span>
+                    <span className="text-muted-foreground font-normal text-xs ml-1">（點擊展開，可編輯或刪除每一組）</span>
                 </h2>
                 {loading ? (
                     <div className="space-y-3">
@@ -487,15 +585,27 @@ export default function HistoryPage() {
                     </div>
                 ) : (
                     <div className="space-y-3">
+                        {loadError && (
+                            <button onClick={load} className="w-full text-sm text-primary py-2">載入失敗，點此重試</button>
+                        )}
                         {completedSessions.map(sess => (
                             <SessionCard
                                 key={sess.id}
                                 session={sess}
-                                onDelete={id => setSessions(prev => prev.filter(s => s.id !== id))}
-                                onRefresh={load}
+                                onDelete={handleSessionDeleted}
+                                onRefresh={refreshSummary}
                             />
                         ))}
                     </div>
+                )}
+                {!loading && hasMore && (
+                    <button
+                        onClick={loadMore}
+                        disabled={loadingMore}
+                        className="w-full mt-3 py-2.5 rounded-xl bg-secondary text-secondary-foreground text-sm font-medium disabled:opacity-50"
+                    >
+                        {loadingMore ? '載入中...' : '載入更多'}
+                    </button>
                 )}
             </div>
         </div>
