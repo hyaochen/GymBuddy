@@ -4,22 +4,30 @@ import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { ChevronLeft, Plus, Trash2, Search, Loader2 } from "lucide-react"
+import { toast } from "@/components/ui/use-toast"
 
 type ExerciseItem = {
     id: string
     name: string
     gifUrl?: string | null
+    isTimeBased?: boolean
 }
 
 type PlanDayExercise = {
     exerciseId: string
     exerciseName: string
-    defaultSets: number
-    defaultRepsMin: number
-    defaultRepsMax: number
-    defaultWeightKg?: number
-    restSeconds: number
+    isTimeBased: boolean
+    // null = 使用者清空了欄位，送出前必須補齊（不再默默變成 0）
+    defaultSets: number | null
+    defaultRepsMin: number | null
+    defaultRepsMax: number | null
+    defaultWeightKg: number | null
+    defaultDurationMin: number | null
+    defaultDurationMax: number | null
+    restSeconds: number | null
 }
+
+const numVal = (v: number | null) => (v === null ? '' : v)
 
 type PlanDay = {
     id: string
@@ -71,9 +79,12 @@ export default function CreatePlanPage() {
         setSearching(true)
         try {
             const res = await fetch(`/api/exercises?q=${encodeURIComponent(q)}&limit=10`)
+            if (!res.ok) throw new Error('search failed')
             const data = await res.json()
             setSearchResults(data.exercises || [])
-        } catch { } finally {
+        } catch {
+            toast({ title: '搜尋動作失敗，請重試', variant: 'destructive' })
+        } finally {
             setSearching(false)
         }
     }
@@ -87,10 +98,13 @@ export default function CreatePlanPage() {
                 exercises: [...d.exercises, {
                     exerciseId: exercise.id,
                     exerciseName: exercise.name,
+                    isTimeBased: !!exercise.isTimeBased,
                     defaultSets: 3,
                     defaultRepsMin: 8,
                     defaultRepsMax: 12,
                     defaultWeightKg: 0,
+                    defaultDurationMin: exercise.isTimeBased ? 20 : null,
+                    defaultDurationMax: exercise.isTimeBased ? 30 : null,
                     restSeconds: 90,
                 }],
             }
@@ -110,44 +124,68 @@ export default function CreatePlanPage() {
             d.id !== dayId ? d : {
                 ...d,
                 exercises: d.exercises.map(e =>
-                    e.exerciseId !== exerciseId ? e : { ...e, [field]: Number.isNaN(value) ? 0 : value }
+                    e.exerciseId !== exerciseId ? e : { ...e, [field]: Number.isNaN(value) ? null : value }
                 ),
             }
         ))
     }
 
+    const fail = (title: string) => toast({ title, variant: 'destructive' })
+
     const handleSubmit = async () => {
-        if (!planName.trim()) return alert('請輸入計畫名稱')
+        const name = planName.trim()
+        if (!name) return fail('請輸入計畫名稱')
+        if (days.length === 0) return fail('至少要有一個訓練日')
+        for (const d of days) {
+            if (!d.dayName.trim()) return fail('訓練日名稱不可為空')
+            for (const e of d.exercises) {
+                const label = e.exerciseName.split(' / ')[1] || e.exerciseName.split(' ')[0]
+                const required = e.isTimeBased
+                    ? [e.defaultSets, e.defaultDurationMin, e.defaultDurationMax, e.restSeconds]
+                    : [e.defaultSets, e.defaultRepsMin, e.defaultRepsMax, e.defaultWeightKg, e.restSeconds]
+                if (required.some(v => v === null)) return fail(`「${label}」有欄位未填寫`)
+                if (e.isTimeBased) {
+                    if ((e.defaultDurationMin as number) > (e.defaultDurationMax as number)) return fail(`「${label}」秒數下限不可大於上限`)
+                } else if ((e.defaultRepsMin as number) > (e.defaultRepsMax as number)) {
+                    return fail(`「${label}」次數下限不可大於上限`)
+                }
+            }
+        }
         setLoading(true)
         try {
             const res = await fetch('/api/plans', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    name: planName,
+                    name,
                     description,
                     daysPerWeek: days.length,
                     days: days.map((d, idx) => ({
-                        dayName: d.dayName,
+                        dayName: d.dayName.trim(),
                         orderIndex: idx,
                         exercises: d.exercises.map((e, exIdx) => ({
                             exerciseId: e.exerciseId,
                             orderIndex: exIdx,
                             defaultSets: e.defaultSets,
-                            defaultRepsMin: e.defaultRepsMin,
-                            defaultRepsMax: e.defaultRepsMax,
-                            defaultWeightKg: e.defaultWeightKg,
                             restSeconds: e.restSeconds,
+                            ...(e.isTimeBased
+                                ? { defaultDurationMin: e.defaultDurationMin, defaultDurationMax: e.defaultDurationMax }
+                                : { defaultRepsMin: e.defaultRepsMin, defaultRepsMax: e.defaultRepsMax, defaultWeightKg: e.defaultWeightKg }),
                         })),
                     })),
                 }),
             })
-            const data = await res.json()
+            const data = await res.json().catch(() => ({}))
+            if (!res.ok) {
+                fail(typeof data?.error === 'string' ? data.error : '建立計畫失敗，請重試')
+                return
+            }
             if (data.plan?.id) {
                 router.push(`/plans/${data.plan.id}`)
             }
         } catch (e) {
             console.error(e)
+            fail('建立計畫失敗，請檢查網路後重試')
         } finally {
             setLoading(false)
         }
@@ -227,30 +265,55 @@ export default function CreatePlanPage() {
                                         <label className="text-muted-foreground block mb-1">組數</label>
                                         <input
                                             type="number"
-                                            value={ex.defaultSets}
+                                            value={numVal(ex.defaultSets)}
                                             onChange={e => updateExercise(day.id, ex.exerciseId, 'defaultSets', parseInt(e.target.value))}
                                             className="w-full h-11 px-2 rounded-lg bg-background border border-border text-foreground text-sm text-center focus:outline-none focus:ring-2 focus:ring-ring"
-                                            min={1} max={10} step={1}
+                                            min={1} max={20} step={1}
                                         />
                                     </div>
+                                    {ex.isTimeBased ? (
+                                        <>
+                                    <div>
+                                        <label className="text-muted-foreground block mb-1">最少秒</label>
+                                        <input
+                                            type="number"
+                                            value={numVal(ex.defaultDurationMin)}
+                                            onChange={e => updateExercise(day.id, ex.exerciseId, 'defaultDurationMin', parseInt(e.target.value))}
+                                            className="w-full h-11 px-2 rounded-lg bg-background border border-border text-foreground text-sm text-center focus:outline-none focus:ring-2 focus:ring-ring"
+                                            min={1} max={3600} step={5}
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="text-muted-foreground block mb-1">最多秒</label>
+                                        <input
+                                            type="number"
+                                            value={numVal(ex.defaultDurationMax)}
+                                            onChange={e => updateExercise(day.id, ex.exerciseId, 'defaultDurationMax', parseInt(e.target.value))}
+                                            className="w-full h-11 px-2 rounded-lg bg-background border border-border text-foreground text-sm text-center focus:outline-none focus:ring-2 focus:ring-ring"
+                                            min={1} max={3600} step={5}
+                                        />
+                                    </div>
+                                        </>
+                                    ) : (
+                                        <>
                                     <div>
                                         <label className="text-muted-foreground block mb-1">最少下</label>
                                         <input
                                             type="number"
-                                            value={ex.defaultRepsMin}
+                                            value={numVal(ex.defaultRepsMin)}
                                             onChange={e => updateExercise(day.id, ex.exerciseId, 'defaultRepsMin', parseInt(e.target.value))}
                                             className="w-full h-11 px-2 rounded-lg bg-background border border-border text-foreground text-sm text-center focus:outline-none focus:ring-2 focus:ring-ring"
-                                            min={1} max={50} step={1}
+                                            min={1} max={100} step={1}
                                         />
                                     </div>
                                     <div>
                                         <label className="text-muted-foreground block mb-1">最多下</label>
                                         <input
                                             type="number"
-                                            value={ex.defaultRepsMax}
+                                            value={numVal(ex.defaultRepsMax)}
                                             onChange={e => updateExercise(day.id, ex.exerciseId, 'defaultRepsMax', parseInt(e.target.value))}
                                             className="w-full h-11 px-2 rounded-lg bg-background border border-border text-foreground text-sm text-center focus:outline-none focus:ring-2 focus:ring-ring"
-                                            min={1} max={50} step={1}
+                                            min={1} max={100} step={1}
                                         />
                                     </div>
                                     <div>
@@ -267,15 +330,15 @@ export default function CreatePlanPage() {
                                             <input
                                                 type="number"
                                                 inputMode="decimal"
-                                                value={ex.defaultWeightKg ?? 0}
+                                                value={numVal(ex.defaultWeightKg)}
                                                 onChange={e => updateExercise(day.id, ex.exerciseId, 'defaultWeightKg', parseFloat(e.target.value))}
                                                 className="flex-1 min-w-0 h-11 px-1 bg-background border-y border-border text-foreground text-sm text-center focus:outline-none focus:ring-2 focus:ring-ring tabular-nums"
-                                                min={0} step={0.1}
+                                                min={0} max={1000} step={0.1}
                                                 title="可直接輸入精確重量（0.1 kg 精度）"
                                             />
                                             <button
                                                 type="button"
-                                                onClick={() => updateExercise(day.id, ex.exerciseId, 'defaultWeightKg', (ex.defaultWeightKg ?? 0) + 2.5)}
+                                                onClick={() => updateExercise(day.id, ex.exerciseId, 'defaultWeightKg', Math.min(1000, (ex.defaultWeightKg ?? 0) + 2.5))}
                                                 className="w-7 h-11 rounded-r-lg bg-muted text-foreground text-[11px] font-semibold hover:bg-muted/80 active:scale-95 transition-transform flex-shrink-0"
                                                 aria-label="加 2.5 公斤"
                                             >
@@ -283,14 +346,16 @@ export default function CreatePlanPage() {
                                             </button>
                                         </div>
                                     </div>
+                                        </>
+                                    )}
                                     <div>
                                         <label className="text-muted-foreground block mb-1">休息(秒)</label>
                                         <input
                                             type="number"
-                                            value={ex.restSeconds}
+                                            value={numVal(ex.restSeconds)}
                                             onChange={e => updateExercise(day.id, ex.exerciseId, 'restSeconds', parseInt(e.target.value))}
                                             className="w-full h-11 px-2 rounded-lg bg-background border border-border text-foreground text-sm text-center focus:outline-none focus:ring-2 focus:ring-ring"
-                                            min={15} step={15}
+                                            min={0} max={600} step={15}
                                         />
                                     </div>
                                 </div>

@@ -36,3 +36,21 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
         isOwn: template.creatorId === user.id,
     })
 }
+
+// 作者下架自己分享的模板：設為不公開（保留讚數與下載數，重新分享同名計畫會再公開）
+export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+    const user = await getCurrentUser()
+    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+    const { id } = await params
+    const template = await prisma.sharedTemplate.findUnique({
+        where: { id },
+        select: { creatorId: true },
+    })
+    if (!template || template.creatorId !== user.id) {
+        return NextResponse.json({ error: 'Not found' }, { status: 404 })
+    }
+
+    await prisma.sharedTemplate.update({ where: { id }, data: { isPublic: false } })
+    return NextResponse.json({ success: true })
+}

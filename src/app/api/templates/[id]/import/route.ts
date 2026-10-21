@@ -9,6 +9,8 @@ interface TemplateExercise {
     repsMin: number
     repsMax: number
     weightKg: number | null
+    durationMin?: number | null
+    durationMax?: number | null
     restSeconds: number
 }
 
@@ -73,6 +75,8 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ id
                                 defaultRepsMin: ex.repsMin,
                                 defaultRepsMax: ex.repsMax,
                                 defaultWeightKg: ex.weightKg,
+                                defaultDurationMin: ex.durationMin ?? null,
+                                defaultDurationMax: ex.durationMax ?? null,
                                 restSeconds: ex.restSeconds,
                             })),
                         },

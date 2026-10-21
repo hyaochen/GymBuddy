@@ -1,21 +1,13 @@
 "use server"
 
 import { revalidatePath } from "next/cache"
-import prisma from "@/lib/prisma"
 import { requireAuth } from "@/lib/auth"
 import { checkSocialBadge } from "@/lib/badges"
+import { sharePlanAsTemplate } from "@/lib/share-template"
 
 export type ShareTemplateActionState = {
     status: "idle" | "success" | "error"
     message: string
-}
-
-type TemplateDifficulty = "BEGINNER" | "INTERMEDIATE" | "ADVANCED"
-
-const DIFFICULTIES = new Set<TemplateDifficulty>(["BEGINNER", "INTERMEDIATE", "ADVANCED"])
-
-function toDifficulty(value: string): TemplateDifficulty {
-    return DIFFICULTIES.has(value as TemplateDifficulty) ? value as TemplateDifficulty : "INTERMEDIATE"
 }
 
 export async function shareTemplate(
@@ -27,76 +19,29 @@ export async function shareTemplate(
     const name = String(formData.get("name") ?? "").trim()
     const rawDescription = String(formData.get("description") ?? "").trim()
     const rawDifficulty = String(formData.get("difficulty") ?? "INTERMEDIATE")
-    const difficulty = toDifficulty(rawDifficulty)
 
     if (!planId) return { status: "error", message: "請選擇要分享的計畫" }
-
-    const plan = await prisma.workoutPlan.findUnique({
-        where: { id: planId },
-        include: {
-            days: {
-                include: {
-                    exercises: {
-                        include: {
-                            exercise: {
-                                include: {
-                                    muscles: {
-                                        include: { muscleGroup: true },
-                                        where: { isPrimary: true },
-                                    },
-                                },
-                            },
-                        },
-                        orderBy: { orderIndex: "asc" },
-                    },
-                },
-                orderBy: { orderIndex: "asc" },
-            },
-        },
-    })
-
-    if (!plan || plan.userId !== user.id) {
-        return { status: "error", message: "計畫不存在" }
-    }
-
-    const days = plan.days.map(day => ({
-        dayName: day.dayName,
-        exercises: day.exercises.map(ex => ({
-            exerciseId: ex.exerciseId,
-            exerciseName: ex.exercise.name,
-            sets: ex.defaultSets,
-            repsMin: ex.defaultRepsMin,
-            repsMax: ex.defaultRepsMax,
-            weightKg: ex.defaultWeightKg ? Number(ex.defaultWeightKg) : null,
-            restSeconds: ex.restSeconds,
-        })),
-    }))
-
-    const muscleSet = new Set<string>()
-    plan.days.forEach(day =>
-        day.exercises.forEach(ex =>
-            ex.exercise.muscles.forEach(m => muscleSet.add(m.muscleGroup.name))
-        )
-    )
+    if (name.length > 60) return { status: "error", message: "模板名稱最多 60 字" }
+    if (rawDescription.length > 500) return { status: "error", message: "說明最多 500 字" }
 
     try {
-        await prisma.sharedTemplate.create({
-            data: {
-                creatorId: user.id,
-                name: name || plan.name,
-                description: rawDescription || plan.description,
-                daysPerWeek: plan.daysPerWeek,
-                difficulty,
-                targetMuscles: JSON.stringify(Array.from(muscleSet)),
-                days: JSON.stringify(days),
-            },
+        const result = await sharePlanAsTemplate({
+            userId: user.id,
+            planId,
+            name,
+            description: rawDescription,
+            difficulty: rawDifficulty,
         })
+        if (!result.ok) return { status: "error", message: result.error }
 
-        checkSocialBadge(user.id, "template_shared").catch(console.error)
+        if (result.created) checkSocialBadge(user.id, "template_shared").catch(console.error)
         revalidatePath(`/plans/${planId}`)
-        return { status: "success", message: "已成功分享為社群模板！" }
+        return {
+            status: "success",
+            message: result.created ? "已成功分享為社群模板！" : "已更新你之前分享的同名模板",
+        }
     } catch (err) {
         console.error("[templates] share failed:", err)
-        return { status: "error", message: "分享失敗" }
+        return { status: "error", message: "分享失敗，請重試" }
     }
 }

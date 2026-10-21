@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
 import { getCurrentUser } from '@/lib/auth'
+import { parseJsonBodyZh, updatePlanExerciseSchema, checkRanges } from '@/lib/validation'
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
     const user = await getCurrentUser()
@@ -15,8 +16,18 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
         return NextResponse.json({ error: 'Not found' }, { status: 404 })
     }
 
-    const body = await req.json()
-    const { defaultSets, defaultRepsMin, defaultRepsMax, restSeconds, defaultWeightKg } = body
+    const parsed = await parseJsonBodyZh(req, updatePlanExerciseSchema)
+    if ('response' in parsed) return parsed.response
+    const { defaultSets, defaultRepsMin, defaultRepsMax, restSeconds, defaultWeightKg, defaultDurationMin, defaultDurationMax } = parsed.data
+
+    // 只送一邊時，要與資料庫現值合併後再檢查 min <= max
+    const rangeError = checkRanges({
+        defaultRepsMin: defaultRepsMin ?? pe.defaultRepsMin,
+        defaultRepsMax: defaultRepsMax ?? pe.defaultRepsMax,
+        defaultDurationMin: defaultDurationMin !== undefined ? defaultDurationMin : pe.defaultDurationMin,
+        defaultDurationMax: defaultDurationMax !== undefined ? defaultDurationMax : pe.defaultDurationMax,
+    })
+    if (rangeError) return NextResponse.json({ error: rangeError }, { status: 400 })
 
     const updated = await prisma.workoutPlanExercise.update({
         where: { id },
@@ -26,6 +37,8 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
             ...(defaultRepsMax !== undefined && { defaultRepsMax }),
             ...(restSeconds !== undefined && { restSeconds }),
             ...(defaultWeightKg !== undefined && { defaultWeightKg }),
+            ...(defaultDurationMin !== undefined && { defaultDurationMin }),
+            ...(defaultDurationMax !== undefined && { defaultDurationMax }),
         },
     })
 

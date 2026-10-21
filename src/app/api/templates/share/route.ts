@@ -1,84 +1,40 @@
 import { NextRequest, NextResponse } from 'next/server'
-import prisma from '@/lib/prisma'
 import { getCurrentUser } from '@/lib/auth'
 import { checkSocialBadge } from '@/lib/badges'
+import { sharePlanAsTemplate } from '@/lib/share-template'
 
 export async function POST(req: NextRequest) {
     const user = await getCurrentUser()
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-    const body = await req.json()
+    const body = await req.json().catch(() => ({}))
     const { planId, name, description, difficulty, targetMuscles } = body
 
-    if (!planId) {
+    if (!planId || typeof planId !== 'string') {
         return NextResponse.json({ error: '請選擇要分享的計畫' }, { status: 400 })
     }
-
-    // Get the plan with all details
-    const plan = await prisma.workoutPlan.findUnique({
-        where: { id: planId },
-        include: {
-            days: {
-                include: {
-                    exercises: {
-                        include: {
-                            exercise: {
-                                include: {
-                                    muscles: {
-                                        include: { muscleGroup: true },
-                                        where: { isPrimary: true },
-                                    },
-                                },
-                            },
-                        },
-                        orderBy: { orderIndex: 'asc' },
-                    },
-                },
-                orderBy: { orderIndex: 'asc' },
-            },
-        },
-    })
-
-    if (!plan || plan.userId !== user.id) {
-        return NextResponse.json({ error: '計畫不存在' }, { status: 404 })
+    if (typeof name === 'string' && name.length > 60) {
+        return NextResponse.json({ error: '模板名稱最多 60 字' }, { status: 400 })
+    }
+    if (typeof description === 'string' && description.length > 500) {
+        return NextResponse.json({ error: '說明最多 500 字' }, { status: 400 })
     }
 
-    // Build template days JSON
-    const days = plan.days.map(day => ({
-        dayName: day.dayName,
-        exercises: day.exercises.map(ex => ({
-            exerciseId: ex.exerciseId,
-            exerciseName: ex.exercise.name,
-            sets: ex.defaultSets,
-            repsMin: ex.defaultRepsMin,
-            repsMax: ex.defaultRepsMax,
-            weightKg: ex.defaultWeightKg ? Number(ex.defaultWeightKg) : null,
-            restSeconds: ex.restSeconds,
-        })),
-    }))
-
-    // Auto-detect muscle groups if not provided
-    const muscleSet = new Set<string>()
-    plan.days.forEach(day =>
-        day.exercises.forEach(ex =>
-            ex.exercise.muscles.forEach(m => muscleSet.add(m.muscleGroup.name))
-        )
-    )
-
-    const template = await prisma.sharedTemplate.create({
-        data: {
-            creatorId: user.id,
-            name: name || plan.name,
-            description: description || plan.description,
-            daysPerWeek: plan.daysPerWeek,
-            difficulty: difficulty || 'INTERMEDIATE',
-            targetMuscles: JSON.stringify(targetMuscles || Array.from(muscleSet)),
-            days: JSON.stringify(days),
-        },
+    // 與 server action 共用同一份邏輯：同作者同名稱重複分享時更新既有模板
+    const result = await sharePlanAsTemplate({
+        userId: user.id,
+        planId,
+        name: typeof name === 'string' ? name : undefined,
+        description: typeof description === 'string' ? description : undefined,
+        difficulty,
+        targetMuscles: Array.isArray(targetMuscles) && targetMuscles.every(m => typeof m === 'string')
+            ? targetMuscles
+            : undefined,
     })
+    if (!result.ok) return NextResponse.json({ error: result.error }, { status: result.status })
 
-    // Badge: template shared
-    const badge = await checkSocialBadge(user.id, 'template_shared')
+    // Badge: template shared（只在首次建立時給）
+    const badge = result.created ? await checkSocialBadge(user.id, 'template_shared') : null
 
-    return NextResponse.json({ template, newBadge: badge }, { status: 201 })
+    return NextResponse.json({ template: result.template, updated: !result.created, newBadge: badge }, { status: result.created ? 201 : 200 })
 }

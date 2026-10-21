@@ -2,7 +2,7 @@
 
 import { useActionState, useEffect, useState } from "react"
 import { Share2, X } from "lucide-react"
-import { cn } from "@/lib/utils"
+import { toast } from "@/components/ui/use-toast"
 import { shareTemplate, type ShareTemplateActionState } from "@/app/actions/templates"
 
 const initialShareTemplateState: ShareTemplateActionState = {
@@ -20,8 +20,9 @@ export default function ShareTemplateButton({ planId, planName }: { planId: stri
     useEffect(() => {
         if (shareState.status === "success") {
             setShowForm(false)
+            toast({ title: shareState.message, variant: "success" })
         }
-    }, [shareState.status])
+    }, [shareState])
 
     return (
         <>
@@ -32,17 +33,6 @@ export default function ShareTemplateButton({ planId, planName }: { planId: stri
             >
                 <Share2 className="h-4 w-4" />
             </button>
-
-            {shareState.status !== "idle" && (
-                <div className={cn(
-                    "rounded-lg px-3 py-2 text-xs",
-                    shareState.status === "success"
-                        ? "bg-green-500/15 text-green-400 border border-green-500/30"
-                        : "bg-destructive/15 text-destructive border border-destructive/30"
-                )}>
-                    {shareState.message}
-                </div>
-            )}
 
             {showForm && (
                 <div className="fixed inset-0 z-50 bg-black/60 flex items-end sm:items-center justify-center" onClick={() => setShowForm(false)}>
@@ -93,6 +83,12 @@ export default function ShareTemplateButton({ planId, planName }: { planId: stri
                                     <option value="ADVANCED">進階</option>
                                 </select>
                             </div>
+
+                            {shareState.status === "error" && !sharePending && (
+                                <p role="alert" className="rounded-lg px-3 py-2 text-xs bg-destructive/15 text-destructive border border-destructive/30">
+                                    {shareState.message}
+                                </p>
+                            )}
 
                             <button
                                 type="submit"
