@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
 import { getCurrentUser } from '@/lib/auth'
 import { getFriendIds } from '@/lib/friends'
+import { resolvePrivacy } from '@/lib/social-privacy'
 import { toDateKey, sumSetsVolume } from '@/lib/utils'
 import { addTaipeiDays, diffTaipeiDateKeys, startOfTaipeiDayUtc, startOfTaipeiWeekUtc } from '@/lib/timezone'
 
@@ -78,7 +79,7 @@ export async function GET() {
     const volumeMap = new Map<string, number>()
     for (const s of weekSessions) {
         const p = profileMap.get(s.userId)
-        if (p && !p.showWorkouts && s.userId !== user.id) continue
+        if (s.userId !== user.id && (p && !p.showWorkouts || !resolvePrivacy(p).showWeight)) continue
         const vol = s.exercises.reduce((sum, e) => sum + sumSetsVolume(e.sets), 0)
         volumeMap.set(s.userId, (volumeMap.get(s.userId) || 0) + vol)
     }

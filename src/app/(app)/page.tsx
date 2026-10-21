@@ -3,6 +3,7 @@ import prisma from '@/lib/prisma'
 import { requireAuth } from '@/lib/auth'
 import { sumSetsVolume } from '@/lib/utils'
 import { getFriendIds } from '@/lib/friends'
+import { friendFeedWhere } from '@/lib/social-privacy'
 import { Play, Trophy, TrendingUp, Calendar, Dumbbell, ClipboardList, Users, Search, Activity } from 'lucide-react'
 import PasskeyPrompt from '@/components/PasskeyPrompt'
 import TrainingHeatmap from '@/components/TrainingHeatmap'
@@ -60,10 +61,9 @@ export default async function DashboardPage() {
             const friendIds = await getFriendIds(user.id)
             return prisma.activityFeedItem.findMany({
                 where: {
-                    isPublic: true,
                     OR: [
-                        { userId: user.id },
-                        { userId: { in: friendIds } },
+                        { userId: user.id, isPublic: true },
+                        await friendFeedWhere(friendIds),
                     ],
                 },
                 include: { user: { select: { name: true } } },
@@ -73,12 +73,16 @@ export default async function DashboardPage() {
         })().catch(() => []),
     ])
 
-    const totalSessions = await prisma.workoutSession.count({
-        where: { userId: user.id, completedAt: { not: null } },
-    })
+    const [totalSessions, weekSessionCount] = await Promise.all([
+        prisma.workoutSession.count({
+            where: { userId: user.id, completedAt: { not: null } },
+        }),
+        prisma.workoutSession.count({
+            where: { userId: user.id, completedAt: { not: null }, startedAt: { gte: sevenDaysAgo } },
+        }),
+    ])
 
     const lastSession = recentSessions[0]
-    const weekSessions = recentSessions.filter(s => new Date(s.startedAt) >= sevenDaysAgo)
 
     return (
         <div className="space-y-5">
@@ -113,7 +117,7 @@ export default async function DashboardPage() {
             {/* This week stats */}
             <div className="grid grid-cols-3 gap-3">
                 <div className="bg-card rounded-xl border border-border p-3 text-center">
-                    <p className="text-2xl font-bold tabular-nums">{weekSessions.length}</p>
+                    <p className="text-2xl font-bold tabular-nums">{weekSessionCount}</p>
                     <p className="text-xs text-muted-foreground mt-0.5">本週訓練</p>
                 </div>
                 <div className="bg-card rounded-xl border border-border p-3 text-center">

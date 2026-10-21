@@ -1,12 +1,17 @@
 import prisma from '@/lib/prisma'
 import { getCurrentUser } from '@/lib/auth'
+import { resolvePrivacy } from '@/lib/social-privacy'
 
 /**
  * Resolve the target userId for analytics APIs.
  * If `targetUserId` query param is provided, checks friendship + publicAnalytics.
+ * `exposesWeight` endpoints (kg numbers) additionally require the friend's showWeight.
  * Returns { userId, error? }
  */
-export async function resolveAnalyticsUser(request: Request): Promise<{ userId: string; error?: string }> {
+export async function resolveAnalyticsUser(
+    request: Request,
+    { exposesWeight = false }: { exposesWeight?: boolean } = {},
+): Promise<{ userId: string; error?: string }> {
     const user = await getCurrentUser()
     if (!user) return { userId: '', error: 'Unauthorized' }
 
@@ -32,6 +37,7 @@ export async function resolveAnalyticsUser(request: Request): Promise<{ userId: 
     // Check publicAnalytics
     const profile = await prisma.userProfile.findUnique({ where: { userId: targetUserId } })
     if (!profile?.publicAnalytics) return { userId: '', error: '對方未開啟公開訓練分析' }
+    if (exposesWeight && !resolvePrivacy(profile).showWeight) return { userId: '', error: '對方未公開重量資料' }
 
     return { userId: targetUserId }
 }

@@ -16,7 +16,7 @@ const REGION_MAP: Record<string, string> = {
 }
 
 export async function GET(request: Request) {
-    const { userId, error } = await resolveAnalyticsUser(request)
+    const { userId, error } = await resolveAnalyticsUser(request, { exposesWeight: true })
     if (error) return NextResponse.json({ error }, { status: 401 })
 
     // Last 8 weeks

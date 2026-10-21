@@ -4,7 +4,7 @@ import { resolveAnalyticsUser } from '@/lib/analytics-auth'
 import { toDateKey } from '@/lib/utils'
 
 export async function GET(request: Request) {
-    const { userId, error } = await resolveAnalyticsUser(request)
+    const { userId, error } = await resolveAnalyticsUser(request, { exposesWeight: true })
     if (error) return NextResponse.json({ error }, { status: 401 })
 
     // Get all exercises the user has done with their equipment

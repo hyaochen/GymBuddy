@@ -5,7 +5,7 @@ import { epley1rm } from '@/lib/utils'
 import { addTaipeiDays, formatTaipeiMonthDay, startOfTaipeiWeekUtc } from '@/lib/timezone'
 
 export async function GET(req: NextRequest) {
-    const { userId, error } = await resolveAnalyticsUser(req)
+    const { userId, error } = await resolveAnalyticsUser(req, { exposesWeight: true })
     if (error) return NextResponse.json({ error }, { status: 401 })
 
     const exerciseId = req.nextUrl.searchParams.get('exerciseId')
