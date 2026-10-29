@@ -50,3 +50,11 @@ export function formatDuration(totalSeconds: number): string {
     const rest = s % 60
     return rest === 0 ? `${m} 分` : `${m} 分 ${rest} 秒`
 }
+
+// 75 -> "1:15", 1200 -> "20:00", 45 -> "45" (stopwatch face; plain seconds under a minute)
+export function formatClock(totalSeconds: number): string {
+    const s = Math.max(0, Math.round(totalSeconds))
+    if (s < 60) return String(s)
+    const m = Math.floor(s / 60)
+    return `${m}:${String(s % 60).padStart(2, '0')}`
+}

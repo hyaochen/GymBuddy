@@ -7,7 +7,7 @@ import { ChevronLeft, X, SkipForward, CheckCircle2, Dumbbell, PartyPopper, Play,
 import { toast } from '@/components/ui/use-toast'
 import { ensurePushSubscription, requestPushPermissionAndSubscribe } from '@/lib/push-client'
 import { describeSetSaveFailure, formatWeightSuggestion } from '@/lib/session-logic'
-import { formatDuration } from '@/lib/youtube'
+import { formatClock, formatDuration } from '@/lib/youtube'
 import YouTubePlayer from '@/components/exercises/YouTubePlayer'
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -1176,10 +1176,10 @@ export default function ActiveSessionPage({ params }: { params: Promise<{ id: st
                                 </svg>
                                 <div className="absolute inset-0 flex flex-col items-center justify-center">
                                     <span className="text-5xl font-bold tabular-nums">
-                                        {state.isTiming ? state.timingElapsed : duration}
+                                        {formatClock(state.isTiming ? state.timingElapsed : duration)}
                                     </span>
                                     <span className="text-sm text-muted-foreground">
-                                        {state.isTiming ? '計時中...' : '秒（目標）'}
+                                        {state.isTiming ? '計時中...' : (duration >= 60 ? '分:秒（目標）' : '秒（目標）')}
                                     </span>
                                 </div>
                             </div>
@@ -1192,7 +1192,7 @@ export default function ActiveSessionPage({ params }: { params: Promise<{ id: st
                                 className="w-full h-14 rounded-xl bg-destructive text-destructive-foreground font-semibold text-base active:scale-98 transition-transform flex items-center justify-center gap-2"
                             >
                                 <Square className="h-4 w-4 fill-current" aria-hidden="true" />
-                                停止計時（{state.timingElapsed} 秒）
+                                停止計時（{formatDuration(state.timingElapsed)}）
                             </button>
                         ) : (
                             <>

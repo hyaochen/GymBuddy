@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { parseYouTubeId, youtubeEmbedUrl, youtubeWatchUrl, youtubeAppUrl, formatDuration } from '@/lib/youtube'
+import { parseYouTubeId, youtubeEmbedUrl, youtubeWatchUrl, youtubeAppUrl, formatDuration, formatClock } from '@/lib/youtube'
 
 describe('parseYouTubeId', () => {
     const id = 'ghwNOgmYsz0'
@@ -51,5 +51,13 @@ describe('formatDuration', () => {
         expect(formatDuration(1200)).toBe('20 分')
         expect(formatDuration(75)).toBe('1 分 15 秒')
         expect(formatDuration(3750)).toBe('62 分 30 秒')
+    })
+})
+
+describe('formatClock', () => {
+    it('formats stopwatch face', () => {
+        expect(formatClock(45)).toBe('45')
+        expect(formatClock(1200)).toBe('20:00')
+        expect(formatClock(75)).toBe('1:15')
     })
 })

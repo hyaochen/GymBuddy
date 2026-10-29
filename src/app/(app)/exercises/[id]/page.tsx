@@ -97,6 +97,7 @@ export default async function ExerciseDetailPage({
             )}
 
             {/* Muscles */}
+            {exercise.muscles.length > 0 && (
             <div className="bg-card rounded-xl border border-border p-4 space-y-3">
                 <h2 className="font-semibold text-sm text-muted-foreground uppercase tracking-wider">訓練肌群</h2>
                 {primaryMuscles.length > 0 && (
@@ -120,6 +121,7 @@ export default async function ExerciseDetailPage({
                     </div>
                 )}
             </div>
+            )}
 
             {/* Equipment — clickable to show image */}
             {exercise.equipment.length > 0 && (
