@@ -1,3 +1,4 @@
+import { formatDuration } from "@/lib/youtube"
 import { notFound } from "next/navigation"
 import Link from "next/link"
 import prisma from "@/lib/prisma"
@@ -86,7 +87,9 @@ export default async function PlanDetailPage({
                                         <div className="text-right">
                                             <p className="text-xs text-muted-foreground">
                                                 {pe.exercise.isTimeBased
-                                                    ? `${pe.defaultSets} 組 × ${pe.defaultDurationMin ?? 20}-${pe.defaultDurationMax ?? 30} 秒`
+                                                    ? (pe.defaultDurationMin ?? 20) === (pe.defaultDurationMax ?? 30)
+                                                        ? `${pe.defaultSets} 組 × ${formatDuration(pe.defaultDurationMax ?? 30)}`
+                                                        : `${pe.defaultSets} 組 × ${formatDuration(pe.defaultDurationMin ?? 20)} - ${formatDuration(pe.defaultDurationMax ?? 30)}`
                                                     : `${pe.defaultSets} 組 × ${pe.defaultRepsMin}-${pe.defaultRepsMax} 下`
                                                 }
                                             </p>

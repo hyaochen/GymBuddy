@@ -7,6 +7,8 @@ import { ChevronLeft, X, SkipForward, CheckCircle2, Dumbbell, PartyPopper, Play,
 import { toast } from '@/components/ui/use-toast'
 import { ensurePushSubscription, requestPushPermissionAndSubscribe } from '@/lib/push-client'
 import { describeSetSaveFailure, formatWeightSuggestion } from '@/lib/session-logic'
+import { formatDuration } from '@/lib/youtube'
+import YouTubePlayer from '@/components/exercises/YouTubePlayer'
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -27,6 +29,7 @@ type SessionExercise = {
         id: string
         name: string
         gifUrl: string | null
+        videoUrl?: string | null
         stepInstructions: unknown
         isTimeBased: boolean
         muscles: Array<{ muscleGroup: { name: string }; isPrimary: boolean }>
@@ -1082,10 +1085,15 @@ export default function ActiveSessionPage({ params }: { params: Promise<{ id: st
                         loading="lazy"
                     />
                 </div>
-            ) : (
+            ) : !ex.exercise.videoUrl && (
                 <div className="bg-card rounded-xl border border-border flex items-center justify-center" style={{ aspectRatio: '4/3' }}>
                     <Dumbbell className="h-12 w-12 text-muted-foreground" />
                 </div>
+            )}
+
+            {/* YouTube video (collapsible, open by default) */}
+            {ex.exercise.videoUrl && (
+                <YouTubePlayer key={ex.exercise.id} videoUrl={ex.exercise.videoUrl} title={exName} collapsible />
             )}
 
             {/* Steps toggle */}
@@ -1142,7 +1150,7 @@ export default function ActiveSessionPage({ params }: { params: Promise<{ id: st
                         <span className="text-xs text-muted-foreground ml-2">（目標 {targetRepsMin}–{targetRepsMax} 下）</span>
                     )}
                     {isTimeBased && d?.defaultDurationMin && d?.defaultDurationMax && (
-                        <span className="text-xs text-muted-foreground ml-2">（目標 {d.defaultDurationMin}–{d.defaultDurationMax} 秒）</span>
+                        <span className="text-xs text-muted-foreground ml-2">（目標 {d.defaultDurationMin === d.defaultDurationMax ? formatDuration(d.defaultDurationMax) : `${formatDuration(d.defaultDurationMin)} – ${formatDuration(d.defaultDurationMax)}`}）</span>
                     )}
                 </p>
 

@@ -3,8 +3,9 @@ import Link from "next/link"
 import prisma from "@/lib/prisma"
 import { requireAuth } from "@/lib/auth"
 import { Badge } from "@/components/ui/badge"
-import { ChevronLeft, Dumbbell, Video } from "lucide-react"
+import { ChevronLeft, Dumbbell } from "lucide-react"
 import EquipmentImageDialog from "@/components/exercises/EquipmentImageDialog"
+import YouTubePlayer from "@/components/exercises/YouTubePlayer"
 
 const DIFFICULTY_LABELS: Record<string, string> = {
     BEGINNER: '初級',
@@ -70,7 +71,7 @@ export default async function ExerciseDetailPage({
                         className="w-full max-h-52 object-contain"
                     />
                 </div>
-            ) : (
+            ) : !exercise.videoUrl && (
                 <div className="rounded-xl bg-card border border-border h-36 flex items-center justify-center">
                     <div className="text-center text-muted-foreground">
                         <Dumbbell className="mx-auto mb-1 h-8 w-8" aria-hidden="true" />
@@ -79,17 +80,9 @@ export default async function ExerciseDetailPage({
                 </div>
             )}
 
-            {/* YouTube Link */}
+            {/* YouTube: embedded player + open-in-app button */}
             {exercise.videoUrl && (
-                <a
-                    href={exercise.videoUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-2 text-sm text-primary hover:underline"
-                >
-                    <Video className="h-4 w-4" />
-                    觀看教學影片
-                </a>
+                <YouTubePlayer videoUrl={exercise.videoUrl} title={exercise.name} />
             )}
 
             {/* Tags */}
